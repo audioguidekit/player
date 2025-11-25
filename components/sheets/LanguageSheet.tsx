@@ -1,27 +1,28 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { BottomSheet } from '../BottomSheet';
-import { LANGUAGES } from '../../constants';
 import { Language } from '../../types';
 
 interface LanguageSheetProps {
   isOpen: boolean;
   selectedLanguage: Language;
+  languages: Language[];
   onSelect: (lang: Language) => void;
   onClose: () => void;
 }
 
-export const LanguageSheet: React.FC<LanguageSheetProps> = ({ 
-  isOpen, 
-  selectedLanguage, 
-  onSelect, 
-  onClose 
+export const LanguageSheet: React.FC<LanguageSheetProps> = ({
+  isOpen,
+  selectedLanguage,
+  languages,
+  onSelect,
+  onClose
 }) => {
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <div className="p-4 pt-2">
         <div className="space-y-2">
-          {LANGUAGES.map((lang) => (
+          {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => {

@@ -4,7 +4,7 @@ import { motion, useSpring, useTransform } from 'framer-motion';
 import { TourData } from '../types';
 import { TourListItem } from '../components/TourListItem';
 
-interface DetailScreenProps {
+interface TourDetailProps {
   tour: TourData;
   currentStopId: string | null;
   isPlaying: boolean;
@@ -27,7 +27,7 @@ const AnimatedCounter = ({ value }: { value: number }) => {
   return <motion.span>{display}</motion.span>;
 };
 
-export const DetailScreen: React.FC<DetailScreenProps> = ({
+export const TourDetail: React.FC<TourDetailProps> = ({
   tour,
   currentStopId,
   isPlaying,

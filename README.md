@@ -2,6 +2,13 @@
 
 A high-fidelity mobile-first progressive web application for guided audio tours. This interactive prototype showcases an immersive audio tour experience for Ancient Rome, featuring sophisticated animations, gesture-based navigation, and a modern mobile UI.
 
+## 📚 Documentation
+
+- **[Complete Documentation Index](docs/README.md)** - All project documentation
+- **[PWA Architecture](docs/PWA_ARCHITECTURE.md)** - Progressive Web App implementation guide
+- **[Adding Tours](docs/ADDING_TOURS.md)** - Guide for adding new tours
+- **[Data Structure](public/data/README.md)** - Tour data format
+
 ## Overview
 
 AudioTour Pro is a React-based mobile web application designed to simulate a premium audio tour guide experience. The app demonstrates professional UI/UX patterns with production-ready animations, bottom sheet navigation, and an intuitive audio player interface - perfect for museums, historical sites, or city tours.
@@ -29,6 +36,17 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 - **Responsive Design** - Optimized for mobile with desktop preview mode
 - **Type-Safe** - Full TypeScript implementation with comprehensive type definitions
 - **Modern React** - Built with React 19 hooks and functional components
+- **Dynamic Data Loading** - Tour data loaded from external JSON files with caching support
+
+### Progressive Web App (PWA)
+- **Offline Support** - Full offline functionality with Service Worker caching
+- **Installable** - Add to home screen on mobile and desktop
+- **URL Routing** - Deep linking and shareable tour URLs
+- **Persistent Storage** - IndexedDB for progress tracking and downloads
+- **Automatic Caching** - Intelligent caching strategies for optimal performance
+- **Fast Loading** - Self-hosted assets and optimized bundle (~380KB)
+
+> 📖 **See [PWA Architecture Guide](docs/PWA_ARCHITECTURE.md)** for complete implementation details
 
 ## Technologies
 
@@ -36,7 +54,8 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 - **React 19.2.0** - Latest React with modern hooks
 - **TypeScript 5.8.2** - Full type safety
 - **Vite 6.2.0** - Fast development server and optimized builds
-- **Tailwind CSS** - Utility-first styling (via CDN)
+- **Tailwind CSS 3.4** - Self-hosted utility-first styling
+- **React Router 6.28** - URL-based routing and navigation
 
 ### Libraries
 - **Framer Motion 12.23.24** - Animation and gesture library
@@ -51,9 +70,9 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 ```
 superguided-audio/
 ├── screens/                    # Main screen components
-│   ├── StartScreen.tsx        # Landing screen with parallax background
-│   ├── DetailScreen.tsx       # Tour details with progress tracking
-│   └── ActivePlayerScreen.tsx # Full-screen audio player
+│   ├── TourStart.tsx          # Landing screen with parallax background
+│   ├── TourDetail.tsx         # Tour details with progress tracking
+│   └── StopDetail.tsx         # Full-screen stop player
 ├── components/                 # Reusable UI components
 │   ├── sheets/                # Modal bottom sheets
 │   │   ├── RatingSheet.tsx   # User rating interface
@@ -63,10 +82,21 @@ superguided-audio/
 │   ├── MiniPlayer.tsx         # Floating mini player
 │   ├── StartCard.tsx          # Tour start/resume card
 │   └── TourListItem.tsx       # Tour stop list items
+├── services/                   # Data services
+│   └── dataService.ts         # Dynamic data loading with caching
+├── hooks/                      # Custom React hooks
+│   └── useDataLoader.ts       # Hooks for loading tours and languages
+├── public/                     # Static assets
+│   └── data/                  # Tour data (JSON files)
+│       ├── README.md          # Data structure documentation
+│       ├── languages.json     # Supported languages
+│       └── tours/             # Tour definitions
+│           ├── index.json     # Tour manifest
+│           └── *.json         # Individual tour files
 ├── App.tsx                    # Main application & state management
 ├── index.tsx                  # React entry point
 ├── types.ts                   # TypeScript type definitions
-├── constants.ts               # Mock data & configurations
+├── constants.ts               # Legacy constants (deprecated)
 ├── vite.config.ts            # Vite configuration
 ├── tsconfig.json             # TypeScript configuration
 └── package.json              # Dependencies and scripts
@@ -153,15 +183,15 @@ The app uses React hooks for state management in `App.tsx`:
 
 ```
 App.tsx
-├── StartScreen
-├── DetailScreen
+├── TourStart
+├── TourDetail
 │   ├── MainSheet (draggable)
 │   │   └── StartCard
 │   │       └── TourListItem (multiple)
 │   ├── MiniPlayer
 │   ├── RatingSheet
 │   └── LanguageSheet
-└── ActivePlayerScreen (full-screen)
+└── StopDetail (full-screen)
 ```
 
 ### Data Model
@@ -173,11 +203,11 @@ Tour data is defined in `constants.ts`:
 
 ### Key Files
 
-- **App.tsx:200** - Main component with routing and state logic
+- **App.tsx** - Main component with routing and state logic
 - **MainSheet.tsx** - Implements drag gestures and animation springs
-- **ActivePlayerScreen.tsx** - Full-screen player with swipe-to-dismiss
+- **StopDetail.tsx** - Full-screen stop player with swipe-to-dismiss
 - **types.ts** - Type definitions for Stop, TourData, Language, SheetType
-- **constants.ts** - Mock tour data for "Ancient Rome" with 6 stops
+- **dataService.ts** - Dynamic tour data loading with caching
 
 ## Configuration
 
@@ -196,22 +226,68 @@ Tour data is defined in `constants.ts`:
 - Strict mode enabled
 - Path mapping for `@/*` imports
 
-## Mock Data
+## Data Management
 
-The app currently uses mock data for the "Ancient Rome" tour with 6 stops:
+The app loads tour data dynamically from JSON files in the `/public/data/` directory.
+
+### Current Tours
+
+**Ancient Rome Tour** (`rome-01`):
 1. The Colosseum
 2. Roman Forum
 3. Palatine Hill
-4. Pantheon
-5. Trevi Fountain
-6. Spanish Steps
+4. Arch of Constantine
+5. Trajan's Market
+6. Pantheon
 
-Each stop includes:
-- Title and subtitle
-- Image URLs (using Unsplash)
-- Audio duration (simulated)
-- Detailed description
-- GPS coordinates (placeholder)
+### Adding New Tours
+
+Quick steps to add a tour:
+
+1. **Create a tour JSON file** in `/public/data/tours/`
+2. **Update the manifest** in `/public/data/tours/index.json`
+3. **Test the new tour** by updating `DEFAULT_TOUR_ID` in `App.tsx`
+
+For complete step-by-step guide with examples, see **[ADDING_TOURS.md](ADDING_TOURS.md)**
+
+### Data Structure
+
+```typescript
+// Tour data
+interface TourData {
+  id: string;
+  title: string;
+  description: string;
+  totalDuration: string;
+  totalStops: number;
+  image: string;
+  stops: Stop[];
+}
+
+// Individual stop
+interface Stop {
+  id: string;
+  title: string;
+  duration: string;
+  isCompleted: boolean;
+  isPlaying?: boolean;
+  image: string;
+}
+```
+
+### Loading Data
+
+The app uses custom React hooks for data loading:
+
+```typescript
+// Load a specific tour
+const { data: tour, loading, error } = useTourData('rome-01');
+
+// Load all languages
+const { data: languages } = useLanguages();
+```
+
+Data is automatically cached for performance. See [`services/dataService.ts`](/services/dataService.ts) for the caching implementation.
 
 ## Future Enhancements
 
@@ -240,14 +316,19 @@ Potential features to implement:
 - **Framer Motion** - For animations and gestures
 - **Tailwind Classes** - Utility-first styling approach
 
-### Adding New Tours
+### Working with Tour Data
 
-To add new tour data:
+The application uses dynamic data loading from JSON files:
 
-1. Create tour object in `constants.ts` following the `TourData` type
-2. Add stop information with images and descriptions
-3. Update language translations
-4. Configure in `App.tsx` if needed
+1. **Tour files** - `/public/data/tours/*.json`
+2. **Languages** - `/public/data/languages.json`
+3. **Tour manifest** - `/public/data/tours/index.json`
+
+To add or modify tours, edit the JSON files directly. The app will load changes automatically on refresh.
+
+**Documentation:**
+- Data structure: [public/data/README.md](public/data/README.md)
+- Adding tours: [ADDING_TOURS.md](ADDING_TOURS.md)
 
 ## AI Studio Integration
 

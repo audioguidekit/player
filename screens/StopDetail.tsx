@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { TourData } from '../types';
 
-interface ActivePlayerScreenProps {
+interface StopDetailProps {
   tour: TourData;
   currentStopId: string | null;
   isPlaying: boolean;
@@ -16,7 +16,7 @@ interface ActivePlayerScreenProps {
   onPrev: () => void;
 }
 
-export const ActivePlayerScreen: React.FC<ActivePlayerScreenProps> = ({
+export const StopDetail: React.FC<StopDetailProps> = ({
   tour,
   currentStopId,
   isPlaying,

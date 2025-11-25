@@ -67,7 +67,7 @@ export const MainSheet: React.FC<MainSheetProps> = ({
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Report the calculated collapsed Y to parent (for StartScreen animations)
+  // Report the calculated collapsed Y to parent (for TourStart animations)
   useEffect(() => {
     if (onLayoutChange) {
       onLayoutChange(COLLAPSED_Y);

@@ -3,7 +3,7 @@ import { motion, useTransform, MotionValue, useMotionTemplate } from 'framer-mot
 import { MessageCircleMore, Languages } from 'lucide-react';
 import { TourData } from '../types';
 
-interface StartScreenProps {
+interface TourStartProps {
   tour: TourData;
   onOpenRating: () => void;
   onOpenLanguage: () => void;
@@ -11,7 +11,7 @@ interface StartScreenProps {
   collapsedY?: number;
 }
 
-export const StartScreen: React.FC<StartScreenProps> = ({
+export const TourStart: React.FC<TourStartProps> = ({
   tour,
   onOpenRating,
   onOpenLanguage,
