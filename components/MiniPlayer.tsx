@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, RotateCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
+import { Play, Pause } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useAnimationControls } from 'framer-motion';
 import { Stop } from '../types';
+import { ForwardIcon } from './icons/ForwardIcon';
+import { BackwardIcon } from './icons/BackwardIcon';
 
 interface MiniPlayerProps {
   currentStop: Stop | undefined;
@@ -35,10 +37,73 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   // Use real progress from audio player
   const visualProgress = Math.max(0, Math.min(100, progress || 0));
 
-  // Debug logging
+  // Marquee animation for title
+  const titleRef = useRef<HTMLSpanElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const controls = useAnimationControls();
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  // Check if title overflows and setup marquee animation
   useEffect(() => {
-    console.log('MiniPlayer progress:', visualProgress);
-  }, [visualProgress]);
+    // Reset position to start immediately when track changes
+    controls.set({ x: 0 });
+
+    if (!titleRef.current || !containerRef.current) return;
+
+    // Wait for next frame to get accurate measurements
+    const timeoutId = setTimeout(() => {
+      if (!titleRef.current || !containerRef.current) return;
+
+      const titleWidth = titleRef.current.scrollWidth;
+      const containerWidth = containerRef.current.clientWidth;
+      const overflow = titleWidth - containerWidth;
+
+      if (overflow > 0) {
+        setShouldAnimate(true);
+
+        // Start animation sequence after 2 seconds
+        const startAnimation = async () => {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+
+          // Infinite loop
+          while (true) {
+            // Scroll left to reveal full text
+            await controls.start({
+              x: -overflow - 10,
+              transition: {
+                duration: overflow / 30, // Speed based on overflow
+                ease: "linear"
+              }
+            });
+
+            // Pause at the end
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Scroll back to start
+            await controls.start({
+              x: 0,
+              transition: {
+                duration: overflow / 30,
+                ease: "linear"
+              }
+            });
+
+            // Pause at the start
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        };
+
+        startAnimation();
+      } else {
+        setShouldAnimate(false);
+      }
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controls.stop();
+    };
+  }, [currentStop?.title, controls]);
 
   if (!currentStop) return null;
 
@@ -47,14 +112,6 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (visualProgress / 100) * circumference;
-
-  // Debug logging for SVG calculations
-  console.log('MiniPlayer render:', {
-    progress: visualProgress,
-    radius,
-    circumference: circumference.toFixed(2),
-    offset: offset.toFixed(2)
-  });
 
   return (
     <motion.div
@@ -71,22 +128,86 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
              <div className="w-10 h-10 rounded-lg bg-gray-200 overflow-hidden shrink-0 shadow-sm">
                <img src={currentStop.image} alt="" className="w-full h-full object-cover" />
              </div>
-             <div className="overflow-hidden">
+             <div className="overflow-hidden flex-1">
                 {/* Increased title to text-base for better legibility */}
-                <p className="font-bold text-base text-gray-900 truncate leading-tight">{currentStop.title}</p>
+                <div ref={containerRef} className="overflow-hidden leading-tight">
+                  <motion.span
+                    ref={titleRef}
+                    animate={controls}
+                    className="font-bold text-base text-gray-900 whitespace-nowrap inline-block"
+                  >
+                    {currentStop.title}
+                  </motion.span>
+                </div>
                 {/* Increased subtitle to text-sm */}
-                <p className="text-sm text-[#2dd482] font-medium truncate mt-0.5">Playing • {currentStop.duration}</p>
+                <p className="text-sm font-medium truncate mt-0.5 flex items-center overflow-hidden">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {isPlaying && (
+                      <motion.span
+                        key="playing-text"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 25,
+                          mass: 0.8
+                        }}
+                        className="text-[#2dd482] mr-1.5"
+                        layout
+                      >
+                        Playing
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {isPlaying && (
+                      <motion.span
+                        key="dot"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 25,
+                          mass: 0.8,
+                          delay: 0.05
+                        }}
+                        className="text-[#2dd482] mr-1.5"
+                        layout
+                      >
+                        •
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
+                  <motion.span
+                    layout
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 25,
+                      mass: 0.8
+                    }}
+                    className="text-[#2dd482]"
+                  >
+                    {currentStop.duration}
+                  </motion.span>
+                </p>
              </div>
           </div>
         </div>
 
         {/* Controls */}
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onRewind(); }}
             className="p-2 text-gray-400 hover:text-gray-900 transition-all active:scale-90"
           >
-            <RotateCcw size={20} />
+            <BackwardIcon size={24} />
           </button>
           
           <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -101,7 +222,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                  cy={size / 2}
                />
                <circle
-                 stroke="#000000" // black for better contrast
+                 stroke="#2dd482" // green progress indicator
                  strokeWidth={strokeWidth}
                  fill="transparent"
                  r={radius}
@@ -114,7 +235,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                />
              </svg>
 
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
               className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-sm z-10 overflow-hidden relative"
             >
@@ -148,11 +269,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             </button>
           </div>
 
-          <button 
+          <button
              onClick={(e) => { e.stopPropagation(); onForward(); }}
              className="p-2 text-gray-400 hover:text-gray-900 transition-all active:scale-90"
           >
-            <RotateCw size={20} />
+            <ForwardIcon size={24} />
           </button>
         </div>
       </div>

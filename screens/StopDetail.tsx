@@ -4,10 +4,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
-  Pause,
-  Check
+  Pause
 } from 'lucide-react';
 import { TourData } from '../types';
+import { AnimatedCheckmark } from '../components/AnimatedCheckmark';
 
 interface StopDetailProps {
   tour: TourData;
@@ -131,10 +131,11 @@ export const StopDetail: React.FC<StopDetailProps> = ({
              />
              <div className="absolute inset-0 bg-black/10" />
 
-             {/* Top Right Status Circle */}
-             <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
-               {isStopCompleted && <Check size={14} className="text-black" strokeWidth={3} />}
-             </div>
+             {/* Top Right Status Circle with Animated Checkmark */}
+             <AnimatedCheckmark
+               isVisible={isStopCompleted}
+               uniqueKey={currentStopId || 'stop'}
+             />
 
              {/* Play/Pause Button - Floating */}
              <button

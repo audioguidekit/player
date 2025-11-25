@@ -82,92 +82,69 @@ export const useAudioPlayer = ({
 
     // Set up event listeners
     const handleLoadedMetadata = () => {
-      console.log('✅ [EVENT] loadedmetadata - duration:', audio.duration);
       setDuration(audio.duration);
     };
 
     const handleTimeUpdate = () => {
-      console.log('✅ [EVENT] timeupdate fired - currentTime:', audio.currentTime.toFixed(2));
+      console.log('⏱️ timeupdate - currentTime:', audio.currentTime.toFixed(2));
       setCurrentTime(audio.currentTime);
       if (audio.duration) {
         const percentComplete = (audio.currentTime / audio.duration) * 100;
-        console.log('📊 Setting progress to:', percentComplete.toFixed(1) + '%', 'currentTime:', audio.currentTime.toFixed(1), 'duration:', audio.duration.toFixed(1));
+        console.log('📊 Progress:', percentComplete.toFixed(1) + '%');
         setProgress(percentComplete);
 
         // Call progress callback if provided
         if (onProgressRef.current) {
           onProgressRef.current(audio.currentTime, audio.duration, percentComplete);
         }
-      } else {
-        console.warn('⚠️ Audio duration not available yet');
       }
     };
 
     const handleEnded = () => {
-      console.log('Audio ended');
+      console.log('🏁 Audio ended');
       setProgress(0);
       setCurrentTime(0);
       onEndedRef.current?.();
     };
 
     const handleError = (e: Event) => {
-      console.error('Audio loading error:', e);
-      console.error('Failed to load audio from:', audioUrl);
+      console.error('❌ Audio loading error:', e);
+      console.error('Failed to load:', audioUrl);
     };
 
     const handlePlay = () => {
-      console.log('✅ [EVENT] play - Audio is now playing');
-      console.log('Audio state:', {
-        volume: audio.volume,
-        muted: audio.muted,
-        paused: audio.paused,
-        currentTime: audio.currentTime,
-        duration: audio.duration
-      });
+      console.log('▶️ Audio playing');
     };
 
     const handlePause = () => {
-      console.log('⏸️ [EVENT] pause - Audio is now paused');
+      console.log('⏸️ Audio paused');
     };
 
-    console.log('🔧 Adding event listeners to audio element');
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
-    console.log('✅ All event listeners added successfully');
 
     // If isPlaying is true when we create a new audio element, start playing it
     if (isPlaying) {
-      console.log('▶️ New audio loaded while playing - starting playback');
-      console.log('Audio readyState:', audio.readyState);
-
       // Wait for audio to be ready before auto-playing
       if (audio.readyState >= 2) {
-        console.log('🎵 Audio ready, calling play() immediately');
-        audio.play()
-          .then(() => console.log('✅ play() succeeded'))
-          .catch((error) => {
-            console.error('❌ Error auto-playing new audio:', error);
-          });
+        audio.play().catch(() => {
+          // Auto-play failed
+        });
       } else {
-        console.log('⏳ Audio not ready, waiting for canplay event');
         const handleCanPlayAutoStart = () => {
-          console.log('🎵 canplay event fired, calling play()');
-          audio.play()
-            .then(() => console.log('✅ play() succeeded after canplay'))
-            .catch((error) => {
-              console.error('❌ Error auto-playing new audio after canplay:', error);
-            });
+          audio.play().catch(() => {
+            // Auto-play failed
+          });
         };
         audio.addEventListener('canplay', handleCanPlayAutoStart, { once: true });
       }
     }
 
     return () => {
-      console.log('🧹 Cleaning up audio element and removing listeners');
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
@@ -180,38 +157,31 @@ export const useAudioPlayer = ({
 
   // Handle play/pause
   useEffect(() => {
-    console.log('🎮 Play/pause effect running - isPlaying:', isPlaying);
+    console.log('🎮 Play/pause effect - isPlaying:', isPlaying);
     if (!audioRef.current) {
-      console.log('⚠️ No audio ref available');
+      console.log('⚠️ No audio ref');
       return;
     }
 
     const audio = audioRef.current;
 
     if (isPlaying) {
-      console.log('▶️ [EFFECT] Attempting to play audio...');
-      console.log('Audio state:', { paused: audio.paused, readyState: audio.readyState });
-
+      console.log('▶️ Attempting to play...');
       // Wait for audio to be ready before playing
       const attemptPlay = () => {
-        if (audio.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-          console.log('🎵 [EFFECT] Audio ready, calling play()');
-          audio.play()
-            .then(() => console.log('✅ [EFFECT] play() succeeded'))
-            .catch((error) => {
-              console.error('❌ [EFFECT] Error playing audio:', error);
-              console.error('Audio URL:', audio.src);
-            });
+        if (audio.readyState >= 2) {
+          console.log('✅ Audio ready, playing');
+          audio.play().catch((error) => {
+            console.error('❌ Play failed:', error);
+          });
         } else {
+          console.log('⏳ Waiting for audio to be ready...');
           // Audio not ready yet, wait for canplay event
-          console.log('⏳ [EFFECT] Audio not ready, waiting for canplay');
           const handleCanPlay = () => {
-            console.log('🎵 [EFFECT] canplay fired, calling play()');
-            audio.play()
-              .then(() => console.log('✅ [EFFECT] play() succeeded after canplay'))
-              .catch((error) => {
-                console.error('❌ [EFFECT] Error playing audio after canplay:', error);
-              });
+            console.log('✅ Audio ready, playing');
+            audio.play().catch((error) => {
+              console.error('❌ Play failed:', error);
+            });
             audio.removeEventListener('canplay', handleCanPlay);
           };
           audio.addEventListener('canplay', handleCanPlay, { once: true });
@@ -220,7 +190,7 @@ export const useAudioPlayer = ({
 
       attemptPlay();
     } else {
-      console.log('⏸️ [EFFECT] Pausing audio');
+      console.log('⏸️ Pausing audio');
       audio.pause();
     }
   }, [isPlaying]);

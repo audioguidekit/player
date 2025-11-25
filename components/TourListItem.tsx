@@ -1,7 +1,8 @@
 import React from 'react';
-import { Play, Pause, Check } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { Stop } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedCheckmark } from './AnimatedCheckmark';
 
 interface TourListItemProps {
   stop: Stop;
@@ -44,10 +45,11 @@ export const TourListItem: React.FC<TourListItemProps> = ({
              alt={stop.title}
              className="w-full h-full object-cover"
            />
-           {/* Top Right Status Circle */}
-           <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
-             {isCompleted && <Check size={14} className="text-black" strokeWidth={3} />}
-           </div>
+           {/* Top Right Status Circle with Animated Checkmark */}
+           <AnimatedCheckmark
+             isVisible={isCompleted}
+             uniqueKey={stop.id}
+           />
         </div>
 
         {/* Play Button - Floating in between sections */}
