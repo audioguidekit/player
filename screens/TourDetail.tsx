@@ -12,6 +12,8 @@ interface TourDetailProps {
   onTogglePlay: () => void;
   onStopPlayPause: (stopId: string) => void;
   tourProgress: number;
+  consumedMinutes: number;
+  totalMinutes: number;
   completedStopsCount: number;
   isStopCompleted: (stopId: string) => boolean;
 }
@@ -37,6 +39,8 @@ export const TourDetail: React.FC<TourDetailProps> = ({
   onTogglePlay,
   onStopPlayPause,
   tourProgress,
+  consumedMinutes,
+  totalMinutes,
   completedStopsCount,
   isStopCompleted
 }) => {
@@ -76,13 +80,15 @@ export const TourDetail: React.FC<TourDetailProps> = ({
         <div className="flex justify-between text-sm font-semibold text-gray-400 uppercase tracking-wider">
           <div className="flex items-center gap-1.5">
             <Clock3 size={16} />
-            <span className="text-gray-900">{tour.totalDuration.split(' ')[0]}</span>
-            <span>mins total</span>
+            <span className="text-gray-900">
+              <AnimatedCounter value={consumedMinutes} />
+            </span>
+            <span>/ {totalMinutes} mins</span>
           </div>
           <div className="flex items-center gap-1.5">
             <MapPin size={16} />
             <span className="text-gray-900">{completedStopsCount}</span>
-            <span>/ {tour.totalStops} stops</span>
+            <span>/ {tour.totalStops}</span>
           </div>
         </div>
       </div>

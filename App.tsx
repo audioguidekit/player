@@ -196,6 +196,9 @@ const App: React.FC = () => {
 
     // Update position for resume
     progressTracking.updateStopPosition(currentStopId, currentTime);
+
+    // Track maximum progress reached (prevents progress bar from decreasing on rewind)
+    progressTracking.updateStopMaxProgress(currentStopId, percentComplete);
   }, [currentStopId, progressTracking]);
 
   // Audio Player
@@ -285,7 +288,21 @@ const App: React.FC = () => {
                 onStopClick={handleStopClick}
                 onTogglePlay={handlePlayPause}
                 onStopPlayPause={handleStopPlayPause}
-                tourProgress={progressTracking.getTourCompletionPercentage(tour.totalStops)}
+                tourProgress={progressTracking.getRealtimeProgressPercentage(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                )}
+                consumedMinutes={progressTracking.getConsumedMinutes(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                ).consumed}
+                totalMinutes={progressTracking.getConsumedMinutes(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                ).total}
                 completedStopsCount={progressTracking.getCompletedStopsCount()}
                 isStopCompleted={progressTracking.isStopCompleted}
               />

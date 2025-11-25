@@ -183,7 +183,7 @@ export const StopDetail: React.FC<StopDetailProps> = ({
              <div className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold text-sm">
-                    #{currentStopIndex + 1}
+                    {currentStopIndex + 1}
                   </div>
                   {/* Metadata text size increased */}
                   <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">{tour.title}</span>

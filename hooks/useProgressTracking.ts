@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Stop } from '../types';
 
 interface StopProgress {
   isCompleted: boolean;
   lastPosition: number;
+  maxPercentageReached?: number; // Track maximum progress to prevent decreasing
 }
 
 interface TourProgress {
@@ -10,6 +12,15 @@ interface TourProgress {
 }
 
 const STORAGE_KEY_PREFIX = 'tour_progress_';
+
+/**
+ * Parse duration string from tour data
+ * Examples: "5 min audio" → 5, "12 min audio" → 12
+ */
+const parseDurationMinutes = (durationString: string): number => {
+  const match = durationString.match(/(\d+)\s*min/i);
+  return match ? parseInt(match[1], 10) : 0;
+};
 
 /**
  * Hook to manage tour progress tracking
@@ -64,10 +75,34 @@ export const useProgressTracking = (tourId: string) => {
         ...prev.stops,
         [stopId]: {
           isCompleted: prev.stops[stopId]?.isCompleted || false,
-          lastPosition: position
+          lastPosition: position,
+          maxPercentageReached: prev.stops[stopId]?.maxPercentageReached
         }
       }
     }));
+  }, []);
+
+  // Update maximum percentage reached for a stop (to prevent progress decrease)
+  const updateStopMaxProgress = useCallback((stopId: string, percentComplete: number) => {
+    setProgress(prev => {
+      const currentMax = prev.stops[stopId]?.maxPercentageReached || 0;
+      // Only update if new percentage is higher
+      if (percentComplete > currentMax) {
+        return {
+          ...prev,
+          stops: {
+            ...prev.stops,
+            [stopId]: {
+              ...prev.stops[stopId],
+              isCompleted: prev.stops[stopId]?.isCompleted || false,
+              lastPosition: prev.stops[stopId]?.lastPosition || 0,
+              maxPercentageReached: percentComplete
+            }
+          }
+        };
+      }
+      return prev;
+    });
   }, []);
 
   // Check if a stop is completed
@@ -91,12 +126,101 @@ export const useProgressTracking = (tourId: string) => {
     return Object.values(progress.stops).filter(s => s.isCompleted).length;
   }, [progress]);
 
+  // Calculate realtime progress with duration-weighting
+  const getRealtimeProgressPercentage = useCallback((
+    tourStops: Stop[],
+    currentStopId: string | null,
+    currentStopProgress: number
+  ): number => {
+    // Calculate total duration of all stops
+    const totalDurationMinutes = tourStops.reduce((sum, stop) => {
+      return sum + parseDurationMinutes(stop.duration);
+    }, 0);
+
+    if (totalDurationMinutes === 0) {
+      return 0; // Safety check
+    }
+
+    // Calculate consumed duration including all stops
+    let consumedDurationMinutes = 0;
+
+    tourStops.forEach(stop => {
+      const stopDuration = parseDurationMinutes(stop.duration);
+
+      if (progress.stops[stop.id]?.isCompleted) {
+        // Completed stops count fully
+        consumedDurationMinutes += stopDuration;
+      } else {
+        // Non-completed stops: use their maximum progress reached
+        const maxReached = progress.stops[stop.id]?.maxPercentageReached || 0;
+
+        // If this is the current stop, use max of current progress or saved max
+        const effectiveProgress = stop.id === currentStopId
+          ? Math.max(currentStopProgress, maxReached)
+          : maxReached;
+
+        if (effectiveProgress > 0) {
+          consumedDurationMinutes += stopDuration * (effectiveProgress / 100);
+        }
+      }
+    });
+
+    // Calculate weighted percentage
+    const percentage = (consumedDurationMinutes / totalDurationMinutes) * 100;
+
+    return Math.round(percentage);
+  }, [progress]);
+
+  // Get consumed time in minutes for display
+  const getConsumedMinutes = useCallback((
+    tourStops: Stop[],
+    currentStopId: string | null,
+    currentStopProgress: number
+  ): { consumed: number; total: number } => {
+    // Calculate total duration of all stops
+    const totalMinutes = tourStops.reduce((sum, stop) => {
+      return sum + parseDurationMinutes(stop.duration);
+    }, 0);
+
+    // Calculate consumed duration including all stops
+    let consumedMinutes = 0;
+
+    tourStops.forEach(stop => {
+      const stopDuration = parseDurationMinutes(stop.duration);
+
+      if (progress.stops[stop.id]?.isCompleted) {
+        // Completed stops count fully
+        consumedMinutes += stopDuration;
+      } else {
+        // Non-completed stops: use their maximum progress reached
+        const maxReached = progress.stops[stop.id]?.maxPercentageReached || 0;
+
+        // If this is the current stop, use max of current progress or saved max
+        const effectiveProgress = stop.id === currentStopId
+          ? Math.max(currentStopProgress, maxReached)
+          : maxReached;
+
+        if (effectiveProgress > 0) {
+          consumedMinutes += stopDuration * (effectiveProgress / 100);
+        }
+      }
+    });
+
+    return {
+      consumed: Math.round(consumedMinutes),
+      total: totalMinutes
+    };
+  }, [progress]);
+
   return {
     markStopCompleted,
     updateStopPosition,
+    updateStopMaxProgress,
     isStopCompleted,
     getStopPosition,
     getTourCompletionPercentage,
-    getCompletedStopsCount
+    getCompletedStopsCount,
+    getRealtimeProgressPercentage,
+    getConsumedMinutes
   };
 };

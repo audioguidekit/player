@@ -96,7 +96,7 @@ export const TourListItem: React.FC<TourListItemProps> = ({
             
             {/* Number Circle - Increased size for better number legibility */}
             <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-              <span className="text-sm font-bold text-gray-500">#{index + 1}</span>
+              <span className="text-sm font-bold text-gray-500">{index + 1}</span>
             </div>
 
             {/* Text Content */}
