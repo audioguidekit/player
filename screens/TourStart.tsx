@@ -9,6 +9,7 @@ interface TourStartProps {
   onOpenLanguage: () => void;
   sheetY?: MotionValue<number>;
   collapsedY?: number;
+  isVisible?: boolean;
 }
 
 export const TourStart: React.FC<TourStartProps> = ({
@@ -16,7 +17,8 @@ export const TourStart: React.FC<TourStartProps> = ({
   onOpenRating,
   onOpenLanguage,
   sheetY,
-  collapsedY = 0
+  collapsedY = 0,
+  isVisible = true
 }) => {
   // Check if the media is a video
   const isVideo = tour.image.match(/\.(mp4|webm|ogg)$/i);
@@ -58,7 +60,7 @@ export const TourStart: React.FC<TourStartProps> = ({
   const blurFilter = useMotionTemplate`blur(${blurAmount}px)`;
 
   return (
-    <motion.div className="absolute inset-0 w-full h-full bg-black z-0 overflow-hidden">
+    <div className="absolute inset-0 w-full h-full bg-black z-0 overflow-hidden">
       {/* Background Image Area */}
       <motion.div
         style={{ scale, y, filter: blurFilter }}
@@ -107,6 +109,6 @@ export const TourStart: React.FC<TourStartProps> = ({
           </button>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };

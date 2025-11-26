@@ -116,9 +116,16 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   return (
     <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      exit={{ y: 100 }}
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 100, opacity: 0 }}
+      transition={{
+        delay: 0.2,
+        duration: 0.3,
+        type: "spring",
+        stiffness: 200,
+        damping: 20
+      }}
       className="absolute bottom-0 left-0 right-0 z-[60]"
     >
       {/* Bottom Sheet Style Container */}

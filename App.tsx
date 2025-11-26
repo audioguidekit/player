@@ -6,7 +6,6 @@ import { RatingSheet } from './components/sheets/RatingSheet';
 import { LanguageSheet } from './components/sheets/LanguageSheet';
 import { TourStart } from './screens/TourStart';
 import { TourDetail } from './screens/TourDetail';
-import { StopDetail } from './screens/StopDetail';
 import { MainSheet } from './components/MainSheet';
 import { StartCard } from './components/StartCard';
 import { MiniPlayer } from './components/MiniPlayer';
@@ -17,7 +16,7 @@ import { useProgressTracking } from './hooks/useProgressTracking';
 
 const App: React.FC = () => {
   // Get route params
-  const { tourId, stopId } = useParams<{ tourId: string; stopId?: string }>();
+  const { tourId } = useParams<{ tourId: string }>();
   const navigate = useNavigate();
 
   // Load data dynamically
@@ -28,7 +27,6 @@ const App: React.FC = () => {
   const progressTracking = useProgressTracking(tourId || DEFAULT_TOUR_ID);
 
   // Navigation & State
-  const [showStopDetail, setShowStopDetail] = useState(false);
   const [activeSheet, setActiveSheet] = useState<SheetType>('NONE');
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
 
@@ -40,18 +38,6 @@ const App: React.FC = () => {
       setSelectedLanguage(defaultLang);
     }
   }, [languages, selectedLanguage]);
-
-  // Sync URL params with state
-  useEffect(() => {
-    if (stopId) {
-      // URL has a stopId - show stop detail (but don't change audio)
-      setShowStopDetail(true);
-      setHasStarted(true);
-    } else if (stopId === undefined && showStopDetail) {
-      // URL changed to remove stopId - close stop detail
-      setShowStopDetail(false);
-    }
-  }, [stopId, showStopDetail]);
 
   // Main Sheet State (Collapsed vs Expanded)
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
@@ -74,7 +60,7 @@ const App: React.FC = () => {
   // Get current audio stop (type-safe)
   const currentAudioStop = currentStop?.type === 'audio' ? currentStop : undefined;
 
-  // Show mini player when tour has started (either in Tour Detail or Stop Detail)
+  // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
 
   // --- Handlers ---
@@ -83,17 +69,29 @@ const App: React.FC = () => {
     if (!tour || tour.stops.length === 0) return;
 
     setHasStarted(true);
-    // Start first audio stop automatically
-    const firstAudioStop = tour.stops.find(s => s.type === 'audio');
-    if (firstAudioStop) {
-      setCurrentStopId(firstAudioStop.id);
-      setIsPlaying(true);
+
+    // Only auto-play if this is the first time starting (no current stop set)
+    // If returning from start screen, preserve the play/pause state
+    if (!currentStopId) {
+      // First time starting - set first audio stop and auto-play
+      const firstAudioStop = tour.stops.find(s => s.type === 'audio');
+      if (firstAudioStop) {
+        setCurrentStopId(firstAudioStop.id);
+        setIsPlaying(true);
+      }
     }
+    // If currentStopId already exists, we're returning - don't change isPlaying state
+  };
+
+  const handleBackToStart = () => {
+    // Go back to start screen (audio continues playing if it was playing)
+    setHasStarted(false);
   };
 
   const handleStopClick = (clickedStopId: string) => {
-    // Only navigate - don't change audio
-    navigate(`/tour/${tourId}/stop/${clickedStopId}`);
+    // Start playing the clicked stop
+    setCurrentStopId(clickedStopId);
+    setIsPlaying(true);
   };
 
   const handleStopPlayPause = (stopId: string) => {
@@ -122,25 +120,6 @@ const App: React.FC = () => {
     }
   }, [currentStopId, tour]);
 
-  // Navigate to next/prev stop detail (for chevron buttons - no audio change)
-  const handleNextStopDetail = useCallback(() => {
-    if (!stopId || !tour) return;
-    const currentIndex = tour.stops.findIndex(s => s.id === stopId);
-    if (currentIndex !== -1 && currentIndex < tour.stops.length - 1) {
-      const nextStopId = tour.stops[currentIndex + 1].id;
-      navigate(`/tour/${tourId}/stop/${nextStopId}`);
-    }
-  }, [stopId, tour, tourId, navigate]);
-
-  const handlePrevStopDetail = useCallback(() => {
-    if (!stopId || !tour) return;
-    const currentIndex = tour.stops.findIndex(s => s.id === stopId);
-    if (currentIndex > 0) {
-      const prevStopId = tour.stops[currentIndex - 1].id;
-      navigate(`/tour/${tourId}/stop/${prevStopId}`);
-    }
-  }, [stopId, tour, tourId, navigate]);
-
   // Control audio playback (for audio player controls)
   const handleNextStop = useCallback(() => {
     if (!currentStopId || !tour) return;
@@ -151,10 +130,9 @@ const App: React.FC = () => {
       if (nextAudioStop) {
         setCurrentStopId(nextAudioStop.id);
         setIsPlaying(true); // Auto-play next track
-        navigate(`/tour/${tourId}/stop/${nextAudioStop.id}`);
       }
     }
-  }, [currentStopId, tour, tourId, navigate]);
+  }, [currentStopId, tour]);
 
   const handlePrevStop = () => {
     if (!currentStopId || !tour) return;
@@ -165,14 +143,7 @@ const App: React.FC = () => {
       if (prevAudioStop) {
         setCurrentStopId(prevAudioStop.id);
         setIsPlaying(true);
-        navigate(`/tour/${tourId}/stop/${prevAudioStop.id}`);
       }
-    }
-  };
-
-  const handleMiniPlayerExpand = () => {
-    if (currentStopId) {
-      navigate(`/tour/${tourId}/stop/${currentStopId}`);
     }
   };
 
@@ -261,107 +232,116 @@ const App: React.FC = () => {
       <div className="w-full max-w-[400px] h-[100dvh] md:h-[844px] bg-white md:rounded-[2.5rem] relative overflow-hidden shadow-2xl flex flex-col">
         
         {/* Main Content Area */}
-        <div className="flex-1 relative overflow-hidden">
-           {/* Background Layer (Tour Start Image) - Only shown when tour hasn't started */}
-           {!hasStarted && (
-             <TourStart
-               tour={tour}
-               onOpenRating={() => setActiveSheet('RATING')}
-               onOpenLanguage={() => setActiveSheet('LANGUAGE')}
-               sheetY={sheetY}
-               collapsedY={collapsedY}
-             />
-           )}
-
-          {/* Main Interactive Sheet - Only shown when tour hasn't started */}
-          {!hasStarted && (
-            <MainSheet
-              isExpanded={false}
-              onExpand={() => setIsSheetExpanded(true)}
-              onCollapse={() => setIsSheetExpanded(false)}
-              sheetY={sheetY}
-              onLayoutChange={setCollapsedY}
-              startContent={
-                <StartCard
-                  tour={tour}
-                  hasStarted={hasStarted}
-                  onAction={handleStartTour}
-                />
-              }
-              detailContent={null}
-            />
-          )}
-
-          {/* Full Screen Tour Detail - Shown when tour has started and stop detail is closed */}
+        <div className="flex-1 relative overflow-hidden bg-black">
           <AnimatePresence>
-            {hasStarted && !showStopDetail && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="absolute inset-0 z-30 bg-white"
-              >
-                <TourDetail
-                  tour={tour}
-                  currentStopId={currentStopId}
-                  isPlaying={isPlaying}
-                  onStopClick={handleStopClick}
-                  onTogglePlay={handlePlayPause}
-                  onStopPlayPause={handleStopPlayPause}
-                  tourProgress={progressTracking.getRealtimeProgressPercentage(
-                    tour.stops,
-                    currentStopId,
-                    audioPlayer.progress
-                  )}
-                  consumedMinutes={progressTracking.getConsumedMinutes(
-                    tour.stops,
-                    currentStopId,
-                    audioPlayer.progress
-                  ).consumed}
-                  totalMinutes={progressTracking.getConsumedMinutes(
-                    tour.stops,
-                    currentStopId,
-                    audioPlayer.progress
-                  ).total}
-                  completedStopsCount={progressTracking.getCompletedStopsCount()}
-                  isStopCompleted={progressTracking.isStopCompleted}
-                />
+            {!hasStarted ? (
+              // START SCREEN - Background + Card
+              <motion.div key="start-screen" className="absolute inset-0">
+                {/* Background Image with exit animation */}
+                <motion.div
+                  initial={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.05, opacity: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="absolute inset-0"
+                >
+                  <TourStart
+                    tour={tour}
+                    onOpenRating={() => setActiveSheet('RATING')}
+                    onOpenLanguage={() => setActiveSheet('LANGUAGE')}
+                    sheetY={sheetY}
+                    collapsedY={collapsedY}
+                    isVisible={true}
+                  />
+                </motion.div>
+
+                {/* THE CARD - Will morph to fullscreen */}
+                <motion.div
+                  layoutId="tour-container"
+                  className="absolute bottom-0 left-0 right-0 bg-white overflow-hidden z-20"
+                  style={{
+                    borderTopLeftRadius: 40,
+                    borderTopRightRadius: 40,
+                  }}
+                  transition={{ type: "spring", stiffness: 150, damping: 25 }}
+                >
+                  {/* Card content - fades out on exit */}
+                  <motion.div
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <StartCard
+                      tour={tour}
+                      hasStarted={!!currentStopId}
+                      onAction={handleStartTour}
+                    />
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            ) : (
+              // PLAYER SCREEN - Fullscreen white container
+              <motion.div key="player-screen" className="absolute inset-0">
+                {/* THE CARD EXPANDED - Matches layoutId */}
+                <motion.div
+                  layoutId="tour-container"
+                  className="absolute inset-0 bg-white z-30"
+                  transition={{ type: "spring", stiffness: 150, damping: 25 }}
+                >
+                  {/* Player content - fades in */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ delay: 0.15, duration: 0.25 }}
+                    className="h-full w-full"
+                  >
+                    <TourDetail
+                      tour={tour}
+                      currentStopId={currentStopId}
+                      isPlaying={isPlaying}
+                      onStopClick={handleStopClick}
+                      onTogglePlay={handlePlayPause}
+                      onStopPlayPause={handleStopPlayPause}
+                      onBack={handleBackToStart}
+                      tourProgress={progressTracking.getRealtimeProgressPercentage(
+                        tour.stops,
+                        currentStopId,
+                        audioPlayer.progress
+                      )}
+                      consumedMinutes={progressTracking.getConsumedMinutes(
+                        tour.stops,
+                        currentStopId,
+                        audioPlayer.progress
+                      ).consumed}
+                      totalMinutes={progressTracking.getConsumedMinutes(
+                        tour.stops,
+                        currentStopId,
+                        audioPlayer.progress
+                      ).total}
+                      completedStopsCount={progressTracking.getCompletedStopsCount()}
+                      isStopCompleted={progressTracking.isStopCompleted}
+                    />
+                  </motion.div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Stop Detail - Full Screen Overlay */}
-          <AnimatePresence>
-            {showStopDetail && stopId && (
-              <StopDetail
-                tour={tour}
-                currentStopId={stopId}
-                isPlaying={isPlaying && currentStopId === stopId}
-                isStopCompleted={progressTracking.isStopCompleted(stopId)}
-                onPlayPause={() => handleStopPlayPause(stopId)}
-                onMinimize={() => navigate(`/tour/${tourId}`)}
-                onNext={handleNextStopDetail}
-                onPrev={handlePrevStopDetail}
-              />
-            )}
-          </AnimatePresence>
-
-          {/* Global Floating Mini Player */}
-          <AnimatePresence>
-            {shouldShowMiniPlayer && currentAudioStop && (
-              <MiniPlayer
-                currentStop={currentAudioStop}
-                isPlaying={isPlaying}
-                onTogglePlay={handlePlayPause}
-                onRewind={() => audioPlayer.skipBackward(15)}
-                onForward={() => audioPlayer.skipForward(15)}
-                onClick={handleMiniPlayerExpand}
-                onEnd={handleAudioComplete}
-                progress={audioPlayer.progress}
-              />
-            )}
-          </AnimatePresence>
+            {/* Global Floating Mini Player */}
+            <AnimatePresence>
+              {shouldShowMiniPlayer && currentAudioStop && (
+                <MiniPlayer
+                  currentStop={currentAudioStop}
+                  isPlaying={isPlaying}
+                  onTogglePlay={handlePlayPause}
+                  onRewind={() => audioPlayer.skipBackward(15)}
+                  onForward={() => audioPlayer.skipForward(15)}
+                  onClick={() => {}}
+                  onEnd={handleAudioComplete}
+                  progress={audioPlayer.progress}
+                />
+              )}
+            </AnimatePresence>
         </div>
 
         {/* Global Sheets */}

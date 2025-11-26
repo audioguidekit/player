@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Home, Grid, Search } from 'lucide-react';
+import { ArrowDownFromLine, Grid, Search } from 'lucide-react';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { TourData } from '../types';
 import { TourListItem } from '../components/TourListItem';
@@ -12,6 +12,7 @@ interface TourDetailProps {
   onStopClick: (stopId: string) => void;
   onTogglePlay: () => void;
   onStopPlayPause: (stopId: string) => void;
+  onBack: () => void;
   tourProgress: number;
   consumedMinutes: number;
   totalMinutes: number;
@@ -39,6 +40,7 @@ export const TourDetail: React.FC<TourDetailProps> = ({
   onStopClick,
   onTogglePlay,
   onStopPlayPause,
+  onBack,
   tourProgress,
   consumedMinutes,
   totalMinutes,
@@ -56,29 +58,44 @@ export const TourDetail: React.FC<TourDetailProps> = ({
   const width = useTransform(progressSpring, (value) => `${value}%`);
 
   return (
-    <div className="flex flex-col h-full relative w-full bg-white">
+    <div className="flex flex-col h-full relative w-full">
       {/* Floating Action Buttons - Clear of Dynamic Island */}
-      <div className="absolute top-0 left-0 right-0 z-30 px-6 pt-4 pb-2">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ delay: 0.15, duration: 0.2 }}
+        className="absolute top-0 left-0 right-0 z-30 px-6 pt-4 pb-2"
+      >
         <div className="flex items-center justify-between">
-          {/* Left: Home Button */}
-          <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg">
-            <Home size={20} />
+          {/* Left: Back Button */}
+          <button
+            onClick={onBack}
+            className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg active:scale-95"
+          >
+            <ArrowDownFromLine size={20} />
           </button>
 
           {/* Right: Grid and Search Buttons */}
           <div className="flex items-center gap-2">
-            <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg">
+            <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg active:scale-95">
               <Grid size={20} />
             </button>
-            <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg">
+            <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg active:scale-95">
               <Search size={20} />
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Sticky Header with Progress Indicator */}
-      <div className="px-6 pt-20 pb-4 bg-white sticky top-0 z-20">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.2, duration: 0.2 }}
+        className="px-6 pt-20 pb-4 bg-white sticky top-0 z-20"
+      >
         {/* Progress Indicator Row */}
         <div className="flex items-center gap-3">
           {/* Progress Bar (70% width) */}
@@ -94,10 +111,14 @@ export const TourDetail: React.FC<TourDetailProps> = ({
             <AnimatedCounter value={totalMinutes - consumedMinutes} /> minutes left
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Scrollable List */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ delay: 0.2, duration: 0.25, type: "spring" }}
         className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32 no-scrollbar"
       >
         {tour.stops.map((stop, index) => {
@@ -121,7 +142,7 @@ export const TourDetail: React.FC<TourDetailProps> = ({
           // Render other content types with FeedItemRenderer
           return <FeedItemRenderer key={stop.id} item={stop} />;
         })}
-      </div>
+      </motion.div>
     </div>
   );
 };
