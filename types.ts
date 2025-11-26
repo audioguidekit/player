@@ -1,4 +1,4 @@
-export type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email';
+export type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email' | 'quote';
 
 export interface BaseStop {
   id: string;
@@ -57,7 +57,14 @@ export interface EmailStop extends BaseStop {
   buttonText?: string;
 }
 
-export type Stop = AudioStop | TextStop | ImageTextStop | ThreeDObjectStop | VideoStop | HeadlineStop | RatingStop | EmailStop;
+export interface QuoteStop extends BaseStop {
+  type: 'quote';
+  quote: string;
+  author: string;
+  year?: string;
+}
+
+export type Stop = AudioStop | TextStop | ImageTextStop | ThreeDObjectStop | VideoStop | HeadlineStop | RatingStop | EmailStop | QuoteStop;
 
 // Legacy type aliases for backward compatibility
 export type FeedItemType = StopType;
@@ -70,6 +77,7 @@ export type VideoFeedItem = VideoStop;
 export type HeadlineFeedItem = HeadlineStop;
 export type RatingFeedItem = RatingStop;
 export type EmailFeedItem = EmailStop;
+export type QuoteFeedItem = QuoteStop;
 export type FeedItem = Stop;
 
 export interface TourData {

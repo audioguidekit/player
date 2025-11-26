@@ -116,6 +116,9 @@ const App: React.FC = () => {
         setCurrentStopId(nextAudioStop.id);
         setIsPlaying(true); // Auto-play next track
         // Don't navigate - keep user where they are
+      } else {
+        // No next track - stop playing
+        setIsPlaying(false);
       }
     }
   }, [currentStopId, tour]);

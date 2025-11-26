@@ -8,6 +8,7 @@ import { VideoCard } from './VideoCard';
 import { HeadlineCard } from './HeadlineCard';
 import { RatingCard } from './RatingCard';
 import { EmailCard } from './EmailCard';
+import { QuoteCard } from './QuoteCard';
 
 interface FeedItemRendererProps {
   item: FeedItem;
@@ -55,6 +56,8 @@ export const FeedItemRenderer: React.FC<FeedItemRendererProps> = ({
       return <RatingCard item={item} />;
     case 'email':
       return <EmailCard item={item} />;
+    case 'quote':
+      return <QuoteCard item={item} />;
     default:
       return null;
   }

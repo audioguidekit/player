@@ -34,6 +34,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onEnd,
   progress = 0
 }) => {
+  // Minimized state - when true, only handle is visible
+  const [isMinimized, setIsMinimized] = useState(false);
+  const dragY = useMotionValue(0);
+
   // Use real progress from audio player
   const visualProgress = Math.max(0, Math.min(100, progress || 0));
 
@@ -114,22 +118,51 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (visualProgress / 100) * circumference;
 
+  // Height of the content when expanded (approximately)
+  const expandedHeight = 180;
+  const minimizedOffset = expandedHeight - 48; // Show handle area fully (48px)
+
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      animate={{
+        y: isMinimized ? minimizedOffset : 0,
+        opacity: 1
+      }}
       exit={{ y: 100, opacity: 0 }}
+      drag="y"
+      dragConstraints={{ top: 0, bottom: minimizedOffset }}
+      dragElastic={{ top: 0.05, bottom: 0.15 }}
+      dragMomentum={false}
+      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+      style={{ y: dragY }}
+      onDragEnd={(_, info) => {
+        // Reset drag position
+        dragY.set(0);
+
+        // Decide state based on position and velocity
+        const shouldMinimize = info.offset.y > 50 || (info.offset.y > 30 && info.velocity.y > 200);
+        const shouldExpand = info.offset.y < -20 || (info.offset.y < -10 && info.velocity.y < -200);
+
+        if (!isMinimized && shouldMinimize) {
+          setIsMinimized(true);
+        } else if (isMinimized && shouldExpand) {
+          setIsMinimized(false);
+        }
+      }}
       transition={{
-        delay: 0.2,
-        duration: 0.3,
         type: "spring",
-        stiffness: 200,
-        damping: 20
+        stiffness: 400,
+        damping: 30,
+        mass: 0.8
       }}
       className="absolute bottom-0 left-0 right-0 z-[60]"
     >
       {/* Bottom Sheet Style Container */}
-      <div className="bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border-t border-gray-100">
+      <div className="relative bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border-t border-gray-100">
+        {/* Extended white background below viewport */}
+        <div className="absolute top-full left-0 right-0 h-[200px] bg-white" />
+
         {/* Handle */}
         <div className="w-full flex justify-center pt-3 pb-2">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
