@@ -69,6 +69,11 @@ export const useAudioPlayer = ({
       audioRef.current.src = '';
     }
 
+    // Reset progress state immediately when switching tracks
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
+
     currentAudioUrlRef.current = audioUrl;
 
     // Create new audio element

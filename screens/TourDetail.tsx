@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Clock3, MapPin } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Home, Grid, Search } from 'lucide-react';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { TourData } from '../types';
 import { TourListItem } from '../components/TourListItem';
@@ -55,44 +55,43 @@ export const TourDetail: React.FC<TourDetailProps> = ({
 
   const width = useTransform(progressSpring, (value) => `${value}%`);
 
-  // Count only audio stops for progress display
-  const audioStopsCount = tour.stops.filter(stop => stop.type === 'audio').length;
-
   return (
     <div className="flex flex-col h-full relative w-full bg-white">
-      {/* Sticky Header */}
-      <div className="px-6 pt-2 pb-4 border-b border-gray-50 bg-white sticky top-0 z-20">
-        <div className="flex justify-between items-start mb-4 mt-2">
-          <h2 className="text-3xl font-bold text-gray-900 w-2/3 leading-tight">{tour.title}</h2>
-          <div className="text-right">
-             <span className="text-3xl font-bold text-gray-900">
-               <AnimatedCounter value={tourProgress} />
-             </span>
-             <span className="text-sm font-medium text-gray-400 ml-0.5">%</span>
-          </div>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-100 h-1.5 rounded-full mb-4 overflow-hidden">
-          <motion.div 
-            style={{ width }}
-            className="bg-black h-full rounded-full" 
-          />
-        </div>
+      {/* Floating Action Buttons - Clear of Dynamic Island */}
+      <div className="absolute top-0 left-0 right-0 z-30 px-6 pt-4 pb-2">
+        <div className="flex items-center justify-between">
+          {/* Left: Home Button */}
+          <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg">
+            <Home size={20} />
+          </button>
 
-        {/* Increased text size from text-xs to text-sm for better legibility */}
-        <div className="flex justify-between text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          <div className="flex items-center gap-1.5">
-            <Clock3 size={16} />
-            <span className="text-gray-900">
-              <AnimatedCounter value={consumedMinutes} />
-            </span>
-            <span>/ {totalMinutes} mins</span>
+          {/* Right: Grid and Search Buttons */}
+          <div className="flex items-center gap-2">
+            <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg">
+              <Grid size={20} />
+            </button>
+            <button className="w-11 h-11 rounded-full bg-gray-700 text-white flex items-center justify-center hover:bg-gray-600 transition-colors shadow-lg">
+              <Search size={20} />
+            </button>
           </div>
-          <div className="flex items-center gap-1.5">
-            <MapPin size={16} />
-            <span className="text-gray-900">{completedStopsCount}</span>
-            <span>/ {audioStopsCount}</span>
+        </div>
+      </div>
+
+      {/* Sticky Header with Progress Indicator */}
+      <div className="px-6 pt-20 pb-4 bg-white sticky top-0 z-20">
+        {/* Progress Indicator Row */}
+        <div className="flex items-center gap-3">
+          {/* Progress Bar (70% width) */}
+          <div className="flex-1 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+            <motion.div
+              style={{ width }}
+              className="bg-black h-full rounded-full"
+            />
+          </div>
+
+          {/* Time Remaining Text */}
+          <div className="text-sm font-medium text-gray-500 whitespace-nowrap">
+            <AnimatedCounter value={totalMinutes - consumedMinutes} /> minutes left
           </div>
         </div>
       </div>
@@ -100,8 +99,6 @@ export const TourDetail: React.FC<TourDetailProps> = ({
       {/* Scrollable List */}
       <div
         className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32 no-scrollbar"
-        // Stop propagation of drag events on the list to allow scrolling
-        onPointerDown={(e) => e.stopPropagation()}
       >
         {tour.stops.map((stop, index) => {
           // Render audio stops with TourListItem

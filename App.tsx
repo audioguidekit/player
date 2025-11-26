@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AnimatePresence, useMotionValue } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { SheetType, Language } from './types';
 import { RatingSheet } from './components/sheets/RatingSheet';
 import { LanguageSheet } from './components/sheets/LanguageSheet';
@@ -47,7 +47,6 @@ const App: React.FC = () => {
       // URL has a stopId - show stop detail (but don't change audio)
       setShowStopDetail(true);
       setHasStarted(true);
-      setIsSheetExpanded(true);
     } else if (stopId === undefined && showStopDetail) {
       // URL changed to remove stopId - close stop detail
       setShowStopDetail(false);
@@ -75,9 +74,8 @@ const App: React.FC = () => {
   // Get current audio stop (type-safe)
   const currentAudioStop = currentStop?.type === 'audio' ? currentStop : undefined;
 
-  // Logic to hide mini player on tour start (collapsed sheet) to avoid redundancy with "Resume Tour" button
-  // Show only when sheet is expanded (Tour Detail) or when Stop Detail is open.
-  const shouldShowMiniPlayer = !!currentAudioStop && (isSheetExpanded || showStopDetail);
+  // Show mini player when tour has started (either in Tour Detail or Stop Detail)
+  const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
 
   // --- Handlers ---
 
@@ -91,13 +89,6 @@ const App: React.FC = () => {
       setCurrentStopId(firstAudioStop.id);
       setIsPlaying(true);
     }
-
-    // Expand the sheet to show details
-    setIsSheetExpanded(true);
-  };
-
-  const handleViewDetails = () => {
-    setIsSheetExpanded(true);
   };
 
   const handleStopClick = (clickedStopId: string) => {
@@ -271,57 +262,74 @@ const App: React.FC = () => {
         
         {/* Main Content Area */}
         <div className="flex-1 relative overflow-hidden">
-           {/* Background Layer (Tour Start Image) */}
-           <TourStart
-             tour={tour}
-             onOpenRating={() => setActiveSheet('RATING')}
-             onOpenLanguage={() => setActiveSheet('LANGUAGE')}
-             sheetY={sheetY}
-             collapsedY={collapsedY}
-           />
+           {/* Background Layer (Tour Start Image) - Only shown when tour hasn't started */}
+           {!hasStarted && (
+             <TourStart
+               tour={tour}
+               onOpenRating={() => setActiveSheet('RATING')}
+               onOpenLanguage={() => setActiveSheet('LANGUAGE')}
+               sheetY={sheetY}
+               collapsedY={collapsedY}
+             />
+           )}
 
-          {/* Main Interactive Sheet */}
-          <MainSheet
-            isExpanded={isSheetExpanded}
-            onExpand={() => setIsSheetExpanded(true)}
-            onCollapse={() => setIsSheetExpanded(false)}
-            sheetY={sheetY}
-            onLayoutChange={setCollapsedY}
-            startContent={
-              <StartCard
-                tour={tour}
-                hasStarted={hasStarted}
-                onAction={hasStarted ? handleViewDetails : handleStartTour}
-              />
-            }
-            detailContent={
-              <TourDetail
-                tour={tour}
-                currentStopId={currentStopId}
-                isPlaying={isPlaying}
-                onStopClick={handleStopClick}
-                onTogglePlay={handlePlayPause}
-                onStopPlayPause={handleStopPlayPause}
-                tourProgress={progressTracking.getRealtimeProgressPercentage(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                )}
-                consumedMinutes={progressTracking.getConsumedMinutes(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                ).consumed}
-                totalMinutes={progressTracking.getConsumedMinutes(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                ).total}
-                completedStopsCount={progressTracking.getCompletedStopsCount()}
-                isStopCompleted={progressTracking.isStopCompleted}
-              />
-            }
-          />
+          {/* Main Interactive Sheet - Only shown when tour hasn't started */}
+          {!hasStarted && (
+            <MainSheet
+              isExpanded={false}
+              onExpand={() => setIsSheetExpanded(true)}
+              onCollapse={() => setIsSheetExpanded(false)}
+              sheetY={sheetY}
+              onLayoutChange={setCollapsedY}
+              startContent={
+                <StartCard
+                  tour={tour}
+                  hasStarted={hasStarted}
+                  onAction={handleStartTour}
+                />
+              }
+              detailContent={null}
+            />
+          )}
+
+          {/* Full Screen Tour Detail - Shown when tour has started and stop detail is closed */}
+          <AnimatePresence>
+            {hasStarted && !showStopDetail && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="absolute inset-0 z-30 bg-white"
+              >
+                <TourDetail
+                  tour={tour}
+                  currentStopId={currentStopId}
+                  isPlaying={isPlaying}
+                  onStopClick={handleStopClick}
+                  onTogglePlay={handlePlayPause}
+                  onStopPlayPause={handleStopPlayPause}
+                  tourProgress={progressTracking.getRealtimeProgressPercentage(
+                    tour.stops,
+                    currentStopId,
+                    audioPlayer.progress
+                  )}
+                  consumedMinutes={progressTracking.getConsumedMinutes(
+                    tour.stops,
+                    currentStopId,
+                    audioPlayer.progress
+                  ).consumed}
+                  totalMinutes={progressTracking.getConsumedMinutes(
+                    tour.stops,
+                    currentStopId,
+                    audioPlayer.progress
+                  ).total}
+                  completedStopsCount={progressTracking.getCompletedStopsCount()}
+                  isStopCompleted={progressTracking.isStopCompleted}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Stop Detail - Full Screen Overlay */}
           <AnimatePresence>

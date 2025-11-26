@@ -107,9 +107,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   if (!currentStop) return null;
 
+  // Progress ring calculations for the new 64x64 SVG
   const strokeWidth = 2.5;
-  const size = 46;
-  const radius = (size - strokeWidth) / 2;
+  const svgSize = 64;
+  const radius = 29.25; // (64 - 2.5 - 2.5) / 2 = 29.25
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (visualProgress / 100) * circumference;
 
@@ -118,163 +119,108 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       exit={{ y: 100 }}
-      className="absolute bottom-6 left-4 right-4 z-[60]"
+      className="absolute bottom-0 left-0 right-0 z-[60]"
     >
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 pl-4 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center justify-between gap-3">
-        
-        {/* Info Section - Clickable to open full player */}
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-lg bg-gray-200 overflow-hidden shrink-0 shadow-sm">
-               <img src={currentStop.image} alt="" className="w-full h-full object-cover" />
-             </div>
-             <div className="overflow-hidden flex-1">
-                {/* Increased title to text-base for better legibility */}
-                <div ref={containerRef} className="overflow-hidden leading-tight">
-                  <motion.span
-                    ref={titleRef}
-                    animate={controls}
-                    className="font-bold text-base text-gray-900 whitespace-nowrap inline-block"
-                  >
-                    {currentStop.title}
-                  </motion.span>
-                </div>
-                {/* Increased subtitle to text-sm */}
-                <p className="text-sm font-medium truncate mt-0.5 flex items-center overflow-hidden">
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    {isPlaying && (
-                      <motion.span
-                        key="playing-text"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 25,
-                          mass: 0.8
-                        }}
-                        className="text-[#2dd482] mr-1.5"
-                        layout
-                      >
-                        Playing
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    {isPlaying && (
-                      <motion.span
-                        key="dot"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 25,
-                          mass: 0.8,
-                          delay: 0.05
-                        }}
-                        className="text-[#2dd482] mr-1.5"
-                        layout
-                      >
-                        •
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-
-                  <motion.span
-                    layout
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 25,
-                      mass: 0.8
-                    }}
-                    className="text-[#2dd482]"
-                  >
-                    {currentStop.duration}
-                  </motion.span>
-                </p>
-             </div>
-          </div>
+      {/* Bottom Sheet Style Container */}
+      <div className="bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border-t border-gray-100">
+        {/* Handle */}
+        <div className="w-full flex justify-center pt-3 pb-2">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); onRewind(); }}
-            className="p-2 text-gray-400 hover:text-gray-900 transition-all active:scale-90"
-          >
-            <BackwardIcon size={24} />
-          </button>
-          
-          <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-             {/* Progress Ring */}
-             <svg className="absolute inset-0 rotate-[-90deg] pointer-events-none" width={size} height={size}>
-               <circle
-                 stroke="#d1d5db" // gray-300 - more visible background
-                 strokeWidth={strokeWidth}
-                 fill="transparent"
-                 r={radius}
-                 cx={size / 2}
-                 cy={size / 2}
-               />
-               <circle
-                 stroke="#2dd482" // green progress indicator
-                 strokeWidth={strokeWidth}
-                 fill="transparent"
-                 r={radius}
-                 cx={size / 2}
-                 cy={size / 2}
-                 strokeDasharray={circumference}
-                 strokeDashoffset={offset}
-                 strokeLinecap="round"
-                 style={{ transition: 'stroke-dashoffset 0.1s linear' }}
-               />
-             </svg>
-
+        {/* Content */}
+        <div className="px-6 pb-6 pt-2">
+          {/* Controls Row */}
+          <div className="flex items-center justify-center gap-4 mb-4">
+            {/* Skip Back Button */}
             <button
-              onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-              className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-sm z-10 overflow-hidden relative"
+              onClick={(e) => { e.stopPropagation(); onRewind(); }}
+              className="w-12 h-12 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-500 transition-colors shadow-md"
             >
-              <AnimatePresence mode="popLayout" initial={false}>
-                {isPlaying ? (
-                   <motion.div
-                     key="pause"
-                     variants={iconVariants}
-                     initial="initial"
-                     animate="animate"
-                     exit="exit"
-                     transition={iconTransition}
-                     className="absolute inset-0 flex items-center justify-center"
-                   >
-                     <Pause size={18} fill="currentColor" />
-                   </motion.div>
-                ) : (
-                  <motion.div
-                    key="play"
-                    variants={iconVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    transition={iconTransition}
-                    className="absolute inset-0 flex items-center justify-center pl-0.5"
-                  >
-                    <Play size={18} fill="currentColor" className="" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <BackwardIcon size={24} />
+            </button>
+
+            {/* Main Play/Pause Button with Progress Ring */}
+            <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
+               {/* Progress Ring */}
+               <svg className="absolute inset-0 rotate-[-90deg] pointer-events-none" width={64} height={64}>
+                 <circle
+                   stroke="#d1d5db"
+                   strokeWidth={2.5}
+                   fill="transparent"
+                   r={29.25}
+                   cx={32}
+                   cy={32}
+                 />
+                 <circle
+                   stroke="#2dd482"
+                   strokeWidth={2.5}
+                   fill="transparent"
+                   r={29.25}
+                   cx={32}
+                   cy={32}
+                   strokeDasharray={radius * 2 * Math.PI}
+                   strokeDashoffset={offset}
+                   strokeLinecap="round"
+                   style={{ transition: 'stroke-dashoffset 0.1s linear' }}
+                 />
+               </svg>
+
+              <button
+                onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
+                className="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg z-10 overflow-hidden relative"
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {isPlaying ? (
+                     <motion.div
+                       key="pause"
+                       variants={iconVariants}
+                       initial="initial"
+                       animate="animate"
+                       exit="exit"
+                       transition={iconTransition}
+                       className="absolute inset-0 flex items-center justify-center"
+                     >
+                       <Pause size={24} fill="currentColor" />
+                     </motion.div>
+                  ) : (
+                    <motion.div
+                      key="play"
+                      variants={iconVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      transition={iconTransition}
+                      className="absolute inset-0 flex items-center justify-center pl-0.5"
+                    >
+                      <Play size={24} fill="currentColor" className="" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            </div>
+
+            {/* Skip Forward Button */}
+            <button
+               onClick={(e) => { e.stopPropagation(); onForward(); }}
+               className="w-12 h-12 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-500 transition-colors shadow-md"
+            >
+              <ForwardIcon size={24} />
             </button>
           </div>
 
-          <button
-             onClick={(e) => { e.stopPropagation(); onForward(); }}
-             className="p-2 text-gray-400 hover:text-gray-900 transition-all active:scale-90"
-          >
-            <ForwardIcon size={24} />
-          </button>
+          {/* Object Name Label */}
+          <div className="text-center cursor-pointer" onClick={onClick}>
+            <div ref={containerRef} className="overflow-hidden leading-tight">
+              <motion.span
+                ref={titleRef}
+                animate={controls}
+                className="font-semibold text-base text-gray-900 whitespace-nowrap inline-block"
+              >
+                {currentStop.title}
+              </motion.span>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
