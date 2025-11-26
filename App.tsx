@@ -236,99 +236,59 @@ const App: React.FC = () => {
         
         {/* Main Content Area */}
         <div className="flex-1 relative overflow-hidden bg-black">
-          <AnimatePresence>
-            {!hasStarted ? (
-              // START SCREEN - Background + Card
-              <motion.div key="start-screen" className="absolute inset-0">
-                {/* Background Image with exit animation */}
-                <motion.div
-                  initial={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 1.05, opacity: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="absolute inset-0"
-                >
-                  <TourStart
-                    tour={tour}
-                    onOpenRating={() => setActiveSheet('RATING')}
-                    onOpenLanguage={() => setActiveSheet('LANGUAGE')}
-                    sheetY={sheetY}
-                    collapsedY={collapsedY}
-                    isVisible={true}
-                  />
-                </motion.div>
+          {/* Background Image - Always Visible */}
+          <TourStart
+            tour={tour}
+            onOpenRating={() => setActiveSheet('RATING')}
+            onOpenLanguage={() => setActiveSheet('LANGUAGE')}
+            sheetY={sheetY}
+            collapsedY={collapsedY}
+            isVisible={true}
+          />
 
-                {/* THE CARD - Will morph to fullscreen */}
-                <motion.div
-                  layoutId="tour-container"
-                  className="absolute bottom-0 left-0 right-0 bg-white overflow-hidden z-20"
-                  style={{
-                    borderTopLeftRadius: 40,
-                    borderTopRightRadius: 40,
-                  }}
-                  transition={{ type: "spring", stiffness: 150, damping: 25 }}
-                >
-                  {/* Card content - fades out on exit */}
-                  <motion.div
-                    initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <StartCard
-                      tour={tour}
-                      hasStarted={!!currentStopId}
-                      onAction={handleStartTour}
-                    />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-            ) : (
-              // PLAYER SCREEN - Fullscreen white container
-              <motion.div key="player-screen" className="absolute inset-0">
-                {/* THE CARD EXPANDED - Matches layoutId */}
-                <motion.div
-                  layoutId="tour-container"
-                  className="absolute inset-0 bg-white z-30"
-                  transition={{ type: "spring", stiffness: 150, damping: 25 }}
-                >
-                  {/* Player content - fades in */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ delay: 0.15, duration: 0.25 }}
-                    className="h-full w-full"
-                  >
-                    <TourDetail
-                      tour={tour}
-                      currentStopId={currentStopId}
-                      isPlaying={isPlaying}
-                      onStopClick={handleStopClick}
-                      onTogglePlay={handlePlayPause}
-                      onStopPlayPause={handleStopPlayPause}
-                      onBack={handleBackToStart}
-                      tourProgress={progressTracking.getRealtimeProgressPercentage(
-                        tour.stops,
-                        currentStopId,
-                        audioPlayer.progress
-                      )}
-                      consumedMinutes={progressTracking.getConsumedMinutes(
-                        tour.stops,
-                        currentStopId,
-                        audioPlayer.progress
-                      ).consumed}
-                      totalMinutes={progressTracking.getConsumedMinutes(
-                        tour.stops,
-                        currentStopId,
-                        audioPlayer.progress
-                      ).total}
-                      completedStopsCount={progressTracking.getCompletedStopsCount()}
-                      isStopCompleted={progressTracking.isStopCompleted}
-                    />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Main Sheet - Draggable bottom sheet that expands to fullscreen */}
+          <MainSheet
+            isExpanded={hasStarted}
+            onExpand={handleStartTour}
+            onCollapse={handleBackToStart}
+            sheetY={sheetY}
+            onLayoutChange={setCollapsedY}
+            startContent={
+              <StartCard
+                tour={tour}
+                hasStarted={!!currentStopId}
+                onAction={handleStartTour}
+              />
+            }
+            detailContent={
+              <TourDetail
+                tour={tour}
+                currentStopId={currentStopId}
+                isPlaying={isPlaying}
+                onStopClick={handleStopClick}
+                onTogglePlay={handlePlayPause}
+                onStopPlayPause={handleStopPlayPause}
+                onBack={handleBackToStart}
+                tourProgress={progressTracking.getRealtimeProgressPercentage(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                )}
+                consumedMinutes={progressTracking.getConsumedMinutes(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                ).consumed}
+                totalMinutes={progressTracking.getConsumedMinutes(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                ).total}
+                completedStopsCount={progressTracking.getCompletedStopsCount()}
+                isStopCompleted={progressTracking.isStopCompleted}
+              />
+            }
+          />
 
             {/* Global Floating Mini Player */}
             <AnimatePresence>

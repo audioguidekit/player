@@ -108,7 +108,7 @@ export const TourDetail: React.FC<TourDetailProps> = ({
 
           {/* Time Remaining Text */}
           <div className="text-sm font-medium text-gray-500 whitespace-nowrap">
-            <AnimatedCounter value={totalMinutes - consumedMinutes} /> minutes left
+            <AnimatedCounter value={totalMinutes - consumedMinutes} /> mins left
           </div>
         </div>
       </motion.div>

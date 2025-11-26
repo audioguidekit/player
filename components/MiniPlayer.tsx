@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useAnimationControls } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { AudioStop } from '../types';
 import { ForwardIcon } from './icons/ForwardIcon';
 import { BackwardIcon } from './icons/BackwardIcon';
+import { BottomSheet } from './BottomSheet';
 
 interface MiniPlayerProps {
   currentStop: AudioStop | undefined;
@@ -34,9 +35,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onEnd,
   progress = 0
 }) => {
-  // Minimized state - when true, only handle is visible
-  const [isMinimized, setIsMinimized] = useState(false);
-  const dragY = useMotionValue(0);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // Use real progress from audio player
   const visualProgress = Math.max(0, Math.min(100, progress || 0));
@@ -118,58 +117,70 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (visualProgress / 100) * circumference;
 
-  // Height of the content when expanded (approximately)
-  const expandedHeight = 180;
-  const minimizedOffset = expandedHeight - 48; // Show handle area fully (48px)
+  // Minimized bar when collapsed
+  if (!isExpanded) {
+    return (
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        className="absolute bottom-0 left-0 right-0 z-[60]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div className="bg-white border-t border-gray-200 px-6 py-3 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] rounded-t-2xl">
+          {/* Expandable area - title */}
+          <div
+            onClick={() => setIsExpanded(true)}
+            className="flex items-center flex-1 min-w-0 cursor-pointer"
+          >
+            <span className="font-medium text-sm text-gray-900 truncate">{currentStop.title}</span>
+          </div>
 
-  return (
-    <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{
-        y: isMinimized ? minimizedOffset : 0,
-        opacity: 1
-      }}
-      exit={{ y: 100, opacity: 0 }}
-      drag="y"
-      dragConstraints={{ top: 0, bottom: minimizedOffset }}
-      dragElastic={{ top: 0.05, bottom: 0.15 }}
-      dragMomentum={false}
-      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-      style={{ y: dragY }}
-      onDragEnd={(_, info) => {
-        // Reset drag position
-        dragY.set(0);
-
-        // Decide state based on position and velocity
-        const shouldMinimize = info.offset.y > 50 || (info.offset.y > 30 && info.velocity.y > 200);
-        const shouldExpand = info.offset.y < -20 || (info.offset.y < -10 && info.velocity.y < -200);
-
-        if (!isMinimized && shouldMinimize) {
-          setIsMinimized(true);
-        } else if (isMinimized && shouldExpand) {
-          setIsMinimized(false);
-        }
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 400,
-        damping: 30,
-        mass: 0.8
-      }}
-      className="absolute bottom-0 left-0 right-0 z-[60]"
-    >
-      {/* Bottom Sheet Style Container */}
-      <div className="relative bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border-t border-gray-100">
-        {/* Extended white background below viewport */}
-        <div className="absolute top-full left-0 right-0 h-[200px] bg-white" />
-
-        {/* Handle */}
-        <div className="w-full flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          {/* Play/Pause button - functional */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePlay();
+            }}
+            className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shrink-0 hover:bg-gray-800 active:scale-95 transition-all relative overflow-hidden"
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              {isPlaying ? (
+                <motion.div
+                  key="pause-mini"
+                  variants={iconVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={iconTransition}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <Pause size={16} fill="currentColor" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="play-mini"
+                  variants={iconVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={iconTransition}
+                  className="absolute inset-0 flex items-center justify-center pl-0.5"
+                >
+                  <Play size={16} fill="currentColor" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </button>
         </div>
+      </motion.div>
+    );
+  }
 
-        {/* Content */}
-        <div className="px-6 pb-6 pt-2">
+  // Expanded full player
+  return (
+    <BottomSheet isOpen={!!currentStop} onClose={() => setIsExpanded(false)} showBackdrop={false}>
+      <div className="px-6 pb-6 pt-2" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
           {/* Controls Row */}
           <div className="flex items-center justify-center gap-4 mb-4">
             {/* Skip Back Button */}
@@ -249,20 +260,19 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             </button>
           </div>
 
-          {/* Object Name Label */}
-          <div className="text-center cursor-pointer" onClick={onClick}>
-            <div ref={containerRef} className="overflow-hidden leading-tight">
-              <motion.span
-                ref={titleRef}
-                animate={controls}
-                className="font-semibold text-base text-gray-900 whitespace-nowrap inline-block"
-              >
-                {currentStop.title}
-              </motion.span>
-            </div>
+        {/* Object Name Label */}
+        <div className="text-center cursor-pointer" onClick={onClick}>
+          <div ref={containerRef} className="overflow-hidden leading-tight">
+            <motion.span
+              ref={titleRef}
+              animate={controls}
+              className="font-semibold text-base text-gray-900 whitespace-nowrap inline-block"
+            >
+              {currentStop.title}
+            </motion.span>
           </div>
         </div>
       </div>
-    </motion.div>
+    </BottomSheet>
   );
 };

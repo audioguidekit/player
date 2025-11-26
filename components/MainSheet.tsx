@@ -32,18 +32,17 @@ export const MainSheet: React.FC<MainSheetProps> = ({
   const [containerHeight, setContainerHeight] = useState(800);
 
   // Constants
-  const EXPANDED_OFFSET = 80; 
+  const EXPANDED_OFFSET = 80;
   const EXPANDED_Y = 0; // Top of the sheet when expanded
-  const HANDLE_AREA_HEIGHT = 40; // Approx height of the handle area
   const MARGIN_BOTTOM = 32; // Floating gap from bottom
   const MARGIN_SIDE = 20; // Floating gap from sides
 
   // Calculate Collapsed Position
-  // We want the visual card to be (StartContent + Handle) tall.
+  // We want the visual card to be StartContent tall.
   // We want it to sit MARGIN_BOTTOM pixels from the bottom of the container.
   // Layout Top is anchored at EXPANDED_OFFSET.
   // So we translate down by: (ContainerHeight - MARGIN_BOTTOM - CardHeight - EXPANDED_OFFSET)
-  const cardHeight = startContentHeight + HANDLE_AREA_HEIGHT;
+  const cardHeight = startContentHeight;
   const rawCollapsedY = containerHeight - MARGIN_BOTTOM - cardHeight - EXPANDED_OFFSET;
   const COLLAPSED_Y = Math.max(0, rawCollapsedY);
 
@@ -119,6 +118,8 @@ export const MainSheet: React.FC<MainSheetProps> = ({
   const bottomInset = useTransform(y, inputRange, [0, COLLAPSED_Y + MARGIN_BOTTOM]);
 
   const bottomRadius = useTransform(y, inputRange, [0, 40]); // 40px = 2.5rem
+  const topRadius = useTransform(y, inputRange, [0, 40]); // 40px = 2.5rem
+  const topOffset = useTransform(y, inputRange, [0, EXPANDED_OFFSET]); // Fullscreen when expanded, offset when collapsed
 
   const startOpacity = useTransform(y, inputRange, [0, 1]);
   const startPointerEvents = useTransform(y, (latest) => latest > (COLLAPSED_Y / 2) ? 'auto' : 'none');
@@ -138,32 +139,26 @@ export const MainSheet: React.FC<MainSheetProps> = ({
       )}
 
       <motion.div
-        drag="y"
+        drag={isExpanded ? false : "y"}
         dragConstraints={{ top: EXPANDED_Y, bottom: COLLAPSED_Y }}
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         animate={controls}
         initial={{ y: 500 }} // Start slightly lower to prevent flash
-        style={{ 
-          y, 
-          top: EXPANDED_OFFSET,
+        style={{
+          y,
+          top: topOffset,
           // Animated constraints for floating card effect
           left: sideInset,
           right: sideInset,
           bottom: bottomInset,
+          borderTopLeftRadius: topRadius,
+          borderTopRightRadius: topRadius,
           borderBottomLeftRadius: bottomRadius,
           borderBottomRightRadius: bottomRadius
         }}
-        className="absolute bg-white rounded-t-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-20 flex flex-col pointer-events-auto"
+        className="absolute bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-20 flex flex-col pointer-events-auto"
       >
-        {/* Drag Handle Area */}
-        <div 
-          className="w-full h-10 shrink-0 cursor-grab active:cursor-grabbing z-30 relative bg-white flex items-center justify-center" 
-          onClick={isExpanded ? onCollapse : onExpand}
-        >
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
-        </div>
-
         {/* Content Area */}
         <div className="relative flex-1 w-full">
           

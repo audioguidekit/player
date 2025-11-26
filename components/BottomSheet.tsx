@@ -8,14 +8,16 @@ interface BottomSheetProps {
   children: React.ReactNode;
   title?: string;
   className?: string;
+  showBackdrop?: boolean;
 }
 
-export const BottomSheet: React.FC<BottomSheetProps> = ({ 
-  isOpen, 
-  onClose, 
-  children, 
+export const BottomSheet: React.FC<BottomSheetProps> = ({
+  isOpen,
+  onClose,
+  children,
   title,
-  className = ""
+  className = "",
+  showBackdrop = true
 }) => {
   useEffect(() => {
     // Body scroll lock logic could go here
@@ -26,15 +28,17 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.3 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black z-[60]"
-          />
-          
+          {showBackdrop && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.3 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={onClose}
+              className="absolute inset-0 bg-black z-[60]"
+            />
+          )}
+
           {/* Sheet */}
           <motion.div
             initial={{ y: '100%' }}
