@@ -77,7 +77,7 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
           </div>
 
           {/* Time Remaining Text */}
-          <div className="text-sm font-medium text-gray-500 whitespace-nowrap">
+          <div className="text-sm text-gray-500 whitespace-nowrap">
             <AnimatedCounter value={totalMinutes - consumedMinutes} /> mins left
           </div>
         </div>

@@ -5,19 +5,25 @@ interface AnimatedCheckmarkProps {
   isVisible: boolean;
   size?: number;
   uniqueKey?: string;
+  className?: string;
 }
 
 export const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
   isVisible,
   size = 8,
-  uniqueKey = 'checkmark'
+  uniqueKey = 'checkmark',
+  className = ''
 }) => {
   const circleSize = size * 3.5; // 28px for size 8
-  const svgSize = size * 1.75; // 14px for size 8
+  const svgSize = size * 1.75;   // 14px for size 8
 
   return (
     <div
-      className="absolute top-4 right-4 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm"
+      className={`
+        rounded-full flex items-center justify-center
+        ${isVisible ? 'bg-[#86efac] border-0' : 'bg-transparent border border-neutral-200'}
+        ${className}
+      `}
       style={{ width: circleSize, height: circleSize }}
     >
       <AnimatePresence mode="wait">
@@ -32,7 +38,7 @@ export const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
           >
             <motion.path
               d="M1 4L3.5 6.5L9 1"
-              stroke="#000000"
+              stroke="#ffffff" // white checkmark
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -40,11 +46,7 @@ export const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{
-                pathLength: {
-                  type: "spring",
-                  duration: 0.35,
-                  bounce: 0,
-                },
+                pathLength: { type: 'spring', duration: 0.35, bounce: 0 },
                 opacity: { duration: 0.01 }
               }}
             />

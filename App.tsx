@@ -50,15 +50,16 @@ const App: React.FC = () => {
 
   // Main Sheet State (Collapsed vs Expanded)
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
-  
+
   // Shared Animation State
   const sheetY = useMotionValue(0);
   const [collapsedY, setCollapsedY] = useState(0);
-  
+
   // Tour State
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [currentStopId, setCurrentStopId] = useState<string | null>(null);
+  const [scrollToStopId, setScrollToStopId] = useState<string | null>(null);
 
   // Tour Progress (Percentage) - Animated in TourDetail
   const [tourProgress, setTourProgress] = useState(0);
@@ -251,7 +252,7 @@ const App: React.FC = () => {
     <div className="md:min-h-screen bg-white md:bg-zinc-800 flex md:items-center md:justify-center p-0 md:p-8 font-sans" style={{ height: '100dvh' }}>
       {/* Mobile Frame Container */}
       <div className="w-full max-w-[400px] md:h-[844px] bg-white md:rounded-[2.5rem] relative overflow-hidden shadow-2xl flex flex-col" style={{ height: '100%' }}>
-        
+
         {/* Main Content Area */}
         <div className={`flex-1 relative overflow-hidden ${hasStarted ? 'bg-white' : 'bg-black'}`}>
           {/* Background Image - Always Visible */}
@@ -309,33 +310,45 @@ const App: React.FC = () => {
                 ).total}
                 completedStopsCount={progressTracking.getCompletedStopsCount()}
                 isStopCompleted={progressTracking.isStopCompleted}
+                scrollToStopId={scrollToStopId}
+                onScrollComplete={() => setScrollToStopId(null)}
               />
             }
           />
 
-            {/* Global Floating Mini Player */}
-            <AnimatePresence>
-              {shouldShowMiniPlayer && currentAudioStop && (
-                <MiniPlayer
-                  currentStop={currentAudioStop}
-                  isPlaying={isPlaying}
-                  onTogglePlay={handlePlayPause}
-                  onRewind={() => audioPlayer.skipBackward(15)}
-                  onForward={() => audioPlayer.skipForward(15)}
-                  onClick={() => {}}
-                  onEnd={handleAudioComplete}
-                  progress={audioPlayer.progress}
-                  isExpanded={isMiniPlayerExpanded}
-                  onToggleExpanded={setIsMiniPlayerExpanded}
-                />
-              )}
-            </AnimatePresence>
+          {/* Global Floating Mini Player */}
+          <AnimatePresence>
+            {shouldShowMiniPlayer && currentAudioStop && (
+              <MiniPlayer
+                currentStop={currentAudioStop}
+                isPlaying={isPlaying}
+                onTogglePlay={handlePlayPause}
+                onRewind={() => audioPlayer.skipBackward(15)}
+                onForward={() => audioPlayer.skipForward(15)}
+                onRewind={() => audioPlayer.skipBackward(15)}
+                onForward={() => audioPlayer.skipForward(15)}
+                onClick={() => {
+                  if (currentAudioStop) {
+                    setScrollToStopId(currentAudioStop.id);
+                    // If sheet is collapsed, expand it to show the list
+                    if (!hasStarted) {
+                      handleStartTour();
+                    }
+                  }
+                }}
+                onEnd={handleAudioComplete}
+                progress={audioPlayer.progress}
+                isExpanded={isMiniPlayerExpanded}
+                onToggleExpanded={setIsMiniPlayerExpanded}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Global Sheets */}
-        <RatingSheet 
-          isOpen={activeSheet === 'RATING'} 
-          onClose={closeSheet} 
+        <RatingSheet
+          isOpen={activeSheet === 'RATING'}
+          onClose={closeSheet}
         />
 
         <LanguageSheet
