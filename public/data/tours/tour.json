@@ -133,6 +133,20 @@
       "id": "17",
       "type": "text",
       "content": "Did you know? The Sagrada Família has been under construction since 1882 and is expected to be completed in 2026, marking the centenary of Gaudí's death. It will have taken over 140 years to build this architectural wonder."
+    },
+    {
+      "id": "18",
+      "type": "rating",
+      "question": "How was your Barcelona experience?",
+      "description": "We'd love to hear your thoughts about this tour!"
+    },
+    {
+      "id": "19",
+      "type": "email",
+      "title": "Get More Barcelona Insights",
+      "description": "Subscribe to receive exclusive tips, hidden gems, and updates about Barcelona tours.",
+      "placeholder": "your@email.com",
+      "buttonText": "Subscribe Now"
     }
   ]
 }
