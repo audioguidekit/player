@@ -32,19 +32,11 @@ export const MainSheet: React.FC<MainSheetProps> = ({
   const [containerHeight, setContainerHeight] = useState(800);
 
   // Constants
-  const EXPANDED_OFFSET = 80;
-  const EXPANDED_Y = 0; // Top of the sheet when expanded
-  const MARGIN_BOTTOM = 32; // Floating gap from bottom
-  const MARGIN_SIDE = 20; // Floating gap from sides
+  const EXPANDED_Y = 0; // Fully expanded (top of viewport)
 
   // Calculate Collapsed Position
-  // We want the visual card to be StartContent tall.
-  // We want it to sit MARGIN_BOTTOM pixels from the bottom of the container.
-  // Layout Top is anchored at EXPANDED_OFFSET.
-  // So we translate down by: (ContainerHeight - MARGIN_BOTTOM - CardHeight - EXPANDED_OFFSET)
-  const cardHeight = startContentHeight;
-  const rawCollapsedY = containerHeight - MARGIN_BOTTOM - cardHeight - EXPANDED_OFFSET;
-  const COLLAPSED_Y = Math.max(0, rawCollapsedY);
+  // Sheet should show only the start content height from the bottom
+  const COLLAPSED_Y = containerHeight - startContentHeight;
 
   // Measure content on mount and resize
   useEffect(() => {
@@ -104,26 +96,13 @@ export const MainSheet: React.FC<MainSheetProps> = ({
 
   // Interpolations
   const inputRange = [EXPANDED_Y, COLLAPSED_Y];
-  
-  // Floating Card Effect Interpolations
-  
-  // Side Margins: 0px (Expanded) -> 20px (Collapsed)
-  const sideInset = useTransform(y, inputRange, [0, MARGIN_SIDE]); 
-  
-  // Bottom Inset: 0px (Expanded) -> Recalculated to ensure visual bottom aligns with margin
-  // Visual Bottom = ContainerHeight - bottomInset + y
-  // We want Visual Bottom @ COLLAPSED_Y = ContainerHeight - MARGIN_BOTTOM
-  // ContainerHeight - bottomInset + COLLAPSED_Y = ContainerHeight - MARGIN_BOTTOM
-  // bottomInset = COLLAPSED_Y + MARGIN_BOTTOM
-  const bottomInset = useTransform(y, inputRange, [0, COLLAPSED_Y + MARGIN_BOTTOM]);
 
-  const bottomRadius = useTransform(y, inputRange, [0, 40]); // 40px = 2.5rem
-  const topRadius = useTransform(y, inputRange, [0, 40]); // 40px = 2.5rem
-  const topOffset = useTransform(y, inputRange, [0, EXPANDED_OFFSET]); // Fullscreen when expanded, offset when collapsed
+  // Border radius: 0 when expanded (fullscreen), 40px when collapsed (bottom sheet)
+  const topRadius = useTransform(y, inputRange, [0, 40]);
 
   const startOpacity = useTransform(y, inputRange, [0, 1]);
   const startPointerEvents = useTransform(y, (latest) => latest > (COLLAPSED_Y / 2) ? 'auto' : 'none');
-  
+
   const detailOpacity = useTransform(y, inputRange, [1, 0]);
   const detailPointerEvents = useTransform(y, (latest) => latest < (COLLAPSED_Y / 2) ? 'auto' : 'none');
 
@@ -144,20 +123,14 @@ export const MainSheet: React.FC<MainSheetProps> = ({
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         animate={controls}
-        initial={{ y: 500 }} // Start slightly lower to prevent flash
+        initial={{ y: containerHeight }} // Start off-screen at bottom
         style={{
           y,
-          top: topOffset,
-          // Animated constraints for floating card effect
-          left: sideInset,
-          right: sideInset,
-          bottom: bottomInset,
           borderTopLeftRadius: topRadius,
           borderTopRightRadius: topRadius,
-          borderBottomLeftRadius: bottomRadius,
-          borderBottomRightRadius: bottomRadius
+          top: isExpanded ? 'calc(-1 * env(safe-area-inset-top, 0px))' : '0',
         }}
-        className="absolute bg-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden z-20 flex flex-col pointer-events-auto"
+        className="absolute inset-x-0 bottom-0 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.1)] overflow-hidden z-20 flex flex-col pointer-events-auto"
       >
         {/* Content Area */}
         <div className="relative flex-1 w-full">

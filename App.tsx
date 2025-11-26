@@ -59,9 +59,12 @@ const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [currentStopId, setCurrentStopId] = useState<string | null>(null);
-  
+
   // Tour Progress (Percentage) - Animated in TourDetail
   const [tourProgress, setTourProgress] = useState(0);
+
+  // Mini Player State - persists across navigation
+  const [isMiniPlayerExpanded, setIsMiniPlayerExpanded] = useState(true);
 
   // Derived State
   const currentStop = currentStopId && tour ? tour.stops.find(s => s.id === currentStopId) : undefined;
@@ -250,7 +253,7 @@ const App: React.FC = () => {
       <div className="w-full max-w-[400px] md:h-[844px] bg-white md:rounded-[2.5rem] relative overflow-hidden shadow-2xl flex flex-col" style={{ height: '100%' }}>
         
         {/* Main Content Area */}
-        <div className="flex-1 relative overflow-hidden bg-black">
+        <div className={`flex-1 relative overflow-hidden ${hasStarted ? 'bg-white' : 'bg-black'}`}>
           {/* Background Image - Always Visible */}
           <TourStart
             tour={tour}
@@ -322,6 +325,8 @@ const App: React.FC = () => {
                   onClick={() => {}}
                   onEnd={handleAudioComplete}
                   progress={audioPlayer.progress}
+                  isExpanded={isMiniPlayerExpanded}
+                  onToggleExpanded={setIsMiniPlayerExpanded}
                 />
               )}
             </AnimatePresence>

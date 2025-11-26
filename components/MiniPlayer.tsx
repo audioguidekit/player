@@ -15,6 +15,8 @@ interface MiniPlayerProps {
   onClick: () => void;
   onEnd?: () => void;
   progress?: number;
+  isExpanded?: boolean;
+  onToggleExpanded?: (expanded: boolean) => void;
 }
 
 const iconVariants = {
@@ -33,9 +35,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onRewind,
   onClick,
   onEnd,
-  progress = 0
+  progress = 0,
+  isExpanded: externalIsExpanded,
+  onToggleExpanded
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // Use external state if provided, otherwise fall back to local state
+  const [localIsExpanded, setLocalIsExpanded] = useState(true);
+  const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : localIsExpanded;
+  const setIsExpanded = onToggleExpanded || setLocalIsExpanded;
 
   // Use real progress from audio player
   const visualProgress = Math.max(0, Math.min(100, progress || 0));
@@ -179,7 +186,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   // Expanded full player
   return (
-    <BottomSheet isOpen={!!currentStop} onClose={() => setIsExpanded(false)} showBackdrop={false}>
+    <BottomSheet
+      isOpen={!!currentStop}
+      onClose={() => setIsExpanded(false)}
+      showBackdrop={false}
+      allowDragClose={false}
+    >
       <div className="px-6 pb-6 pt-2" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
           {/* Controls Row */}
           <div className="flex items-center justify-center gap-4 mb-4">

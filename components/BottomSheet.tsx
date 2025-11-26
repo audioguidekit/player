@@ -9,6 +9,7 @@ interface BottomSheetProps {
   title?: string;
   className?: string;
   showBackdrop?: boolean;
+  allowDragClose?: boolean; // Allow closing via drag gesture
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -17,7 +18,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   children,
   title,
   className = "",
-  showBackdrop = true
+  showBackdrop = true,
+  allowDragClose = true
 }) => {
   useEffect(() => {
     // Body scroll lock logic could go here
@@ -44,15 +46,21 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            // Slower spring: stiffness 150 (was 250)
-            transition={{ type: 'spring', damping: 25, stiffness: 150, mass: 0.8 }}
+            // Responsive spring for quick gestures
+            transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.5 }}
             drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={0.05}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.1}
+            dragMomentum={false}
             onDragEnd={(_, info) => {
-              if (info.offset.y > 100 || info.velocity.y > 500) {
-                onClose();
+              // Snap behavior: if dragged down beyond threshold, minimize (call onClose)
+              // Otherwise, snap back to expanded
+              const shouldMinimize = info.offset.y > 50 || info.velocity.y > 300;
+
+              if (shouldMinimize) {
+                onClose(); // This will minimize, not close completely
               }
+              // If not minimizing, spring will automatically snap back to position 0
             }}
             // h-auto to hug content, max-h-[90%] to fit screen
             className={`absolute bottom-0 left-0 right-0 bg-white z-[70] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] flex flex-col h-auto max-h-[90%] ${className}`}
