@@ -13,6 +13,7 @@ import { useTourData, useLanguages } from './hooks/useDataLoader';
 import { DEFAULT_TOUR_ID } from './src/config/tours';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { useProgressTracking } from './hooks/useProgressTracking';
+import { useDownloadManager } from './hooks/useDownloadManager';
 
 const App: React.FC = () => {
   // Get route params
@@ -25,6 +26,9 @@ const App: React.FC = () => {
 
   // Progress tracking
   const progressTracking = useProgressTracking(tourId || DEFAULT_TOUR_ID);
+
+  // Download manager for offline support
+  const downloadManager = useDownloadManager(tour);
 
   // Navigation & State
   const [activeSheet, setActiveSheet] = useState<SheetType>('NONE');
@@ -67,6 +71,12 @@ const App: React.FC = () => {
 
   const handleStartTour = () => {
     if (!tour || tour.stops.length === 0) return;
+
+    // If tour requires offline download, check if it's downloaded
+    if (tour.offlineAvailable && !downloadManager.isDownloaded) {
+      console.log('Tour requires offline download. Please download first.');
+      return;
+    }
 
     setHasStarted(true);
 
@@ -258,6 +268,11 @@ const App: React.FC = () => {
                 tour={tour}
                 hasStarted={!!currentStopId}
                 onAction={handleStartTour}
+                isDownloading={downloadManager.isDownloading}
+                isDownloaded={downloadManager.isDownloaded}
+                downloadProgress={downloadManager.downloadProgress.percentage}
+                onDownload={downloadManager.startDownload}
+                downloadError={downloadManager.error}
               />
             }
             detailContent={
