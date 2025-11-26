@@ -84,6 +84,7 @@ export const useAudioPlayer = ({
     audio.preload = 'auto';
     audio.volume = 1.0;
     audio.muted = false;
+    audio.load(); // Ensure loading starts immediately
 
     // Set up event listeners
     const handleLoadedMetadata = () => {
@@ -133,20 +134,16 @@ export const useAudioPlayer = ({
     audio.addEventListener('pause', handlePause);
 
     // If isPlaying is true when we create a new audio element, start playing it
+    // This handles the case where we auto-advance to the next track
     if (isPlaying) {
-      // Wait for audio to be ready before auto-playing
-      if (audio.readyState >= 2) {
-        audio.play().catch(() => {
-          // Auto-play failed
+      console.log('🎵 isPlaying is true, auto-playing new audio');
+      const handleCanPlay = () => {
+        console.log('✅ New audio ready, auto-playing');
+        audio.play().catch((error) => {
+          console.error('❌ Auto-play failed:', error);
         });
-      } else {
-        const handleCanPlayAutoStart = () => {
-          audio.play().catch(() => {
-            // Auto-play failed
-          });
-        };
-        audio.addEventListener('canplay', handleCanPlayAutoStart, { once: true });
-      }
+      };
+      audio.addEventListener('canplay', handleCanPlay, { once: true });
     }
 
     return () => {
@@ -158,11 +155,11 @@ export const useAudioPlayer = ({
       audio.removeEventListener('pause', handlePause);
       audio.pause();
     };
-  }, [audioUrl]);
+  }, [audioUrl, isPlaying]);
 
   // Handle play/pause
   useEffect(() => {
-    console.log('🎮 Play/pause effect - isPlaying:', isPlaying);
+    console.log('🎮 Play/pause effect - isPlaying:', isPlaying, 'url:', audioUrl);
     if (!audioRef.current) {
       console.log('⚠️ No audio ref');
       return;
@@ -198,7 +195,7 @@ export const useAudioPlayer = ({
       console.log('⏸️ Pausing audio');
       audio.pause();
     }
-  }, [isPlaying]);
+  }, [isPlaying, audioUrl]);
 
   const seek = (time: number) => {
     if (audioRef.current) {

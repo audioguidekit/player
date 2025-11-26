@@ -124,9 +124,20 @@ const App: React.FC = () => {
     }
   };
 
+  const [isAudioCompleting, setIsAudioCompleting] = useState(false);
+
   // Auto-advance to next track when audio ends (without navigation)
-  const handleAudioEnded = useCallback(() => {
+  const handleAudioEnded = useCallback(async () => {
     if (!currentStopId || !tour) return;
+
+    // Show completion animation
+    setIsAudioCompleting(true);
+
+    // Wait for animation
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    setIsAudioCompleting(false);
+
     const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
     if (currentIndex !== -1) {
       // Find next audio stop
@@ -187,7 +198,7 @@ const App: React.FC = () => {
     if (!currentStopId) return;
 
     // Mark as completed when reaching 85%
-    if (percentComplete >= 85 && !progressTracking.isStopCompleted(currentStopId)) {
+    if (percentComplete >= 100 && !progressTracking.isStopCompleted(currentStopId)) {
       console.log(`Stop ${currentStopId} completed at ${percentComplete}%`);
       progressTracking.markStopCompleted(currentStopId);
     }
@@ -325,8 +336,6 @@ const App: React.FC = () => {
                 onTogglePlay={handlePlayPause}
                 onRewind={() => audioPlayer.skipBackward(15)}
                 onForward={() => audioPlayer.skipForward(15)}
-                onRewind={() => audioPlayer.skipBackward(15)}
-                onForward={() => audioPlayer.skipForward(15)}
                 onClick={() => {
                   if (currentAudioStop) {
                     setScrollToStopId(currentAudioStop.id);
@@ -340,6 +349,7 @@ const App: React.FC = () => {
                 progress={audioPlayer.progress}
                 isExpanded={isMiniPlayerExpanded}
                 onToggleExpanded={setIsMiniPlayerExpanded}
+                isCompleting={isAudioCompleting}
               />
             )}
           </AnimatePresence>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Check } from 'lucide-react';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { AudioStop } from '../types';
 import { ForwardIcon } from './icons/ForwardIcon';
@@ -17,6 +17,7 @@ interface MiniPlayerProps {
   progress?: number;
   isExpanded?: boolean;
   onToggleExpanded?: (expanded: boolean) => void;
+  isCompleting?: boolean;
 }
 
 const iconVariants = {
@@ -37,7 +38,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onEnd,
   progress = 0,
   isExpanded: externalIsExpanded,
-  onToggleExpanded
+  onToggleExpanded,
+  isCompleting = false
 }) => {
   // Use external state if provided, otherwise fall back to local state
   const [localIsExpanded, setLocalIsExpanded] = useState(true);
@@ -208,34 +210,47 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
           <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
             {/* Progress Ring */}
             <svg className="absolute inset-0 rotate-[-90deg] pointer-events-none" width={64} height={64}>
-              <circle
-                stroke="#d1d5db"
-                strokeWidth={2.5}
+              <motion.circle
+                stroke="#dddddd"
+                strokeWidth={3}
                 fill="transparent"
                 r={29.25}
                 cx={32}
                 cy={32}
               />
-              <circle
+              <motion.circle
                 stroke="#2dd482"
-                strokeWidth={2.5}
+                strokeWidth={4}
                 fill="transparent"
                 r={29.25}
                 cx={32}
                 cy={32}
                 strokeDasharray={radius * 2 * Math.PI}
-                strokeDashoffset={offset}
+                animate={{ strokeDashoffset: offset }}
+                transition={{ duration: 0.1, ease: "linear" }}
                 strokeLinecap="round"
-                style={{ transition: 'stroke-dashoffset 0.1s linear' }}
               />
             </svg>
 
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-              className="w-14 h-14 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg z-10 overflow-hidden relative"
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-lg z-10 overflow-hidden relative ${isCompleting ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-gray-800'
+                }`}
             >
               <AnimatePresence mode="popLayout" initial={false}>
-                {isPlaying ? (
+                {isCompleting ? (
+                  <motion.div
+                    key="check"
+                    variants={iconVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={iconTransition}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <Check size={28} strokeWidth={5} />
+                  </motion.div>
+                ) : isPlaying ? (
                   <motion.div
                     key="pause"
                     variants={iconVariants}
