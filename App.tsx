@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { SheetType, Language } from './types';
 import { RatingSheet } from './components/sheets/RatingSheet';
 import { LanguageSheet } from './components/sheets/LanguageSheet';
+import { TourCompleteSheet } from './components/sheets/TourCompleteSheet';
 import { TourStart } from './screens/TourStart';
 import { TourDetail } from './screens/TourDetail';
 import { MainSheet } from './components/MainSheet';
@@ -60,6 +61,7 @@ const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentStopId, setCurrentStopId] = useState<string | null>(null);
   const [scrollToStopId, setScrollToStopId] = useState<string | null>(null);
+  const [hasShownCompletionSheet, setHasShownCompletionSheet] = useState(false);
 
   // Tour Progress (Percentage) - Animated in TourDetail
   const [tourProgress, setTourProgress] = useState(0);
@@ -218,6 +220,22 @@ const App: React.FC = () => {
     onProgress: handleAudioProgress,
   });
 
+  // Check for tour completion
+  useEffect(() => {
+    if (!tour || !currentStopId) return;
+
+    const progress = progressTracking.getRealtimeProgressPercentage(
+      tour.stops,
+      currentStopId,
+      audioPlayer.progress
+    );
+
+    if (progress >= 100 && !hasShownCompletionSheet) {
+      setActiveSheet('TOUR_COMPLETE');
+      setHasShownCompletionSheet(true);
+    }
+  }, [tour, currentStopId, audioPlayer.progress, progressTracking, hasShownCompletionSheet]);
+
   // Loading state
   if (tourLoading || languagesLoading) {
     return (
@@ -367,6 +385,12 @@ const App: React.FC = () => {
           selectedLanguage={selectedLanguage}
           languages={languages}
           onSelect={setSelectedLanguage}
+        />
+
+        <TourCompleteSheet
+          isOpen={activeSheet === 'TOUR_COMPLETE'}
+          onClose={closeSheet}
+          onRateTour={() => setActiveSheet('RATING')}
         />
       </div>
     </div>
