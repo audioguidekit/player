@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpToLine, Clock3, Headphones, Sparkles } from 'lucide-react';
+import { ArrowUpToLine, Clock3, Headphones, Sparkles, RotateCw } from 'lucide-react';
 import { TourData } from '../types';
 
 interface StartCardProps {
@@ -11,6 +11,8 @@ interface StartCardProps {
   downloadProgress?: number;
   onDownload?: () => void;
   downloadError?: string | null;
+  tourProgress?: number;
+  onResetProgress?: () => void;
 }
 
 export const StartCard: React.FC<StartCardProps> = ({
@@ -22,6 +24,8 @@ export const StartCard: React.FC<StartCardProps> = ({
   downloadProgress = 0,
   onDownload,
   downloadError = null,
+  tourProgress = 0,
+  onResetProgress,
 }) => {
   const [loadingDots, setLoadingDots] = React.useState('');
 
@@ -38,6 +42,9 @@ export const StartCard: React.FC<StartCardProps> = ({
       setLoadingDots('');
     }
   }, [isDownloading, downloadProgress]);
+
+  // Check if tour is completed
+  const isTourCompleted = tourProgress >= 100;
 
   return (
     // No fixed height. We let the content define the height, and the parent measures it.
@@ -75,6 +82,12 @@ export const StartCard: React.FC<StartCardProps> = ({
         onClick={(e) => {
           e.stopPropagation();
 
+          // If tour is completed, reset progress
+          if (isTourCompleted && onResetProgress) {
+            onResetProgress();
+            return;
+          }
+
           // If tour requires offline download and isn't downloaded yet, start download automatically
           if (tour.offlineAvailable && !isDownloaded && !isDownloading && onDownload) {
             onDownload();
@@ -107,6 +120,11 @@ export const StartCard: React.FC<StartCardProps> = ({
               ) : (
                 `Loading tour... ${downloadProgress}%`
               )}
+            </>
+          ) : isTourCompleted ? (
+            <>
+              <RotateCw size={20} strokeWidth={2.5} />
+              Replay tour
             </>
           ) : hasStarted ? (
             <>

@@ -109,6 +109,23 @@ const App: React.FC = () => {
     setHasStarted(false);
   };
 
+  const handleResetTour = () => {
+    if (!tour || tour.stops.length === 0) return;
+
+    // Reset all progress
+    progressTracking.resetProgress();
+    // Reset completion sheet flag
+    setHasShownCompletionSheet(false);
+
+    // Start the tour from the beginning
+    const firstAudioStop = tour.stops.find(s => s.type === 'audio');
+    if (firstAudioStop) {
+      setCurrentStopId(firstAudioStop.id);
+      setIsPlaying(true);
+      setHasStarted(true);
+    }
+  };
+
   const handleStopClick = (clickedStopId: string) => {
     // Start playing the clicked stop
     setCurrentStopId(clickedStopId);
@@ -220,6 +237,13 @@ const App: React.FC = () => {
     onProgress: handleAudioProgress,
   });
 
+  // Auto-scroll to current stop when it changes
+  useEffect(() => {
+    if (currentStopId && hasStarted) {
+      setScrollToStopId(currentStopId);
+    }
+  }, [currentStopId, hasStarted]);
+
   // Check for tour completion
   useEffect(() => {
     if (!tour || !currentStopId) return;
@@ -311,6 +335,12 @@ const App: React.FC = () => {
                 downloadProgress={downloadManager.downloadProgress.percentage}
                 onDownload={downloadManager.startDownload}
                 downloadError={downloadManager.error}
+                tourProgress={progressTracking.getRealtimeProgressPercentage(
+                  tour.stops,
+                  currentStopId,
+                  audioPlayer.progress
+                )}
+                onResetProgress={handleResetTour}
               />
             }
             detailContent={

@@ -218,6 +218,11 @@ export const useProgressTracking = (tourId: string) => {
     };
   }, [progress]);
 
+  // Reset all progress (for replay functionality)
+  const resetProgress = useCallback(() => {
+    setProgress({ stops: {} });
+  }, []);
+
   return {
     markStopCompleted,
     updateStopPosition,
@@ -227,6 +232,7 @@ export const useProgressTracking = (tourId: string) => {
     getTourCompletionPercentage,
     getCompletedStopsCount,
     getRealtimeProgressPercentage,
-    getConsumedMinutes
+    getConsumedMinutes,
+    resetProgress
   };
 };
