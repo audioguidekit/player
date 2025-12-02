@@ -429,6 +429,26 @@ const App: React.FC = () => {
           onClose={closeSheet}
           onRateTour={() => setActiveSheet('RATING')}
         />
+
+        {/* Debug: Offline Ready Indicator */}
+        <div id="offline-ready-indicator" className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg z-[100] opacity-0 transition-opacity duration-300 pointer-events-none">
+          Ready for Offline ✈️
+        </div>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(() => {
+                const indicator = document.getElementById('offline-ready-indicator');
+                if (indicator) {
+                  indicator.style.opacity = '1';
+                  setTimeout(() => {
+                    indicator.style.opacity = '0';
+                  }, 3000);
+                }
+              });
+            }
+          `
+        }} />
       </div>
     </div>
   );

@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
           display: 'standalone',
           orientation: 'portrait',
           scope: '/',
-          start_url: '/index.html', // Explicit start_url for iOS reliability
+          start_url: '/',
           icons: [
             {
               src: '/icons/icon-72x72.png',
