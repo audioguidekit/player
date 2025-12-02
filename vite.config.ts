@@ -81,6 +81,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           clientsClaim: true,
           skipWaiting: true,
+          cleanupOutdatedCaches: true,
+          navigateFallback: '/index.html',
           globPatterns: [
             '**/*.{js,css,html,ico,png,svg,woff2}',
             'data/tours/**/*.json' // Precache tour data for offline access
@@ -113,19 +115,8 @@ export default defineConfig(({ mode }) => {
                 }
               }
             },
-            {
-              // Tour JSON Data - Network First
-              urlPattern: /\/data\/tours\/.*\.json$/,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'tour-data',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
-                },
-                networkTimeoutSeconds: 3
-              }
-            },
+            // Tour JSON Data is now precached, so we removed the NetworkFirst runtime rule
+            // to avoid conflicts and ensure offline availability.
             {
               // Unsplash Images - Cache First
               urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
