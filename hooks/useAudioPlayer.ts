@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 export interface UseAudioPlayerProps {
   audioUrl: string | null;
+  id?: string;
   isPlaying: boolean;
   onEnded?: () => void;
-  onProgress?: (currentTime: number, duration: number, percentComplete: number) => void;
+  onProgress?: (id: string | undefined, currentTime: number, duration: number, percentComplete: number) => void;
 }
 
 export interface UseAudioPlayerReturn {
@@ -21,6 +22,7 @@ export interface UseAudioPlayerReturn {
  */
 export const useAudioPlayer = ({
   audioUrl,
+  id,
   isPlaying,
   onEnded,
   onProgress,
@@ -94,16 +96,16 @@ export const useAudioPlayer = ({
     };
 
     const handleTimeUpdate = () => {
-      console.log('⏱️ timeupdate - currentTime:', audio.currentTime.toFixed(2));
+      // console.log('⏱️ timeupdate - currentTime:', audio.currentTime.toFixed(2));
       setCurrentTime(audio.currentTime);
       if (audio.duration) {
         const percentComplete = (audio.currentTime / audio.duration) * 100;
-        console.log('📊 Progress:', percentComplete.toFixed(1) + '%');
+        // console.log('📊 Progress:', percentComplete.toFixed(1) + '%');
         setProgress(percentComplete);
 
         // Call progress callback if provided
         if (onProgressRef.current) {
-          onProgressRef.current(audio.currentTime, audio.duration, percentComplete);
+          onProgressRef.current(id, audio.currentTime, audio.duration, percentComplete);
         }
       }
     };

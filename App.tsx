@@ -212,11 +212,17 @@ const App: React.FC = () => {
 
   const closeSheet = () => setActiveSheet('NONE');
 
-  // Handle audio progress - mark stop as completed at 85%
-  const handleAudioProgress = useCallback((currentTime: number, duration: number, percentComplete: number) => {
+  // Handle audio progress - mark stop as completed at 100%
+  const handleAudioProgress = useCallback((id: string | undefined, currentTime: number, duration: number, percentComplete: number) => {
+    // Race condition protection: ensure we're processing the current stop
+    if (id && id !== currentStopId) {
+      console.log(`Ignoring progress for ${id} while current is ${currentStopId}`);
+      return;
+    }
+
     if (!currentStopId) return;
 
-    // Mark as completed when reaching 85%
+    // Mark as completed when reaching 100%
     if (percentComplete >= 100 && !progressTracking.isStopCompleted(currentStopId)) {
       console.log(`Stop ${currentStopId} completed at ${percentComplete}%`);
       progressTracking.markStopCompleted(currentStopId);
@@ -232,6 +238,7 @@ const App: React.FC = () => {
   // Audio Player
   const audioPlayer = useAudioPlayer({
     audioUrl: currentAudioStop?.audioFile || null,
+    id: currentStopId || undefined,
     isPlaying,
     onEnded: handleAudioEnded,
     onProgress: handleAudioProgress,
