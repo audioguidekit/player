@@ -8,8 +8,40 @@ import { clientsClaim } from 'workbox-core';
 
 declare const self: ServiceWorkerGlobalScope;
 
-const SW_VERSION = '1.0.1';
+const SW_VERSION = '1.0.2';
 console.log(`[SW ${SW_VERSION}] Service Worker initializing...`);
+
+// Critical CDN dependencies that MUST be cached for offline use
+const CRITICAL_CDN_URLS = [
+  'https://aistudiocdn.com/react@^19.2.0',
+  'https://aistudiocdn.com/react-dom@^19.2.0',
+  'https://aistudiocdn.com/framer-motion@^12.23.24',
+  'https://aistudiocdn.com/lucide-react@^0.554.0',
+];
+
+// Warmup cache: Pre-fetch critical CDN resources during install
+async function warmupCache() {
+  console.log(`[SW ${SW_VERSION}] 🔥 Warming up cache with CDN dependencies...`);
+  const cache = await caches.open('external-dependencies');
+
+  const fetchPromises = CRITICAL_CDN_URLS.map(async (url) => {
+    try {
+      console.log(`[SW ${SW_VERSION}] Fetching ${url}...`);
+      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (response.ok) {
+        await cache.put(url, response);
+        console.log(`[SW ${SW_VERSION}] ✅ Cached ${url}`);
+      } else {
+        console.error(`[SW ${SW_VERSION}] ❌ Failed to fetch ${url}: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`[SW ${SW_VERSION}] ❌ Error fetching ${url}:`, error);
+    }
+  });
+
+  await Promise.all(fetchPromises);
+  console.log(`[SW ${SW_VERSION}] 🔥 Cache warmup complete!`);
+}
 
 // Force the new service worker to take control immediately
 self.skipWaiting();
@@ -18,9 +50,12 @@ clientsClaim();
 // Clean up old caches from previous versions
 cleanupOutdatedCaches();
 
-// Log install event
+// Log install event and warmup cache
 self.addEventListener('install', (event) => {
   console.log(`[SW ${SW_VERSION}] INSTALL event - precaching assets`);
+
+  // Pre-fetch CDN dependencies during install
+  event.waitUntil(warmupCache());
 });
 
 // Log activate event
