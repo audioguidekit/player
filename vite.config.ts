@@ -21,9 +21,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        injectRegister: null, // We will register manually in index.html for better control
-        registerType: 'autoUpdate',
-        includeAssets: ['fonts/*.woff2', 'icons/*.svg', 'icons/*.png'],
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
+        injectRegister: null, // We register manually in index.html
         manifest: {
           name: 'Audio Tour Pro - Guided Historical Tours',
           short_name: 'AudioTour',
@@ -79,186 +80,12 @@ export default defineConfig(({ mode }) => {
             }
           ]
         },
-        workbox: {
-          clientsClaim: true,
-          skipWaiting: true,
-          cleanupOutdatedCaches: true,
-          navigateFallback: '/index.html',
+        injectManifest: {
           globPatterns: [
             '**/*.{js,css,html,ico,png,svg,woff2}',
             'data/tours/**/*.json' // Precache tour data for offline access
           ],
-          runtimeCaching: [
-            {
-              // External CDN Dependencies (React, Framer Motion, Lucide) - Cache First
-              urlPattern: /^https:\/\/aistudiocdn\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'external-dependencies',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year (versioned URLs)
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              // App Shell - Cache First
-              urlPattern: ({ url }) => url.origin === self.location.origin,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'app-shell',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                }
-              }
-            },
-            // Tour JSON Data is now precached, so we removed the NetworkFirst runtime rule
-            // to avoid conflicts and ensure offline availability.
-            {
-              // Unsplash Images - Cache First
-              urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'tour-images',
-                expiration: {
-                  maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              // Google Fonts Stylesheets - Cache First
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-stylesheets',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                }
-              }
-            },
-            {
-              // Google Font Files - Cache First
-              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-webfonts',
-                expiration: {
-                  maxEntries: 30,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                }
-              }
-            },
-            {
-              // Supabase Audio Files - Cache First (for offline playback)
-              urlPattern: ({ url }) => {
-                return url.origin === 'https://ewrhpiibxstiipkqafwf.supabase.co' &&
-                  url.pathname.includes('/storage/v1/object/public/') &&
-                  (url.pathname.endsWith('.mp3') ||
-                    url.pathname.endsWith('.wav') ||
-                    url.pathname.endsWith('.m4a'));
-              },
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'tour-assets', // Same cache as download manager
-                expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                },
-                matchOptions: {
-                  ignoreVary: true
-                },
-                rangeRequests: true // Enable range requests for audio seeking
-              }
-            },
-            {
-              // Supabase Images - Cache First (for offline viewing)
-              urlPattern: ({ url }) => {
-                return url.origin === 'https://ewrhpiibxstiipkqafwf.supabase.co' &&
-                  url.pathname.includes('/storage/v1/object/public/') &&
-                  (url.pathname.endsWith('.jpg') ||
-                    url.pathname.endsWith('.jpeg') ||
-                    url.pathname.endsWith('.png') ||
-                    url.pathname.endsWith('.webp'));
-              },
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'tour-assets',
-                expiration: {
-                  maxEntries: 200,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                },
-                matchOptions: {
-                  ignoreVary: true
-                }
-              }
-            },
-            {
-              // Supabase Videos - Cache First (for offline viewing)
-              urlPattern: ({ url }) => {
-                return url.origin === 'https://ewrhpiibxstiipkqafwf.supabase.co' &&
-                  url.pathname.includes('/storage/v1/object/public/') &&
-                  (url.pathname.endsWith('.mp4') ||
-                    url.pathname.endsWith('.webm'));
-              },
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'tour-assets',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                },
-                matchOptions: {
-                  ignoreVary: true
-                },
-                rangeRequests: true // Enable range requests for video seeking
-              }
-            },
-            {
-              // Supabase 3D Models - Cache First (for offline viewing)
-              urlPattern: ({ url }) => {
-                return url.origin === 'https://ewrhpiibxstiipkqafwf.supabase.co' &&
-                  url.pathname.includes('/storage/v1/object/public/') &&
-                  (url.pathname.endsWith('.glb') ||
-                    url.pathname.endsWith('.gltf'));
-              },
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'tour-assets',
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                },
-                matchOptions: {
-                  ignoreVary: true
-                }
-              }
-            }
-          ]
-        },
-        devOptions: {
-          enabled: true,
-          type: 'module'
+          globIgnores: ['**/node_modules/**/*'],
         }
       })
     ],
