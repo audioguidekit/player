@@ -134,6 +134,61 @@
     // Monitor online/offline status
     window.addEventListener('online', () => console.log('[APP] Network: ONLINE'));
     window.addEventListener('offline', () => console.log('[APP] Network: OFFLINE'));
+
+    // Inspect cache contents after page loads
+    window.addEventListener('load', async () => {
+      console.log('[APP] 🔍 Inspecting cache contents...');
+
+      try {
+        const cacheNames = await caches.keys();
+        console.log('[APP] Found caches:', cacheNames);
+
+        for (const cacheName of cacheNames) {
+          const cache = await caches.open(cacheName);
+          const requests = await cache.keys();
+          console.log(`[APP] Cache "${cacheName}" contains ${requests.length} entries:`);
+
+          // Log first 10 URLs from each cache
+          requests.slice(0, 10).forEach(req => {
+            console.log(`  - ${req.url}`);
+          });
+
+          if (requests.length > 10) {
+            console.log(`  ... and ${requests.length - 10} more`);
+          }
+
+          // Check specifically for CDN resources
+          const cdnResources = requests.filter(req =>
+            req.url.includes('aistudiocdn.com')
+          );
+          if (cdnResources.length > 0) {
+            console.log(`[APP] ✅ Found ${cdnResources.length} CDN resources in this cache`);
+          }
+        }
+
+        // Check for critical CDN resources
+        const criticalUrls = [
+          'https://aistudiocdn.com/react@^19.2.0',
+          'https://aistudiocdn.com/react-dom@^19.2.0',
+          'https://aistudiocdn.com/framer-motion@^12.23.24',
+          'https://aistudiocdn.com/lucide-react@^0.554.0'
+        ];
+
+        console.log('[APP] Checking for critical CDN resources...');
+        for (const url of criticalUrls) {
+          const response = await caches.match(url);
+          if (response) {
+            console.log(`[APP] ✅ CACHED: ${url}`);
+          } else {
+            console.log(`[APP] ❌ NOT CACHED: ${url}`);
+          }
+        }
+
+        console.log('[APP] 🔍 Cache inspection complete!');
+      } catch (err) {
+        console.error('[APP] Error inspecting caches:', err);
+      }
+    });
   </script>
   <script type="module" src="/index.tsx"></script>
 </body>
