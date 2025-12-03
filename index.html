@@ -82,11 +82,58 @@
   </div>
   <script>
     // Register service worker immediately for better offline support on iOS
+    console.log('[APP] Starting SW registration...');
+    console.log('[APP] Online status:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
+
     if ('serviceWorker' in navigator && !/localhost/.test(window.location)) {
       navigator.serviceWorker.register('/sw.js', { scope: '/' })
-        .then(registration => console.log('SW registered:', registration))
-        .catch(err => console.log('SW registration failed:', err));
+        .then(registration => {
+          console.log('[APP] ✅ SW registered successfully');
+          console.log('[APP] SW state:', {
+            installing: registration.installing ? 'yes' : 'no',
+            waiting: registration.waiting ? 'yes' : 'no',
+            active: registration.active ? 'yes' : 'no',
+            scope: registration.scope,
+            updateViaCache: registration.updateViaCache
+          });
+
+          if (registration.active) {
+            console.log('[APP] Active SW state:', registration.active.state);
+          }
+
+          // Listen for SW state changes
+          registration.addEventListener('updatefound', () => {
+            console.log('[APP] SW update found!');
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                console.log('[APP] SW state changed to:', newWorker.state);
+              });
+            }
+          });
+        })
+        .catch(err => {
+          console.error('[APP] ❌ SW registration failed:', err);
+        });
+
+      // Log when SW controller changes
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('[APP] SW controller changed - new SW is now active');
+      });
+
+      // Check current controller
+      if (navigator.serviceWorker.controller) {
+        console.log('[APP] Page is currently controlled by SW:', navigator.serviceWorker.controller.scriptURL);
+      } else {
+        console.log('[APP] ⚠️ Page is NOT controlled by any SW yet');
+      }
+    } else {
+      console.log('[APP] SW not supported or running on localhost');
     }
+
+    // Monitor online/offline status
+    window.addEventListener('online', () => console.log('[APP] Network: ONLINE'));
+    window.addEventListener('offline', () => console.log('[APP] Network: OFFLINE'));
   </script>
   <script type="module" src="/index.tsx"></script>
 </body>
