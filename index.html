@@ -59,13 +59,14 @@
 <body>
   <div id="root">
     <!-- Loading indicator shown while app initializes -->
-    <div
+    <div id="loading-screen"
       style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; color: #666;">
       <div style="text-align: center;">
         <div
           style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;">
         </div>
-        <div>Loading...</div>
+        <div id="loading-status">Loading...</div>
+        <div id="debug-info" style="margin-top: 20px; font-size: 12px; color: #999; max-width: 300px;"></div>
       </div>
     </div>
     <style>
@@ -81,8 +82,25 @@
     </style>
   </div>
   <script>
+    // Visual debug helper
+    function updateDebugInfo(message) {
+      const debugDiv = document.getElementById('debug-info');
+      if (debugDiv) {
+        debugDiv.innerHTML += message + '<br>';
+      }
+    }
+
+    function updateLoadingStatus(message) {
+      const statusDiv = document.getElementById('loading-status');
+      if (statusDiv) {
+        statusDiv.textContent = message;
+      }
+    }
+
     // Register service worker immediately for better offline support on iOS
     console.log('[APP] Starting SW registration...');
+    updateDebugInfo('Starting...');
+    updateDebugInfo('Online: ' + (navigator.onLine ? 'YES' : 'NO'));
     console.log('[APP] Online status:', navigator.onLine ? 'ONLINE' : 'OFFLINE');
     console.log('[APP] Expected SW version: 1.0.3-NAVIGATION-FIX');
 
@@ -133,16 +151,37 @@
       // Check current controller
       if (navigator.serviceWorker.controller) {
         console.log('[APP] Page is currently controlled by SW:', navigator.serviceWorker.controller.scriptURL);
+        updateDebugInfo('✅ SW Active');
       } else {
         console.log('[APP] ⚠️ Page is NOT controlled by any SW yet');
+        updateDebugInfo('⚠️ No SW');
       }
     } else {
       console.log('[APP] SW not supported or running on localhost');
+      updateDebugInfo('❌ SW not supported');
     }
 
     // Monitor online/offline status
-    window.addEventListener('online', () => console.log('[APP] Network: ONLINE'));
-    window.addEventListener('offline', () => console.log('[APP] Network: OFFLINE'));
+    window.addEventListener('online', () => {
+      console.log('[APP] Network: ONLINE');
+      updateDebugInfo('Network: ONLINE');
+    });
+    window.addEventListener('offline', () => {
+      console.log('[APP] Network: OFFLINE');
+      updateDebugInfo('Network: OFFLINE');
+    });
+
+    // Catch any errors during load
+    window.addEventListener('error', (event) => {
+      console.error('[APP] Error:', event.error);
+      updateLoadingStatus('Error loading!');
+      updateDebugInfo('❌ ' + (event.error?.message || event.message || 'Unknown error'));
+    });
+
+    // Update loading status
+    setTimeout(() => {
+      updateLoadingStatus('Loading React...');
+    }, 1000);
 
     // Inspect cache contents after page loads
     window.addEventListener('load', async () => {
