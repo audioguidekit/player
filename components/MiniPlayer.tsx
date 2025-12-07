@@ -1,9 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Check, SkipBack, SkipForward, X } from 'lucide-react';
+import { SkipBack, SkipForward, X } from 'lucide-react';
 import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
 import { AudioStop } from '../types';
 import { ForwardIcon } from './icons/ForwardIcon';
 import { BackwardIcon } from './icons/BackwardIcon';
+import { SkipButton } from './player/SkipButton';
+import { PlayPauseButton } from './player/PlayPauseButton';
+import { ProgressRing } from './player/ProgressRing';
+import { iconVariants, iconTransition } from '../src/animations/variants';
 
 interface MiniPlayerProps {
   currentStop: AudioStop | undefined;
@@ -24,13 +28,6 @@ interface MiniPlayerProps {
   canGoPrev?: boolean;
 }
 
-const iconVariants = {
-  initial: { scale: 0.5, opacity: 0, filter: 'blur(2px)' },
-  animate: { scale: 1, opacity: 1, filter: 'blur(0px)' },
-  exit: { scale: 0.5, opacity: 0, filter: 'blur(2px)' }
-};
-
-const iconTransition = { duration: 0.25, ease: 'easeOut' } as const;
 
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   currentStop,
@@ -364,127 +361,46 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   {/* Controls Row */}
                   <div className="flex items-center justify-center gap-4 mb-1">
                     {/* Skip Back Button */}
-                    <motion.button
-                      variants={buttonVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={{ duration: 0.3 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => { e.stopPropagation(); onRewind(); }}
-                      onPointerDownCapture={(e) => e.stopPropagation()}
-                      className="w-14 h-14 rounded-full text-gray-500 flex items-center justify-center hover:bg-gray-50 active:scale-90 active:bg-gray-200 transition-all duration-100"
+                    <SkipButton
+                      direction="backward"
+                      onClick={onRewind}
+                      seconds={15}
+                      className="w-14 h-14"
                     >
                       <BackwardIcon size={32} className="ml-1 mb-0.5" />
-                    </motion.button>
+                    </SkipButton>
 
                     {/* Main Play/Pause Button with Progress Ring */}
                     <div className="relative flex items-center justify-center" style={{ width: 64, height: 64 }}>
                       {/* Progress Ring */}
                       {!isTransitioning && (
-                        <motion.svg
-                          variants={contentVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={{ duration: 0.3 }}
-                          style={{ rotate: -90 }}
-                          className="absolute inset-0 pointer-events-none"
-                          width={64}
-                          height={64}
-                        >
-                          <motion.circle
-                            stroke="#dddddd"
-                            strokeWidth={3}
-                            fill="transparent"
-                            r={29.25}
-                            cx={32}
-                            cy={32}
-                          />
-                          <motion.circle
-                            stroke="#22BD53"
-                            strokeWidth={4}
-                            fill="transparent"
-                            r={29.25}
-                            cx={32}
-                            cy={32}
-                            strokeDasharray={radius * 2 * Math.PI}
-                            initial={{ strokeDashoffset: offset }}
-                            animate={{ strokeDashoffset: offset }}
-                            transition={{ duration: 0.1, ease: "linear" }}
-                            strokeLinecap="round"
-                          />
-                        </motion.svg>
+                        <ProgressRing
+                          progress={visualProgress}
+                          size={64}
+                          strokeWidth={3}
+                          color="#22BD53"
+                          backgroundColor="#dddddd"
+                        />
                       )}
 
-                      <motion.button
-                        variants={buttonVariants}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        transition={{ duration: 0.3 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-                        onPointerDownCapture={(e) => e.stopPropagation()}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-lg z-10 overflow-hidden relative ${isCompleting ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-gray-800'
-                          }`}
-                      >
-                        <AnimatePresence mode="popLayout" initial={false}>
-                          {isCompleting ? (
-                            <motion.div
-                              key="check"
-                              variants={iconVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={iconTransition}
-                              className="absolute inset-0 flex items-center justify-center"
-                            >
-                              <Check size={28} strokeWidth={5} />
-                            </motion.div>
-                          ) : isPlaying ? (
-                            <motion.div
-                              key="pause"
-                              variants={iconVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={iconTransition}
-                              className="absolute inset-0 flex items-center justify-center"
-                            >
-                              <Pause size={24} fill="currentColor" />
-                            </motion.div>
-                          ) : (
-                            <motion.div
-                              key="play"
-                              variants={iconVariants}
-                              initial="initial"
-                              animate="animate"
-                              exit="exit"
-                              transition={iconTransition}
-                              className="absolute inset-0 flex items-center justify-center pl-0.5"
-                            >
-                              <Play size={24} fill="currentColor" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.button>
+                      <PlayPauseButton
+                        isPlaying={isPlaying}
+                        isCompleting={isCompleting}
+                        onClick={onTogglePlay}
+                        size="expanded"
+                        buttonVariants={buttonVariants}
+                      />
                     </div>
 
                     {/* Skip Forward Button */}
-                    <motion.button
-                      variants={buttonVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={{ duration: 0.3 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => { e.stopPropagation(); onForward(); }}
-                      onPointerDownCapture={(e) => e.stopPropagation()}
-                      className="w-14 h-14 rounded-full text-gray-500 flex items-center justify-center hover:bg-gray-50 active:scale-90 active:bg-gray-200 transition-all duration-100"
+                    <SkipButton
+                      direction="forward"
+                      onClick={onForward}
+                      seconds={15}
+                      className="w-14 h-14"
                     >
                       <ForwardIcon size={32} className="mr-1 mb-0.5" />
-                    </motion.button>
+                    </SkipButton>
                   </div>
 
                   {/* Object Name Label */}
@@ -586,48 +502,13 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   </motion.div>
 
                   {/* Play/Pause button - functional */}
-                  <motion.button
-                    variants={buttonVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    transition={{ duration: 0.3 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTogglePlay();
-                    }}
-                    className="w-10 h-10 rounded-full text-gray-950 flex items-center justify-center shrink-0 hover:bg-gray-100 transition-colors relative overflow-hidden"
-                    onPointerDownCapture={(e) => e.stopPropagation()}
-                  >
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      {isPlaying ? (
-                        <motion.div
-                          key="pause-mini"
-                          variants={iconVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={iconTransition}
-                          className="absolute inset-0 flex items-center justify-center"
-                        >
-                          <Pause size={16} fill="currentColor" />
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="play-mini"
-                          variants={iconVariants}
-                          initial="initial"
-                          animate="animate"
-                          exit="exit"
-                          transition={iconTransition}
-                          className="absolute inset-0 flex items-center justify-center pl-0.5"
-                        >
-                          <Play size={16} fill="currentColor" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
+                  <PlayPauseButton
+                    isPlaying={isPlaying}
+                    onClick={onTogglePlay}
+                    size="sm"
+                    variant="mini"
+                    buttonVariants={buttonVariants}
+                  />
                 </motion.div>
               </div>
             </motion.div>

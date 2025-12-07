@@ -5,50 +5,64 @@ interface ProgressRingProps {
     progress: number;
     size?: number;
     strokeWidth?: number;
+    color?: string;
+    backgroundColor?: string;
     className?: string;
+    animated?: boolean;
 }
 
+/**
+ * SVG circular progress ring component.
+ * Used in MiniPlayer to show audio playback progress.
+ */
 export const ProgressRing: React.FC<ProgressRingProps> = ({
     progress,
-    size = 96,
-    strokeWidth = 4,
-    className = ''
+    size = 64,
+    strokeWidth = 3,
+    color = '#22BD53',
+    backgroundColor = '#dddddd',
+    className = '',
+    animated = true
 }) => {
-    const radius = (size - strokeWidth) / 2;
+    const radius = (size - strokeWidth) / 2 - 1; // -1 for padding
     const circumference = 2 * Math.PI * radius;
     const visualProgress = Math.max(0, Math.min(100, progress));
-
-    // Start from 12 o'clock position (-90 degrees)
     const strokeDashoffset = circumference * (1 - visualProgress / 100);
 
     return (
-        <svg
+        <motion.svg
+            initial={animated ? { opacity: 0 } : false}
+            animate={animated ? { opacity: 1 } : false}
+            exit={animated ? { opacity: 0 } : false}
+            transition={{ duration: 0.3 }}
+            style={{ rotate: -90 }}
+            className={`absolute inset-0 pointer-events-none ${className}`}
             width={size}
             height={size}
-            className={`absolute inset-0 -rotate-90 ${className}`}
         >
             {/* Background circle */}
             <circle
+                stroke={backgroundColor}
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                r={radius}
                 cx={size / 2}
                 cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke="#e5e7eb"
-                strokeWidth={strokeWidth}
             />
             {/* Progress circle */}
             <motion.circle
+                stroke={color}
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                r={radius}
                 cx={size / 2}
                 cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke="#1f2937"
-                strokeWidth={strokeWidth}
-                strokeLinecap="round"
                 strokeDasharray={circumference}
+                initial={{ strokeDashoffset }}
                 animate={{ strokeDashoffset }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
+                transition={{ duration: 0.1, ease: 'linear' }}
+                strokeLinecap="round"
             />
-        </svg>
+        </motion.svg>
     );
 };

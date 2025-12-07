@@ -23,6 +23,7 @@ interface UseTourNavigationReturn {
     handlePrevStop: () => void;
 
     // Transition handling
+    handleTrackTransition: () => void;
     startCompletionAnimation: () => void;
     endCompletionAnimation: () => void;
     transitionTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
@@ -101,6 +102,53 @@ export const useTourNavigation = ({
         }
     }, [currentStopId, tour, onTrackChange]);
 
+    const handleTrackTransition = useCallback(() => {
+        if (!currentStopId || !tour) return;
+
+        // If we're already transitioning, ignore
+        if (isTransitioning) return;
+
+        // Start completion animation (Checkmark)
+        setIsAudioCompleting(true);
+
+        const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
+        const nextAudioStop = tour.stops.slice(currentIndex + 1).find(s => s.type === 'audio');
+
+        if (nextAudioStop) {
+            // If we have transition audio, enable transition state
+            // This allows App.tsx to switch the audio source
+            if (tour.transitionAudio) {
+                console.log('Starting transition audio...');
+                setIsTransitioning(true);
+            }
+
+            // Set timeout for the visual checkmark animation AND transition audio
+            if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+
+            transitionTimeoutRef.current = setTimeout(() => {
+                console.log('Transition timeout finished. Moving to next track.');
+                setIsAudioCompleting(false);
+                setIsTransitioning(false);
+
+                // Switch to next track
+                setCurrentStopId(nextAudioStop.id);
+                setIsPlaying(true);
+
+                // Trigger track switch visual effect
+                setIsSwitchingTracks(true);
+                setTimeout(() => setIsSwitchingTracks(false), 150);
+
+                onTrackChange?.(nextAudioStop.id);
+            }, 1500); // 1.5s duration for checkmark
+        } else {
+            // End of tour
+            setTimeout(() => {
+                setIsAudioCompleting(false);
+                setIsPlaying(false);
+            }, 1500);
+        }
+    }, [currentStopId, tour, isTransitioning, onTrackChange]);
+
     const startCompletionAnimation = useCallback(() => {
         setIsAudioCompleting(true);
     }, []);
@@ -122,6 +170,7 @@ export const useTourNavigation = ({
         handleStopPlayPause,
         handleNextStop,
         handlePrevStop,
+        handleTrackTransition,
         startCompletionAnimation,
         endCompletionAnimation,
         transitionTimeoutRef
