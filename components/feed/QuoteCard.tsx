@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { QuoteStop } from '../../types';
 
 interface QuoteCardProps {
   item: QuoteStop;
 }
 
-export const QuoteCard: React.FC<QuoteCardProps> = ({ item }) => {
+export const QuoteCard = memo<QuoteCardProps>(({ item }) => {
   return (
     <div className="bg-white rounded-2xl p-6 mb-4 shadow-sm border border-gray-100">
       {/* Avatar placeholder - centered at top */}
@@ -27,4 +27,4 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({ item }) => {
       </div>
     </div>
   );
-};
+});

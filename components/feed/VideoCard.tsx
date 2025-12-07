@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { VideoStop } from '../../types';
 
 interface VideoCardProps {
   item: VideoStop;
 }
 
-export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
+export const VideoCard = memo<VideoCardProps>(({ item }) => {
   return (
     <div className="bg-white rounded-2xl overflow-hidden mb-4 shadow-sm border border-gray-100">
       <div className="w-full aspect-video">
@@ -25,4 +25,4 @@ export const VideoCard: React.FC<VideoCardProps> = ({ item }) => {
       )}
     </div>
   );
-};
+});

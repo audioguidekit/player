@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { AudioStop } from '../../types';
 import { AnimatedCheckmark } from '../AnimatedCheckmark';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +13,7 @@ interface AudioStopCardCompactProps {
   id?: string;
 }
 
-export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
+export const AudioStopCardCompact = memo<AudioStopCardCompactProps>(({
   item,
   index = 0,
   isActive = false,
@@ -119,4 +119,4 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
       </div>
     </div>
   );
-};
+});

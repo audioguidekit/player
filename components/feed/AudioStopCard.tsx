@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { AudioStop } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedCheckmark } from '../AnimatedCheckmark';
+import { iconVariants, iconTransition } from '../../src/animations/variants';
 
 interface AudioStopCardProps {
   item: AudioStop;
@@ -14,15 +15,7 @@ interface AudioStopCardProps {
   onPlayPause?: () => void;
 }
 
-const iconVariants = {
-  initial: { scale: 0.5, opacity: 0, filter: 'blur(2px)' },
-  animate: { scale: 1, opacity: 1, filter: 'blur(0px)' },
-  exit: { scale: 0.5, opacity: 0, filter: 'blur(2px)' }
-};
-
-const iconTransition = { duration: 0.25, ease: 'easeOut' } as const;
-
-export const AudioStopCard: React.FC<AudioStopCardProps> = ({
+export const AudioStopCard = memo<AudioStopCardProps>(({
   item,
   index = 0,
   isActive = false,
@@ -60,8 +53,8 @@ export const AudioStopCard: React.FC<AudioStopCardProps> = ({
             }}
             className={`absolute top-[136px] right-6 w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-lg z-10 overflow-hidden
             ${isActive && isPlaying
-              ? 'bg-black text-white'
-              : 'bg-white text-black border border-gray-100 hover:bg-gray-50'}`}
+                ? 'bg-black text-white'
+                : 'bg-white text-black border border-gray-100 hover:bg-gray-50'}`}
           >
             <AnimatePresence mode="popLayout" initial={false}>
               {isActive && isPlaying ? (
@@ -115,4 +108,4 @@ export const AudioStopCard: React.FC<AudioStopCardProps> = ({
       </div>
     </div>
   );
-};
+});

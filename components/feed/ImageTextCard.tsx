@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ImageTextStop } from '../../types';
 
 interface ImageTextCardProps {
   item: ImageTextStop;
 }
 
-export const ImageTextCard: React.FC<ImageTextCardProps> = ({ item }) => {
+export const ImageTextCard = memo<ImageTextCardProps>(({ item }) => {
   return (
     <div className="bg-white rounded-2xl overflow-hidden mb-4 shadow-sm border border-gray-100">
       <div className="w-full h-64 overflow-hidden">
@@ -20,4 +20,4 @@ export const ImageTextCard: React.FC<ImageTextCardProps> = ({ item }) => {
       </div>
     </div>
   );
-};
+});

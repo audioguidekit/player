@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { SheetType, Language } from './types';
@@ -77,6 +77,21 @@ const App: React.FC = () => {
 
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
+
+  // Memoize navigation state (no audioPlayer dependency - can stay here)
+  const canGoNext = useMemo(() => {
+    if (!currentStopId || !tour) return false;
+    const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
+    const nextAudioStop = tour.stops.slice(currentIndex + 1).find(s => s.type === 'audio');
+    return !!nextAudioStop;
+  }, [currentStopId, tour]);
+
+  const canGoPrev = useMemo(() => {
+    if (!currentStopId || !tour) return false;
+    const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
+    const prevAudioStop = tour.stops.slice(0, currentIndex).reverse().find(s => s.type === 'audio');
+    return !!prevAudioStop;
+  }, [currentStopId, tour]);
 
   // --- Handlers ---
 
@@ -297,6 +312,28 @@ const App: React.FC = () => {
     onProgress: handleAudioProgress,
   });
 
+  // --- Memoized Progress Calculations (must be after audioPlayer) ---
+
+  // Memoize progress percentage to avoid recalculating on every render
+  const tourProgress = useMemo(() => {
+    if (!tour) return 0;
+    return progressTracking.getRealtimeProgressPercentage(
+      tour.stops,
+      currentStopId,
+      audioPlayer.progress
+    );
+  }, [tour, currentStopId, audioPlayer.progress, progressTracking]);
+
+  // Memoize consumed/total minutes calculation
+  const { consumed: consumedMinutes, total: totalMinutes } = useMemo(() => {
+    if (!tour) return { consumed: 0, total: 0 };
+    return progressTracking.getConsumedMinutes(
+      tour.stops,
+      currentStopId,
+      audioPlayer.progress
+    );
+  }, [tour, currentStopId, audioPlayer.progress, progressTracking]);
+
   // Auto-scroll to current stop when it changes
   useEffect(() => {
     if (currentStopId && hasStarted) {
@@ -395,11 +432,7 @@ const App: React.FC = () => {
                 downloadProgress={downloadManager.downloadProgress.percentage}
                 onDownload={downloadManager.startDownload}
                 downloadError={downloadManager.error}
-                tourProgress={progressTracking.getRealtimeProgressPercentage(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                )}
+                tourProgress={tourProgress}
                 onResetProgress={handleResetTour}
               />
             }
@@ -412,21 +445,9 @@ const App: React.FC = () => {
                 onTogglePlay={handlePlayPause}
                 onStopPlayPause={handleStopPlayPause}
                 onBack={handleBackToStart}
-                tourProgress={progressTracking.getRealtimeProgressPercentage(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                )}
-                consumedMinutes={progressTracking.getConsumedMinutes(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                ).consumed}
-                totalMinutes={progressTracking.getConsumedMinutes(
-                  tour.stops,
-                  currentStopId,
-                  audioPlayer.progress
-                ).total}
+                tourProgress={tourProgress}
+                consumedMinutes={consumedMinutes}
+                totalMinutes={totalMinutes}
                 completedStopsCount={progressTracking.getCompletedStopsCount()}
                 isStopCompleted={progressTracking.isStopCompleted}
                 scrollToStopId={scrollToStopId}
@@ -460,18 +481,8 @@ const App: React.FC = () => {
                 isTransitioning={isTransitioning || isSwitchingTracks}
                 onNextTrack={handleNextStop}
                 onPrevTrack={handlePrevStop}
-                canGoNext={(() => {
-                  if (!currentStopId || !tour) return false;
-                  const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
-                  const nextAudioStop = tour.stops.slice(currentIndex + 1).find(s => s.type === 'audio');
-                  return !!nextAudioStop;
-                })()}
-                canGoPrev={(() => {
-                  if (!currentStopId || !tour) return false;
-                  const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
-                  const prevAudioStop = tour.stops.slice(0, currentIndex).reverse().find(s => s.type === 'audio');
-                  return !!prevAudioStop;
-                })()}
+                canGoNext={canGoNext}
+                canGoPrev={canGoPrev}
               />
             )}
           </AnimatePresence>
