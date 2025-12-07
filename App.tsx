@@ -105,7 +105,8 @@ const App: React.FC = () => {
     if (!tour || tour.stops.length === 0) return;
 
     // If tour requires offline download, check if it's downloaded
-    if (tour.offlineAvailable && !downloadManager.isDownloaded) {
+    // Only enforce download if offlineAvailable is explicitly true
+    if (tour.offlineAvailable === true && !downloadManager.isDownloaded) {
       console.log('Tour requires offline download. Please download first.');
       return;
     }

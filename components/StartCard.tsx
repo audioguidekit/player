@@ -89,9 +89,9 @@ export const StartCard: React.FC<StartCardProps> = ({
           }
 
           // If tour requires offline download and isn't downloaded yet, start download automatically
-          if (tour.offlineAvailable && !isDownloaded && !isDownloading && onDownload) {
+          if (tour.offlineAvailable === true && !isDownloaded && !isDownloading && onDownload) {
             onDownload();
-          } else if (!isDownloading && (!tour.offlineAvailable || isDownloaded)) {
+          } else if (!isDownloading && (tour.offlineAvailable !== true || isDownloaded)) {
             // Start tour if not downloading AND (offline not required OR already downloaded)
             onAction();
           }
@@ -131,10 +131,10 @@ export const StartCard: React.FC<StartCardProps> = ({
               <ArrowUpToLine size={20} strokeWidth={2.5} />
               Resume tour
             </>
-          ) : tour.offlineAvailable && !isDownloaded ? (
+          ) : tour.offlineAvailable === true && !isDownloaded ? (
             <>
               <Sparkles size={20} strokeWidth={2.5} />
-              Prepare tour
+              Download tour
             </>
           ) : (
             <>
@@ -144,6 +144,14 @@ export const StartCard: React.FC<StartCardProps> = ({
           )}
         </span>
       </button>
+      {/* Offline Download Message - Only shown when offlineAvailable=true and not downloaded */}
+      {tour.offlineAvailable === true && !isDownloaded && !isDownloading && (
+        <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl mt-4 p-4">
+          <p className="text-amber-900 text-sm leading-relaxed">
+            Download this tour now to enjoy it offline in areas with limited connectivity.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

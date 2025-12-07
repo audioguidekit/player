@@ -33,7 +33,7 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
                     className="w-full bg-black text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 mb-3 active:scale-[0.98] transition-transform"
                 >
                     <Star size={20} className="fill-white" />
-                    <span>Rate this Tour</span>
+                    <span>Rate this tour</span>
                 </button>
 
                 <button

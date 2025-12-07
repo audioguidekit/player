@@ -437,6 +437,219 @@ Generated during build by `vite-plugin-pwa`:
 
 ---
 
+### 7. Offline Download Configuration (`offlineAvailable` Flag)
+
+**Purpose**: Control whether tours require mandatory offline download or can be used purely online with opportunistic caching.
+
+#### Tour Configuration
+
+Each tour has an optional `offlineAvailable` boolean flag in its JSON configuration:
+
+```json
+{
+  "id": "barcelona-01",
+  "title": "Unlimited Barcelona",
+  "offlineAvailable": true,  // or false, or omitted
+  "stops": [...]
+}
+```
+
+#### Behavior Matrix
+
+| `offlineAvailable` Value | Download Enforcement | User Message | Button Label | Caching Behavior |
+|-------------------------|---------------------|--------------|--------------|------------------|
+| `true` | ✅ Required | ✅ Shown | "Download tour" | Explicit download + SW caching |
+| `false` | ❌ Not required | ❌ Hidden | "Start tour" | Opportunistic SW caching only |
+| `undefined` (omitted) | ❌ Not required | ❌ Hidden | "Start tour" | Opportunistic SW caching only |
+
+#### When `offlineAvailable: true`
+
+**Enforcement**:
+- Tour cannot start until all assets are downloaded
+- Download button triggers explicit asset pre-caching
+- Progress tracked in IndexedDB `downloaded-tours` store
+- User prevented from starting tour if download incomplete
+
+**User Experience**:
+1. User sees amber message below tour description:
+   ```
+   "Download this tour now to enjoy it offline in areas with limited connectivity."
+   ```
+2. Button shows "Download tour" with Sparkles icon
+3. Click triggers download manager (shows progress %)
+4. During download: Button disabled, shows "Loading tour... X%"
+5. After download: Message hides, button shows "Start tour"
+6. Tour can now be used completely offline
+
+**UI Components**:
+```tsx
+{/* Offline Download Message - StartCard.tsx */}
+{tour.offlineAvailable === true && !isDownloaded && !isDownloading && (
+  <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl mt-4 p-4">
+    <p className="text-amber-900 text-sm font-medium leading-relaxed">
+      Download this tour now to enjoy it offline in areas with limited connectivity.
+    </p>
+  </div>
+)}
+```
+
+**Implementation** (App.tsx:108):
+```typescript
+// Only enforce download if offlineAvailable is explicitly true
+if (tour.offlineAvailable === true && !downloadManager.isDownloaded) {
+  console.log('Tour requires offline download. Please download first.');
+  return; // Blocks tour start
+}
+```
+
+#### When `offlineAvailable: false` or `undefined`
+
+**Behavior**:
+- No download enforcement
+- Tour starts immediately on button click
+- No user message about downloading
+- Service Worker still caches assets opportunistically as they're accessed
+
+**User Experience**:
+1. No amber message shown
+2. Button shows "Start tour" with Headphones icon
+3. Click immediately starts tour
+4. Assets load from network and get cached by SW automatically
+5. If user goes offline later, previously loaded assets still work from cache
+
+**Use Cases**:
+- Tours designed for areas with reliable internet
+- Tours with very large assets (videos) that would take too long to pre-download
+- Beta/test tours where offline support isn't needed yet
+- Tours that frequently update content (prefer fresh network data)
+
+#### Architecture Benefits
+
+**Flexibility**: Tour creators can choose the right model per tour:
+- Museum tours in buildings with poor WiFi → `offlineAvailable: true`
+- City walking tours in urban areas with good coverage → `offlineAvailable: false`
+- Hybrid approach: Different tours optimized for their specific use case
+
+**Backward Compatibility**:
+- Tours without the flag (`undefined`) default to online-first behavior
+- Existing tours continue working without modification
+- No database migrations or storage schema changes required
+
+**User Control**:
+- Users of offline-required tours get clear guidance to download first
+- Users of online tours aren't forced to wait for large downloads
+- Both benefit from service worker caching in the background
+
+#### Technical Implementation
+
+**Files Modified**:
+1. **App.tsx** (lines 108-112) - Conditional download enforcement
+2. **StartCard.tsx** (lines 81-88, 101, 103, 143) - Conditional UI and button behavior
+
+**Key Logic Points**:
+
+```typescript
+// Button click handler (StartCard.tsx:101)
+if (tour.offlineAvailable === true && !isDownloaded && !isDownloading && onDownload) {
+  onDownload(); // Trigger download
+} else if (!isDownloading && (tour.offlineAvailable !== true || isDownloaded)) {
+  onAction(); // Start tour immediately
+}
+
+// Button label (StartCard.tsx:143)
+tour.offlineAvailable === true && !isDownloaded ? (
+  <>
+    <Sparkles size={20} strokeWidth={2.5} />
+    Download tour
+  </>
+) : (
+  <>
+    <Headphones size={20} strokeWidth={2.5} />
+    Start tour
+  </>
+)
+```
+
+#### Service Worker Integration
+
+**Important**: The service worker caching operates **independently** of the `offlineAvailable` flag:
+
+- Service worker always caches assets using defined strategies (see §2 Caching Strategies)
+- `offlineAvailable: true` adds **explicit pre-download** on top of SW caching
+- `offlineAvailable: false` relies **only** on SW opportunistic caching
+- Both approaches result in offline-capable apps, but with different timing
+
+**Example Flow Comparison**:
+
+**With `offlineAvailable: true`**:
+```
+1. User clicks "Download tour"
+2. Download manager fetches all assets explicitly
+3. Assets cached to 'tour-assets' cache via Cache API
+4. User can now start tour offline
+5. During playback, SW serves from cache (instant)
+```
+
+**With `offlineAvailable: false`**:
+```
+1. User clicks "Start tour" immediately
+2. Assets load from network on-demand
+3. Service worker caches each asset as it loads
+4. User can continue offline if they've already loaded the content
+5. During playback, SW serves from cache (if available) or network
+```
+
+#### Storage Tracking
+
+**IndexedDB `downloaded-tours` Store**:
+- Only used when `offlineAvailable: true`
+- Tracks which tours have been explicitly downloaded
+- Records: `tourId`, `downloadedAt`, `version`, `cachedAssets[]`, `sizeBytes`
+- Checked before allowing tour start
+
+**Service Worker Cache**:
+- Used by both modes (`true` and `false`)
+- Automatic caching based on runtime strategies
+- Not explicitly tracked in IndexedDB
+
+#### Edge Cases
+
+| Scenario | Behavior |
+|----------|----------|
+| User downloads tour, then sets `offlineAvailable: false` | Download record remains in IndexedDB, tour works offline, but download not enforced for new users |
+| User starts tour with `false`, goes offline mid-tour | Previously loaded stops work, unvisited stops fail to load |
+| Tour updated from `false` to `true` | Existing users see download prompt on next visit |
+| Download fails (CORS error, network issue) | Error message shown (red banner), user can retry, tour remains blocked |
+| User has slow connection with `true` | Download manager shows progress, user waits but gets guaranteed offline experience |
+
+#### Testing
+
+**Test Cases**:
+1. ✅ `offlineAvailable: true` - Verify download enforced, message shown
+2. ✅ `offlineAvailable: false` - Verify immediate start, no message
+3. ✅ `offlineAvailable: undefined` - Verify defaults to false behavior
+4. ✅ Download in progress - Verify message hides, button shows progress
+5. ✅ Download complete - Verify message hides, button shows "Start tour"
+6. ✅ Download error - Verify both error message and offline message visible
+7. ✅ Service Worker caching - Verify works in both modes
+8. ✅ Offline playback - Verify works after explicit download (`true`) or opportunistic caching (`false`)
+
+**Testing Commands**:
+```bash
+# Test in production mode (required for full offline functionality)
+npm run build
+npm run preview
+
+# Test offline behavior
+# 1. Load app online
+# 2. Open DevTools → Application → Service Workers
+# 3. Check "Offline" checkbox
+# 4. Reload page
+# 5. Verify tour works offline
+```
+
+---
+
 ## How It Works: Complete Flow
 
 ### First Visit
@@ -886,6 +1099,6 @@ content: [
 
 ---
 
-**Last Updated**: November 25, 2024
-**Version**: 1.0.0
-**Status**: Phases 1-3 Complete, Phases 4-5 Pending
+**Last Updated**: December 7, 2024
+**Version**: 1.1.0
+**Status**: All Phases Complete (1-5), Offline Configuration Added
