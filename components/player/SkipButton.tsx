@@ -19,17 +19,18 @@ export const SkipButton: React.FC<SkipButtonProps> = ({
     children
 }) => {
     return (
-        <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-                e.stopPropagation();
-                if (!disabled) onClick();
-            }}
-            className={`w-12 h-12 rounded-full text-gray-950 flex items-center justify-center hover:bg-gray-100 transition-colors relative ${disabled ? 'opacity-40' : ''} ${className}`}
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            disabled={disabled}
-        >
-            {children}
-        </motion.button>
+        <motion.div layout className="relative z-10 flex items-center justify-center">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!disabled) onClick();
+                }}
+                className={`w-12 h-12 rounded-full text-gray-950 flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-transform duration-100 ease-in-out ${disabled ? 'opacity-40' : ''} ${className}`}
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                disabled={disabled}
+            >
+                {children}
+            </button>
+        </motion.div>
     );
 };

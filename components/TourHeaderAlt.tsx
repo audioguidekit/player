@@ -29,7 +29,7 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
                 {/* Home Button - Ghost Style */}
                 <button
                     onClick={onBack}
-                    className="w-11 h-11 rounded-full flex items-center justify-center text-black hover:bg-gray-100 transition-colors active:scale-95 shrink-0"
+                    className="w-11 h-11 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors active:scale-95 shrink-0"
                 >
                     <Home size={24} />
                 </button>
@@ -45,7 +45,7 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
                     </div>
 
                     {/* Time Remaining Text */}
-                    <div className="text-sm font-medium text-gray-500 whitespace-nowrap tabular-nums">
+                    <div className="text-sm font-regular text-gray-600 whitespace-nowrap tabular-nums">
                         <AnimatedCounter value={totalMinutes - consumedMinutes} /> min left
                     </div>
                 </div>
