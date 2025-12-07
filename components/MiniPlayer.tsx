@@ -134,7 +134,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-[60]"
+        className="absolute bottom-0 left-0 right-0 z-[60]"
       >
         <div
           className="bg-white border-t border-gray-200 px-6 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] rounded-t-2xl"
@@ -231,6 +231,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 cx={32}
                 cy={32}
                 strokeDasharray={radius * 2 * Math.PI}
+                initial={{ strokeDashoffset: offset }}
                 animate={{ strokeDashoffset: offset }}
                 transition={{ duration: 0.1, ease: "linear" }}
                 strokeLinecap="round"
