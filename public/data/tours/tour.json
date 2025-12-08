@@ -111,13 +111,13 @@
     {
       "id": "13",
       "type": "image-text",
-      "image": "/_work/01.jpeg",
+      "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/f10g.jpg",
       "content": "The Mediterranean coastline of Barcelona offers stunning views and beautiful beaches. Visitors can enjoy the perfect combination of urban culture and seaside relaxation, making it a unique European capital."
     },
     {
       "id": "14",
       "type": "video",
-      "videoUrl": "/_work/intro.mp4",
+      "videoUrl": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/intro.webm",
       "caption": "Experience the vibrant streets and architecture of Barcelona in this short video tour."
     },
     {
