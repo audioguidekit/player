@@ -6,6 +6,7 @@ export interface UseAudioPlayerProps {
   isPlaying: boolean;
   onEnded?: () => void;
   onProgress?: (id: string | undefined, currentTime: number, duration: number, percentComplete: number) => void;
+  onPlayBlocked?: (error: unknown) => void;
 }
 
 export interface UseAudioPlayerReturn {
@@ -15,6 +16,7 @@ export interface UseAudioPlayerReturn {
   seek: (time: number) => void;
   skipForward: (seconds?: number) => void;
   skipBackward: (seconds?: number) => void;
+  audioElement: HTMLAudioElement | null;
 }
 
 /**
@@ -26,12 +28,34 @@ export const useAudioPlayer = ({
   isPlaying,
   onEnded,
   onProgress,
+  onPlayBlocked,
 }: UseAudioPlayerProps): UseAudioPlayerReturn => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrlRef = useRef<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+
+  const logAudioState = (label: string) => {
+    const audio = audioRef.current;
+    if (!audio) {
+      console.log(`[AUDIO] ${label} - no audio ref`);
+      return;
+    }
+    console.log(
+      `[AUDIO] ${label}`,
+      {
+        readyState: audio.readyState,
+        networkState: audio.networkState,
+        paused: audio.paused,
+        ended: audio.ended,
+        currentTime: audio.currentTime.toFixed(2),
+        duration: audio.duration || 0,
+        src: audio.src,
+        visibility: document.visibilityState,
+      }
+    );
+  };
 
   // Use refs for callbacks to avoid effect re-runs
   const onEndedRef = useRef(onEnded);
@@ -120,6 +144,7 @@ export const useAudioPlayer = ({
     const handleError = (e: Event) => {
       console.error('❌ Audio loading error:', e);
       console.error('Failed to load:', audioUrl);
+      logAudioState('error');
     };
 
     const handlePlay = () => {
@@ -128,6 +153,27 @@ export const useAudioPlayer = ({
 
     const handlePause = () => {
       console.log('⏸️ Audio paused');
+      logAudioState('paused');
+    };
+
+    const handleStalled = () => {
+      console.warn('⚠️ Audio stalled - readyState:', audio.readyState, 'networkState:', audio.networkState);
+    };
+
+    const handleWaiting = () => {
+      console.warn('⏳ Audio waiting for data - readyState:', audio.readyState, 'networkState:', audio.networkState);
+    };
+
+    const handleSuspend = () => {
+      console.warn('⚠️ Audio loading suspended - readyState:', audio.readyState, 'networkState:', audio.networkState);
+    };
+
+    const handleAbort = () => {
+      console.warn('⚠️ Audio load aborted - readyState:', audio.readyState, 'networkState:', audio.networkState);
+    };
+
+    const handleEmptied = () => {
+      console.warn('⚠️ Audio emptied - readyState:', audio.readyState, 'networkState:', audio.networkState);
     };
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -136,19 +182,11 @@ export const useAudioPlayer = ({
     audio.addEventListener('error', handleError);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
-
-    // If isPlaying is true when we create a new audio element, start playing it
-    // This handles the case where we auto-advance to the next track
-    if (isPlaying) {
-      console.log('🎵 isPlaying is true, auto-playing new audio');
-      const handleCanPlay = () => {
-        console.log('✅ New audio ready, auto-playing');
-        audio.play().catch((error) => {
-          console.error('❌ Auto-play failed:', error);
-        });
-      };
-      audio.addEventListener('canplay', handleCanPlay, { once: true });
-    }
+    audio.addEventListener('stalled', handleStalled);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('suspend', handleSuspend);
+    audio.addEventListener('abort', handleAbort);
+    audio.addEventListener('emptied', handleEmptied);
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -157,6 +195,11 @@ export const useAudioPlayer = ({
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('stalled', handleStalled);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('suspend', handleSuspend);
+      audio.removeEventListener('abort', handleAbort);
+      audio.removeEventListener('emptied', handleEmptied);
       audio.pause();
     };
   }, [audioUrl, isPlaying]);
@@ -173,12 +216,19 @@ export const useAudioPlayer = ({
 
     if (isPlaying) {
       console.log('▶️ Attempting to play...');
+      logAudioState('before play');
       // Wait for audio to be ready before playing
       const attemptPlay = () => {
+        // If already playing, no-op
+        if (!audio.paused && !audio.ended) {
+          return;
+        }
         if (audio.readyState >= 2) {
           console.log('✅ Audio ready, playing');
           audio.play().catch((error) => {
             console.error('❌ Play failed:', error);
+            logAudioState('play failed');
+            onPlayBlocked?.(error);
           });
         } else {
           console.log('⏳ Waiting for audio to be ready...');
@@ -187,6 +237,8 @@ export const useAudioPlayer = ({
             console.log('✅ Audio ready, playing');
             audio.play().catch((error) => {
               console.error('❌ Play failed:', error);
+              logAudioState('play failed after canplay');
+              onPlayBlocked?.(error);
             });
             audio.removeEventListener('canplay', handleCanPlay);
           };
@@ -229,5 +281,6 @@ export const useAudioPlayer = ({
     seek,
     skipForward,
     skipBackward,
+    audioElement: audioRef.current,
   };
 };

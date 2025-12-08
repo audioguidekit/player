@@ -1,9 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Stop, TourData } from '../types';
 
 interface UseTourNavigationOptions {
     tour: TourData | null;
     onTrackChange?: (stopId: string) => void;
+    allowAutoPlay?: boolean;
 }
 
 interface UseTourNavigationReturn {
@@ -35,7 +36,8 @@ interface UseTourNavigationReturn {
  */
 export const useTourNavigation = ({
     tour,
-    onTrackChange
+    onTrackChange,
+    allowAutoPlay = true,
 }: UseTourNavigationOptions): UseTourNavigationReturn => {
     const [currentStopId, setCurrentStopId] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -43,6 +45,11 @@ export const useTourNavigation = ({
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isSwitchingTracks, setIsSwitchingTracks] = useState(false);
     const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const allowAutoPlayRef = useRef<boolean>(allowAutoPlay);
+
+    useEffect(() => {
+        allowAutoPlayRef.current = allowAutoPlay;
+    }, [allowAutoPlay]);
 
     const handlePlayPause = useCallback(() => {
         setIsPlaying(prev => !prev);
@@ -78,7 +85,7 @@ export const useTourNavigation = ({
             setIsSwitchingTracks(true);
             setTimeout(() => {
                 setCurrentStopId(nextAudioStop.id);
-                setIsPlaying(true);
+                setIsPlaying(allowAutoPlayRef.current ? true : false);
                 setIsSwitchingTracks(false);
                 onTrackChange?.(nextAudioStop.id);
             }, 300);
@@ -95,7 +102,7 @@ export const useTourNavigation = ({
             setIsSwitchingTracks(true);
             setTimeout(() => {
                 setCurrentStopId(prevAudioStop.id);
-                setIsPlaying(true);
+                setIsPlaying(allowAutoPlayRef.current ? true : false);
                 setIsSwitchingTracks(false);
                 onTrackChange?.(prevAudioStop.id);
             }, 300);
@@ -132,7 +139,7 @@ export const useTourNavigation = ({
 
                 // Switch to next track
                 setCurrentStopId(nextAudioStop.id);
-                setIsPlaying(true);
+                setIsPlaying(allowAutoPlayRef.current ? true : false);
 
                 // Trigger track switch visual effect
                 setIsSwitchingTracks(true);

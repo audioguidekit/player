@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
-import { SheetType, Language } from './types';
+import { SheetType, Language, AudioStop } from './types';
 import { RatingSheet } from './components/sheets/RatingSheet';
 import { LanguageSheet } from './components/sheets/LanguageSheet';
 import { TourCompleteSheet } from './components/sheets/TourCompleteSheet';
@@ -35,6 +35,7 @@ const App: React.FC = () => {
   // Navigation & State
   const [activeSheet, setActiveSheet] = useState<SheetType>('NONE');
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
+  const [allowAutoPlay, setAllowAutoPlay] = useState(true);
 
   // Set default language when languages are loaded
   useEffect(() => {
@@ -74,6 +75,7 @@ const App: React.FC = () => {
     endCompletionAnimation
   } = useTourNavigation({
     tour,
+    allowAutoPlay,
     onTrackChange: (stopId) => {
       // Auto-scroll to the new track
       setScrollToStopId(stopId);
@@ -85,32 +87,154 @@ const App: React.FC = () => {
   const [scrollToStopId, setScrollToStopId] = useState<string | null>(null);
   const [hasShownCompletionSheet, setHasShownCompletionSheet] = useState(false);
 
+  const getArtworkType = (src: string | undefined) => {
+    if (!src) return undefined;
+    const lower = src.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    return undefined;
+  };
+
   // Derived State
   const currentStop = currentStopId && tour ? tour.stops.find(s => s.id === currentStopId) : undefined;
   // Get current audio stop (type-safe)
   const currentAudioStop = currentStop?.type === 'audio' ? currentStop : undefined;
+  const audioPlaylist: AudioStop[] = useMemo(
+    () => tour?.stops.filter((stop): stop is AudioStop => stop.type === 'audio') || [],
+    [tour]
+  );
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
 
   // Memoize navigation state
-  const canGoNext = useMemo(() => {
-    if (!currentStopId || !tour) return false;
-    const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
-    const nextAudioStop = tour.stops.slice(currentIndex + 1).find(s => s.type === 'audio');
-    return !!nextAudioStop;
-  }, [currentStopId, tour]);
+  const currentAudioIndex = useMemo(
+    () => (currentAudioStop ? audioPlaylist.findIndex((stop) => stop.id === currentAudioStop.id) : -1),
+    [audioPlaylist, currentAudioStop]
+  );
 
-  const canGoPrev = useMemo(() => {
-    if (!currentStopId || !tour) return false;
-    const currentIndex = tour.stops.findIndex(s => s.id === currentStopId);
-    const prevAudioStop = tour.stops.slice(0, currentIndex).reverse().find(s => s.type === 'audio');
-    return !!prevAudioStop;
-  }, [currentStopId, tour]);
+  const canGoNext = useMemo(() => currentAudioIndex >= 0 && currentAudioIndex < audioPlaylist.length - 1, [audioPlaylist.length, currentAudioIndex]);
+
+  const canGoPrev = useMemo(() => currentAudioIndex > 0, [currentAudioIndex]);
+
+  // Handle audio progress
+  const handleAudioProgress = useCallback((id: string | undefined, currentTime: number, duration: number, percentComplete: number) => {
+    if (isTransitioning) return;
+    if (id && id !== currentStopId) return;
+    if (!currentStopId) return;
+
+    if (percentComplete >= 100 && !progressTracking.isStopCompleted(currentStopId)) {
+      progressTracking.markStopCompleted(currentStopId);
+      startCompletionAnimation();
+    }
+
+    progressTracking.updateStopPosition(currentStopId, currentTime);
+    progressTracking.updateStopMaxProgress(currentStopId, percentComplete);
+  }, [currentStopId, progressTracking, isTransitioning, startCompletionAnimation]);
+
+  const handleAudioEnded = useCallback(async () => {
+    if (isTransitioning) return;
+    handleTrackTransition();
+  }, [handleTrackTransition, isTransitioning]);
+
+  // Audio Player
+  const audioPlayer = useAudioPlayer({
+    audioUrl: isTransitioning && tour?.transitionAudio
+      ? tour.transitionAudio
+      : (currentAudioStop?.audioFile || null),
+    id: currentStopId || undefined,
+    isPlaying,
+    onEnded: handleAudioEnded,
+    onProgress: handleAudioProgress,
+    onPlayBlocked: () => {
+      console.warn('[Audio] Play was blocked by the browser. Requiring user interaction to resume.');
+      setIsPlaying(false);
+    },
+  });
+
+  // Media Session metadata
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (!tour || !currentAudioStop) return;
+
+    const artworkType = getArtworkType(currentAudioStop.image);
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentAudioStop.title,
+      artist: tour.title,
+      album: 'Audio Tour',
+      artwork: currentAudioStop.image
+        ? [{
+            src: currentAudioStop.image,
+            sizes: '512x512',
+            ...(artworkType ? { type: artworkType } : {})
+          }]
+        : [],
+    });
+  }, [tour, currentAudioStop]);
+
+  // Media Session action handlers
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    const audioEl = audioPlayer.audioElement;
+    if (!audioEl) return;
+
+    const safePlay = () => {
+      audioEl.play().catch((err) => console.error('MediaSession play failed', err));
+    };
+    const safePause = () => audioEl.pause();
+
+    navigator.mediaSession.setActionHandler('play', safePlay);
+    navigator.mediaSession.setActionHandler('pause', safePause);
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (canGoNext) {
+        handleNextStop();
+      }
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (canGoPrev) {
+        handlePrevStop();
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      const seekOffset = details.seekOffset ?? 10;
+      audioEl.currentTime = Math.min(audioEl.currentTime + seekOffset, audioEl.duration || audioEl.currentTime);
+    });
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      const seekOffset = details.seekOffset ?? 10;
+      audioEl.currentTime = Math.max(audioEl.currentTime - seekOffset, 0);
+    });
+
+    return () => {
+      navigator.mediaSession.setActionHandler('play', null);
+      navigator.mediaSession.setActionHandler('pause', null);
+      navigator.mediaSession.setActionHandler('nexttrack', null);
+      navigator.mediaSession.setActionHandler('previoustrack', null);
+      navigator.mediaSession.setActionHandler('seekforward', null);
+      navigator.mediaSession.setActionHandler('seekbackward', null);
+    };
+  }, [audioPlayer.audioElement, canGoNext, canGoPrev, handleNextStop, handlePrevStop]);
+
+  // Global error logging to surface crashes
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      console.error('[GLOBAL ERROR]', event.message, event.error);
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      console.error('[GLOBAL UNHANDLED REJECTION]', event.reason);
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
 
   // Handlers
   const handleStartTour = () => {
     if (!tour || tour.stops.length === 0) return;
     setHasStarted(true);
+    setAllowAutoPlay(true); // user initiated
     // Only auto-play if this is the first time starting (no current stop set)
     if (!currentStopId) {
       const firstAudioStop = tour.stops.find(s => s.type === 'audio');
@@ -135,6 +259,7 @@ const App: React.FC = () => {
       setCurrentStopId(firstAudioStop.id);
       setIsPlaying(true);
       setHasStarted(true);
+      setAllowAutoPlay(true);
     }
     setActiveSheet('NONE');
   };
@@ -156,42 +281,6 @@ const App: React.FC = () => {
     onDownloadComplete: () => {
       handleStartTour();
     }
-  });
-
-  // Handle audio progress
-  const handleAudioProgress = useCallback((id: string | undefined, currentTime: number, duration: number, percentComplete: number) => {
-    if (isTransitioning) return;
-    if (id && id !== currentStopId) return;
-    if (!currentStopId) return;
-
-    if (percentComplete >= 100 && !progressTracking.isStopCompleted(currentStopId)) {
-      progressTracking.markStopCompleted(currentStopId);
-      startCompletionAnimation();
-    }
-
-    progressTracking.updateStopPosition(currentStopId, currentTime);
-    progressTracking.updateStopMaxProgress(currentStopId, percentComplete);
-  }, [currentStopId, progressTracking, isTransitioning, startCompletionAnimation]);
-
-  const handleAudioEnded = useCallback(async () => {
-    if (isTransitioning) return;
-    // Let useTourNavigation handle the logic? 
-    // Actually useTourNavigation doesn't handle audio ended logic automatically, 
-    // it exposes actions.
-    // We kept complex audio ended logic in App.tsx in previous versions.
-    // Now restored via handleTrackTransition in useTourNavigation
-    handleTrackTransition();
-  }, [handleTrackTransition, isTransitioning]);
-
-  // Audio Player
-  const audioPlayer = useAudioPlayer({
-    audioUrl: isTransitioning && tour?.transitionAudio
-      ? tour.transitionAudio
-      : (currentAudioStop?.audioFile || null),
-    id: currentStopId || undefined,
-    isPlaying,
-    onEnded: handleAudioEnded,
-    onProgress: handleAudioProgress,
   });
 
   // Memoize progress
