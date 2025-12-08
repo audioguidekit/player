@@ -2,29 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, CircleCheckBig, Mail } from 'lucide-react';
 import { BottomSheet } from '../BottomSheet';
+import { useRating } from '../../context/RatingContext';
 
 interface RatingSheetProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (rating: number) => void;
 }
 
 type RatingStep = 'RATING' | 'EMAIL' | 'THANKS';
 
-export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => {
-  const [step, setStep] = useState<RatingStep>('RATING');
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
-  const [email, setEmail] = useState('');
+export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSubmit }) => {
+  const {
+    rating, setRating,
+    feedback, setFeedback,
+    email, setEmail,
+    isSubmitted, submitRating
+  } = useRating();
 
-  // Reset state when sheet opens
+  const [step, setStep] = useState<RatingStep>('RATING');
+
+  // Sync step with submission state
   useEffect(() => {
     if (isOpen) {
-      setStep('RATING');
-      setRating(0);
-      setFeedback('');
-      setEmail('');
+      if (isSubmitted) {
+        setStep('THANKS');
+      } else if (rating > 0 && feedback.length > 0) {
+        // If they already rated and typed feedback (e.g. in the card), 
+        // maybe we should start at EMAIL or keep them at RATING depending on UX.
+        // Let's keep them at RATING so they can review, unless they submitted.
+        setStep('RATING');
+      } else {
+        setStep('RATING');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isSubmitted, rating, feedback.length]);
 
   const handleFeedbackSubmit = () => {
     // Proceed to email step
@@ -32,11 +44,12 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
   };
 
   const handleEmailSubmit = () => {
-    // In a real app, send email API call here
+    submitRating(); // Use context submit
     setStep('THANKS');
   };
 
   const handleSkip = () => {
+    submitRating(); // Submit without email
     setStep('THANKS');
   };
 
@@ -46,7 +59,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
 
   // Button is disabled if no feedback text
   const isFeedbackButtonDisabled = feedback.trim().length === 0;
-  
+
   // Email validation (simple check)
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -54,7 +67,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <div className="p-6 pb-8 flex flex-col items-center">
         <AnimatePresence mode="wait" initial={false}>
-          
+
           {/* STEP 1: RATING & FEEDBACK */}
           {step === 'RATING' && (
             <motion.div
@@ -91,34 +104,34 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
 
               {/* Dynamic Content Container */}
               <div className="w-full flex flex-col items-center">
-                
+
                 {/* Animated Hint Text - Increased to text-sm */}
                 <div className="h-6 mb-4 relative w-full flex justify-center overflow-visible">
-                   <AnimatePresence mode="wait">
-                     {rating === 0 ? (
-                       <motion.span
-                         key="hint-start"
-                         initial={{ opacity: 0, y: 5 }}
-                         animate={{ opacity: 1, y: 0 }}
-                         exit={{ opacity: 0, y: -5 }}
-                         transition={{ duration: 0.2 }}
-                         className="text-sm text-gray-400 font-medium absolute top-0"
-                       >
-                         Tap to rate
-                       </motion.span>
-                     ) : (
-                       <motion.span
-                         key="hint-details"
-                         initial={{ opacity: 0, y: 5 }}
-                         animate={{ opacity: 1, y: 0 }}
-                         exit={{ opacity: 0, y: -5 }}
-                         transition={{ duration: 0.2 }}
-                         className="text-sm text-gray-400 font-medium absolute top-0"
-                       >
-                         Mind sharing more details?
-                       </motion.span>
-                     )}
-                   </AnimatePresence>
+                  <AnimatePresence mode="wait">
+                    {rating === 0 ? (
+                      <motion.span
+                        key="hint-start"
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-sm text-gray-400 font-medium absolute top-0"
+                      >
+                        Tap to rate
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="hint-details"
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-sm text-gray-400 font-medium absolute top-0"
+                      >
+                        Mind sharing more details?
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Form Area (Expands when rated) */}
@@ -143,9 +156,9 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
                         onClick={handleFeedbackSubmit}
                         disabled={isFeedbackButtonDisabled}
                         className={`w-full py-4 rounded-full font-bold text-base transition-all duration-300
-                          ${isFeedbackButtonDisabled 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                              : 'bg-black text-white hover:bg-gray-900 shadow-lg active:scale-[0.98]'
+                          ${isFeedbackButtonDisabled
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-black text-white hover:bg-gray-900 shadow-lg active:scale-[0.98]'
                           }`}
                       >
                         Next
@@ -194,13 +207,13 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
                     disabled={!isEmailValid}
                     className={`w-full py-4 rounded-full font-bold text-base transition-all duration-300
                       ${!isEmailValid
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                          : 'bg-black text-white hover:bg-gray-900 shadow-lg active:scale-[0.98]'
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-black text-white hover:bg-gray-900 shadow-lg active:scale-[0.98]'
                       }`}
                   >
                     Subscribe
                   </button>
-                  
+
                   <button
                     onClick={handleSkip}
                     className="w-full py-2 text-base font-medium text-gray-400 hover:text-gray-600 transition-colors"
@@ -214,28 +227,28 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose }) => 
 
           {/* STEP 3: THANKS */}
           {step === 'THANKS' && (
-             <motion.div
-               key="thanks-step"
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0 }}
-               transition={{ duration: 0.3 }}
-               className="w-full flex flex-col items-center justify-center py-8"
-             >
-                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-600">
-                   <CircleCheckBig size={40} strokeWidth={1.5} />
-                </div>
-                
-                <h3 className="text-2xl font-bold mb-2">Thank you!</h3>
-                <p className="text-gray-500 text-base mb-8">We appreciate your feedback.</p>
+            <motion.div
+              key="thanks-step"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full flex flex-col items-center justify-center py-8"
+            >
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-600">
+                <CircleCheckBig size={40} strokeWidth={1.5} />
+              </div>
 
-                <button
-                  onClick={handleFinalClose}
-                  className="w-full py-4 rounded-full font-bold text-base bg-black text-white hover:bg-gray-900 shadow-lg active:scale-[0.98] transition-all"
-                >
-                  Close
-                </button>
-             </motion.div>
+              <h3 className="text-2xl font-bold mb-2">Thank you!</h3>
+              <p className="text-gray-500 text-base mb-8">We appreciate your feedback.</p>
+
+              <button
+                onClick={handleFinalClose}
+                className="w-full py-4 rounded-full font-bold text-base bg-black text-white hover:bg-gray-900 shadow-lg active:scale-[0.98] transition-all"
+              >
+                Close
+              </button>
+            </motion.div>
           )}
 
         </AnimatePresence>

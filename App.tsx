@@ -18,6 +18,7 @@ import { MobileFrame } from './components/shared/MobileFrame';
 import { useProgressTracking } from './hooks/useProgressTracking';
 import { useDownloadManager } from './hooks/useDownloadManager';
 import { useTourNavigation } from './hooks/useTourNavigation';
+import { RatingProvider } from './context/RatingContext';
 
 const App: React.FC = () => {
   // Get route params
@@ -280,112 +281,114 @@ const App: React.FC = () => {
 
   return (
     <MobileFrame>
-      <div className="relative w-full h-full bg-white overflow-hidden flex flex-col font-sans text-base">
-        {/* Main Content Area */}
-        <div className={`flex-1 relative overflow-hidden ${hasStarted ? 'bg-white' : 'bg-black'}`}>
-          <TourStart
-            tour={tour}
-            onOpenRating={() => setActiveSheet('RATING')}
-            onOpenLanguage={() => setActiveSheet('LANGUAGE')}
-            sheetY={sheetY}
-            collapsedY={collapsedY}
-            isVisible={true}
+      <RatingProvider>
+        <div className="relative w-full h-full bg-white overflow-hidden flex flex-col font-sans text-base">
+          {/* Main Content Area */}
+          <div className={`flex-1 relative overflow-hidden ${hasStarted ? 'bg-white' : 'bg-black'}`}>
+            <TourStart
+              tour={tour}
+              onOpenRating={() => setActiveSheet('RATING')}
+              onOpenLanguage={() => setActiveSheet('LANGUAGE')}
+              sheetY={sheetY}
+              collapsedY={collapsedY}
+              isVisible={true}
+              selectedLanguage={selectedLanguage}
+              onStart={handleStartTour}
+              availableLanguages={languages}
+              onLanguageChange={handleLanguageChange}
+            />
+
+            <MainSheet
+              isExpanded={hasStarted}
+              onExpand={handleStartTour}
+              onCollapse={handleBackToStart}
+              sheetY={sheetY}
+              onLayoutChange={setCollapsedY}
+              startContent={
+                <StartCard
+                  tour={tour}
+                  hasStarted={!!currentStopId}
+                  onAction={handleStartTour}
+                  isDownloading={downloadManager.isDownloading}
+                  isDownloaded={downloadManager.isDownloaded}
+                  downloadProgress={downloadManager.downloadProgress.percentage}
+                  onDownload={downloadManager.startDownload}
+                  downloadError={downloadManager.error}
+                  tourProgress={tourProgress}
+                  onResetProgress={handleResetTour}
+                />
+              }
+              detailContent={
+                <TourDetail
+                  tour={tour}
+                  currentStopId={currentStopId}
+                  isPlaying={isPlaying}
+                  onStopClick={handleStopClick}
+                  onTogglePlay={handlePlayPause}
+                  onStopPlayPause={handleStopPlayPause}
+                  onBack={handleBackToStart}
+                  tourProgress={tourProgress}
+                  consumedMinutes={consumedMinutes}
+                  totalMinutes={totalMinutes}
+                  completedStopsCount={progressTracking.getCompletedStopsCount()}
+                  isStopCompleted={progressTracking.isStopCompleted}
+                  scrollToStopId={scrollToStopId}
+                  onScrollComplete={() => setScrollToStopId(null)}
+                />
+              }
+            />
+
+            {/* Mini Player */}
+            <AnimatePresence>
+              {shouldShowMiniPlayer && currentAudioStop && (
+                <MiniPlayer
+                  currentStop={currentAudioStop}
+                  isPlaying={isPlaying}
+                  onTogglePlay={handlePlayPause}
+                  onRewind={() => audioPlayer.seek(audioPlayer.currentTime - 15)}
+                  onForward={() => audioPlayer.seek(audioPlayer.currentTime + 15)}
+                  onClick={() => {
+                    if (currentStopId) setScrollToStopId(currentStopId);
+                  }}
+                  progress={audioPlayer.progress}
+                  isExpanded={isMiniPlayerExpanded}
+                  onToggleExpanded={setIsMiniPlayerExpanded}
+                  isCompleting={isAudioCompleting}
+                  isTransitioning={isTransitioning || isSwitchingTracks}
+                  onNextTrack={handleNextStop}
+                  onPrevTrack={handlePrevStop}
+                  canGoNext={canGoNext}
+                  canGoPrev={canGoPrev}
+                />
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Floating Controls Removed - TourDetail handles the header */}
+
+          {/* Sheets */}
+          <RatingSheet
+            isOpen={activeSheet === 'RATING'}
+            onClose={closeSheet}
+            onSubmit={handleRatingSubmit}
+          />
+
+          <LanguageSheet
+            isOpen={activeSheet === 'LANGUAGE'}
+            onClose={closeSheet}
             selectedLanguage={selectedLanguage}
-            onStart={handleStartTour}
-            availableLanguages={languages}
-            onLanguageChange={handleLanguageChange}
+            languages={languages}
+            onSelect={handleLanguageChange}
           />
 
-          <MainSheet
-            isExpanded={hasStarted}
-            onExpand={handleStartTour}
-            onCollapse={handleBackToStart}
-            sheetY={sheetY}
-            onLayoutChange={setCollapsedY}
-            startContent={
-              <StartCard
-                tour={tour}
-                hasStarted={!!currentStopId}
-                onAction={handleStartTour}
-                isDownloading={downloadManager.isDownloading}
-                isDownloaded={downloadManager.isDownloaded}
-                downloadProgress={downloadManager.downloadProgress.percentage}
-                onDownload={downloadManager.startDownload}
-                downloadError={downloadManager.error}
-                tourProgress={tourProgress}
-                onResetProgress={handleResetTour}
-              />
-            }
-            detailContent={
-              <TourDetail
-                tour={tour}
-                currentStopId={currentStopId}
-                isPlaying={isPlaying}
-                onStopClick={handleStopClick}
-                onTogglePlay={handlePlayPause}
-                onStopPlayPause={handleStopPlayPause}
-                onBack={handleBackToStart}
-                tourProgress={tourProgress}
-                consumedMinutes={consumedMinutes}
-                totalMinutes={totalMinutes}
-                completedStopsCount={progressTracking.getCompletedStopsCount()}
-                isStopCompleted={progressTracking.isStopCompleted}
-                scrollToStopId={scrollToStopId}
-                onScrollComplete={() => setScrollToStopId(null)}
-              />
-            }
+          <TourCompleteSheet
+            isOpen={activeSheet === 'TOUR_COMPLETE'}
+            onClose={closeSheet}
+            onRate={() => setActiveSheet('RATING')}
+            onReplay={handleResetTour}
           />
-
-          {/* Mini Player */}
-          <AnimatePresence>
-            {shouldShowMiniPlayer && currentAudioStop && (
-              <MiniPlayer
-                currentStop={currentAudioStop}
-                isPlaying={isPlaying}
-                onTogglePlay={handlePlayPause}
-                onRewind={() => audioPlayer.seek(audioPlayer.currentTime - 15)}
-                onForward={() => audioPlayer.seek(audioPlayer.currentTime + 15)}
-                onClick={() => {
-                  if (currentStopId) setScrollToStopId(currentStopId);
-                }}
-                progress={audioPlayer.progress}
-                isExpanded={isMiniPlayerExpanded}
-                onToggleExpanded={setIsMiniPlayerExpanded}
-                isCompleting={isAudioCompleting}
-                isTransitioning={isTransitioning || isSwitchingTracks}
-                onNextTrack={handleNextStop}
-                onPrevTrack={handlePrevStop}
-                canGoNext={canGoNext}
-                canGoPrev={canGoPrev}
-              />
-            )}
-          </AnimatePresence>
         </div>
-
-        {/* Floating Controls Removed - TourDetail handles the header */}
-
-        {/* Sheets */}
-        <RatingSheet
-          isOpen={activeSheet === 'RATING'}
-          onClose={closeSheet}
-          onSubmit={handleRatingSubmit}
-        />
-
-        <LanguageSheet
-          isOpen={activeSheet === 'LANGUAGE'}
-          onClose={closeSheet}
-          selectedLanguage={selectedLanguage}
-          languages={languages}
-          onSelect={handleLanguageChange}
-        />
-
-        <TourCompleteSheet
-          isOpen={activeSheet === 'TOUR_COMPLETE'}
-          onClose={closeSheet}
-          onRate={() => setActiveSheet('RATING')}
-          onReplay={handleResetTour}
-        />
-      </div>
+      </RatingProvider>
     </MobileFrame>
   );
 };

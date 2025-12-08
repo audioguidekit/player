@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RatingStop } from '../../types';
+import { useRating } from '../../context/RatingContext';
 
 interface RatingCardProps {
   item: RatingStop;
 }
 
 export const RatingCard: React.FC<RatingCardProps> = ({ item }) => {
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { rating, setRating, feedback, setFeedback, isSubmitted, submitRating } = useRating();
 
   const handleSubmit = () => {
     if (feedback.trim().length === 0) return;
-
-    // In a real app, send to API
-    console.log('Rating submitted:', { rating, feedback });
-    setIsSubmitted(true);
+    submitRating();
   };
 
   const isFeedbackButtonDisabled = feedback.trim().length === 0;
