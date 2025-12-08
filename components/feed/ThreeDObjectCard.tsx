@@ -29,25 +29,36 @@ interface ThreeDObjectCardProps {
 }
 
 export const ThreeDObjectCard: React.FC<ThreeDObjectCardProps> = ({ item }) => {
+  // Safari (especially iOS) can lose the WebGL context and crash the page when
+  // model-viewer initializes heavy GLB files. Detect Safari and render a safe
+  // fallback to avoid the repeated page reload loop the user reported.
+  const isSafari = typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
   return (
     <div className="bg-white rounded-2xl overflow-hidden mb-4 shadow-sm border border-gray-100">
       <div className="w-full h-80 bg-gradient-to-br from-gray-50 to-gray-100 relative">
-        <model-viewer
-          src={item.modelUrl}
-          alt="3D model"
-          camera-controls
-          auto-rotate
-          rotation-per-second="30deg"
-          shadow-intensity="1"
-          exposure="1"
-          loading="eager"
-          interaction-prompt="auto"
-          style={{
-            width: '100%',
-            height: '100%',
-            background: 'transparent'
-          }}
-        />
+        {isSafari ? (
+          <div className="w-full h-full flex items-center justify-center px-6 text-center text-sm text-gray-600">
+            3D preview is not available on Safari yet. Please open in Chrome or use the offline guide.
+          </div>
+        ) : (
+          <model-viewer
+            src={item.modelUrl}
+            alt="3D model"
+            camera-controls
+            auto-rotate
+            rotation-per-second="30deg"
+            shadow-intensity="1"
+            exposure="1"
+            loading="eager"
+            interaction-prompt="auto"
+            style={{
+              width: '100%',
+              height: '100%',
+              background: 'transparent'
+            }}
+          />
+        )}
       </div>
       {item.caption && (
         <div className="p-6">
