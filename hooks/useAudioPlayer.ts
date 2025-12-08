@@ -1,5 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 
+// Debug flag: enable via VITE_DEBUG_AUDIO=true or automatically in dev mode
+// @ts-expect-error - Vite env types are injected at build time
+const DEBUG_AUDIO = import.meta.env.VITE_DEBUG_AUDIO === 'true' || import.meta.env.DEV;
+
+const debugLog = (...args: unknown[]) => {
+  if (DEBUG_AUDIO) {
+    console.log(...args);
+  }
+};
+
+const debugWarn = (...args: unknown[]) => {
+  if (DEBUG_AUDIO) {
+    console.warn(...args);
+  }
+};
+
 export interface UseAudioPlayerProps {
   audioUrl: string | null;
   id?: string;
@@ -20,7 +36,27 @@ export interface UseAudioPlayerReturn {
 }
 
 /**
- * Custom hook for audio playback
+ * Custom hook for audio playback.
+ * 
+ * ⚠️ IMPORTANT: This hook creates a single HTMLAudioElement instance.
+ * Use this hook ONCE at the app/player level, NOT per track/item in a list.
+ * 
+ * ❌ WRONG - Don't do this:
+ *   {tracks.map(track => {
+ *     const player = useAudioPlayer({ audioUrl: track.url, ... });
+ *     // This creates multiple Audio elements!
+ *   })}
+ * 
+ * ✅ CORRECT - Do this:
+ *   // In App.tsx or a global player component
+ *   const audioPlayer = useAudioPlayer({
+ *     audioUrl: currentTrack?.url,
+ *     isPlaying: isPlaying,
+ *     ...
+ *   });
+ * 
+ * The hook manages a single audio element and switches URLs as needed.
+ * For sequential playback (like audio tours), use one instance and update audioUrl.
  */
 export const useAudioPlayer = ({
   audioUrl,
@@ -37,12 +73,13 @@ export const useAudioPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
 
   const logAudioState = (label: string) => {
+    if (!DEBUG_AUDIO) return;
     const audio = audioRef.current;
     if (!audio) {
-      console.log(`[AUDIO] ${label} - no audio ref`);
+      debugLog(`[AUDIO] ${label} - no audio ref`);
       return;
     }
-    console.log(
+    debugLog(
       `[AUDIO] ${label}`,
       {
         readyState: audio.readyState,
@@ -57,17 +94,23 @@ export const useAudioPlayer = ({
     );
   };
 
-  // Use refs for callbacks to avoid effect re-runs
+  // Use refs for callbacks and id to avoid effect re-runs and ensure current values
   const onEndedRef = useRef(onEnded);
   const onProgressRef = useRef(onProgress);
+  const isPlayingRef = useRef(isPlaying);
+  const idRef = useRef(id);
+  const onPlayBlockedRef = useRef(onPlayBlocked);
 
-  // Update refs when callbacks change
+  // Update refs when values change
   useEffect(() => {
     onEndedRef.current = onEnded;
     onProgressRef.current = onProgress;
-  }, [onEnded, onProgress]);
+    isPlayingRef.current = isPlaying;
+    idRef.current = id;
+    onPlayBlockedRef.current = onPlayBlocked;
+  }, [onEnded, onProgress, isPlaying, id, onPlayBlocked]);
 
-  // Create audio element when URL changes
+  // 1) Audio element lifecycle & listeners – depends only on audioUrl
   useEffect(() => {
     if (!audioUrl) {
       if (audioRef.current) {
@@ -81,13 +124,23 @@ export const useAudioPlayer = ({
       return;
     }
 
-    // Don't recreate audio if URL hasn't changed - return before cleanup runs
+    // Don't recreate audio if URL hasn't changed
+    // BUT: We still need to ensure listeners are attached (they might have been removed by cleanup)
     if (currentAudioUrlRef.current === audioUrl && audioRef.current) {
-      console.log('Audio URL unchanged, keeping existing audio element');
-      return;
+      debugLog('Audio URL unchanged, keeping existing audio element');
+      const audio = audioRef.current;
+      
+      // Ensure duration is set if metadata has loaded
+      if (audio.duration && isFinite(audio.duration) && duration === 0) {
+        setDuration(audio.duration);
+      }
+      
+      // Listeners should already be attached, but if effect re-ran due to other deps,
+      // cleanup may have removed them. Since we're reusing the element, listeners should persist.
+      // No need to re-attach - they're already there from the initial setup.
     }
 
-    console.log('Loading audio:', audioUrl);
+    debugLog('Loading audio:', audioUrl);
 
     // Clean up old audio if it exists
     if (audioRef.current) {
@@ -107,12 +160,11 @@ export const useAudioPlayer = ({
     audioRef.current = audio;
 
     // Set audio properties
-    audio.crossOrigin = 'anonymous'; // Ensure CORS is used to match cached response
-    audio.src = audioUrl; // Set src AFTER setting crossOrigin
-    audio.preload = 'auto';
+    audio.src = audioUrl;
+    audio.preload = 'metadata'; // Load metadata only - less aggressive on mobile
     audio.volume = 1.0;
     audio.muted = false;
-    audio.load(); // Ensure loading starts immediately
+    // Note: Setting src already triggers loading. Explicit load() not needed.
 
     // Set up event listeners
     const handleLoadedMetadata = () => {
@@ -120,22 +172,24 @@ export const useAudioPlayer = ({
     };
 
     const handleTimeUpdate = () => {
-      // console.log('⏱️ timeupdate - currentTime:', audio.currentTime.toFixed(2));
-      setCurrentTime(audio.currentTime);
-      if (audio.duration) {
-        const percentComplete = (audio.currentTime / audio.duration) * 100;
-        // console.log('📊 Progress:', percentComplete.toFixed(1) + '%');
+      const currentTime = audio.currentTime;
+      const duration = audio.duration;
+      
+      setCurrentTime(currentTime);
+      
+      if (duration && isFinite(duration)) {
+        const percentComplete = (currentTime / duration) * 100;
         setProgress(percentComplete);
 
         // Call progress callback if provided
         if (onProgressRef.current) {
-          onProgressRef.current(id, audio.currentTime, audio.duration, percentComplete);
+          onProgressRef.current(idRef.current, currentTime, duration, percentComplete);
         }
       }
     };
 
     const handleEnded = () => {
-      console.log('🏁 Audio ended');
+      debugLog('🏁 Audio ended');
       setProgress(0);
       setCurrentTime(0);
       onEndedRef.current?.();
@@ -148,32 +202,32 @@ export const useAudioPlayer = ({
     };
 
     const handlePlay = () => {
-      console.log('▶️ Audio playing');
+      debugLog('▶️ Audio playing');
     };
 
     const handlePause = () => {
-      console.log('⏸️ Audio paused');
+      debugLog('⏸️ Audio paused');
       logAudioState('paused');
     };
 
     const handleStalled = () => {
-      console.warn('⚠️ Audio stalled - readyState:', audio.readyState, 'networkState:', audio.networkState);
+      debugWarn('⚠️ Audio stalled - readyState:', audio.readyState, 'networkState:', audio.networkState);
     };
 
     const handleWaiting = () => {
-      console.warn('⏳ Audio waiting for data - readyState:', audio.readyState, 'networkState:', audio.networkState);
+      debugWarn('⏳ Audio waiting for data - readyState:', audio.readyState, 'networkState:', audio.networkState);
     };
 
     const handleSuspend = () => {
-      console.warn('⚠️ Audio loading suspended - readyState:', audio.readyState, 'networkState:', audio.networkState);
+      debugWarn('⚠️ Audio loading suspended - readyState:', audio.readyState, 'networkState:', audio.networkState);
     };
 
     const handleAbort = () => {
-      console.warn('⚠️ Audio load aborted - readyState:', audio.readyState, 'networkState:', audio.networkState);
+      debugWarn('⚠️ Audio load aborted - readyState:', audio.readyState, 'networkState:', audio.networkState);
     };
 
     const handleEmptied = () => {
-      console.warn('⚠️ Audio emptied - readyState:', audio.readyState, 'networkState:', audio.networkState);
+      debugWarn('⚠️ Audio emptied - readyState:', audio.readyState, 'networkState:', audio.networkState);
     };
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -188,7 +242,30 @@ export const useAudioPlayer = ({
     audio.addEventListener('abort', handleAbort);
     audio.addEventListener('emptied', handleEmptied);
 
+    // Auto-play after track change if isPlaying is true
+    if (isPlayingRef.current) {
+      const attemptPlay = () => {
+        if (audio.readyState >= 2) {
+          audio.play().catch((error) => {
+            console.error('❌ Auto-play failed:', error);
+            onPlayBlockedRef.current?.(error);
+          });
+        } else {
+          const handleCanPlay = () => {
+            audio.play().catch((error) => {
+              console.error('❌ Auto-play failed after canplay:', error);
+              onPlayBlockedRef.current?.(error);
+            });
+            audio.removeEventListener('canplay', handleCanPlay);
+          };
+          audio.addEventListener('canplay', handleCanPlay, { once: true });
+        }
+      };
+      attemptPlay();
+    }
+
     return () => {
+      console.log('[AUDIO DEBUG] ⚠️ CLEANUP: Removing event listeners');
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
@@ -201,21 +278,27 @@ export const useAudioPlayer = ({
       audio.removeEventListener('abort', handleAbort);
       audio.removeEventListener('emptied', handleEmptied);
       audio.pause();
+      // Note: We don't null audioRef here because that only happens when audioUrl changes
     };
-  }, [audioUrl, isPlaying]);
+  }, [audioUrl]); // Only depend on audioUrl - callbacks and id are handled via refs
 
-  // Handle play/pause
+  // 2) Play/pause control – depends on isPlaying and audioUrl
   useEffect(() => {
-    console.log('🎮 Play/pause effect - isPlaying:', isPlaying, 'url:', audioUrl);
+    debugLog('🎮 Play/pause effect - isPlaying:', isPlaying, 'url:', audioUrl);
     if (!audioRef.current) {
-      console.log('⚠️ No audio ref');
+      debugLog('⚠️ No audio ref');
       return;
     }
 
     const audio = audioRef.current;
 
+    // Only control playback if this is the current audio URL
+    if (currentAudioUrlRef.current !== audioUrl) {
+      return;
+    }
+
     if (isPlaying) {
-      console.log('▶️ Attempting to play...');
+      debugLog('▶️ Attempting to play...');
       logAudioState('before play');
       // Wait for audio to be ready before playing
       const attemptPlay = () => {
@@ -224,17 +307,17 @@ export const useAudioPlayer = ({
           return;
         }
         if (audio.readyState >= 2) {
-          console.log('✅ Audio ready, playing');
+          debugLog('✅ Audio ready, playing');
           audio.play().catch((error) => {
             console.error('❌ Play failed:', error);
             logAudioState('play failed');
             onPlayBlocked?.(error);
           });
         } else {
-          console.log('⏳ Waiting for audio to be ready...');
+          debugLog('⏳ Waiting for audio to be ready...');
           // Audio not ready yet, wait for canplay event
           const handleCanPlay = () => {
-            console.log('✅ Audio ready, playing');
+            debugLog('✅ Audio ready, playing');
             audio.play().catch((error) => {
               console.error('❌ Play failed:', error);
               logAudioState('play failed after canplay');
@@ -248,10 +331,10 @@ export const useAudioPlayer = ({
 
       attemptPlay();
     } else {
-      console.log('⏸️ Pausing audio');
+      debugLog('⏸️ Pausing audio');
       audio.pause();
     }
-  }, [isPlaying, audioUrl]);
+  }, [isPlaying, audioUrl, onPlayBlocked]);
 
   const seek = (time: number) => {
     if (audioRef.current) {
@@ -273,6 +356,7 @@ export const useAudioPlayer = ({
       audioRef.current.currentTime = Math.max(audioRef.current.currentTime - seconds, 0);
     }
   };
+
 
   return {
     progress,

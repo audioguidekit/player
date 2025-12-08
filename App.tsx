@@ -434,8 +434,8 @@ const App: React.FC = () => {
                   currentStop={currentAudioStop}
                   isPlaying={isPlaying}
                   onTogglePlay={handlePlayPause}
-                  onRewind={() => audioPlayer.seek(audioPlayer.currentTime - 15)}
-                  onForward={() => audioPlayer.seek(audioPlayer.currentTime + 15)}
+                  onRewind={() => audioPlayer.skipBackward(15)}
+                  onForward={() => audioPlayer.skipForward(15)}
                   onClick={() => {
                     if (currentStopId) setScrollToStopId(currentStopId);
                   }}
