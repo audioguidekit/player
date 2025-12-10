@@ -19,7 +19,7 @@ import { MobileFrame } from './components/shared/MobileFrame';
 import { useProgressTracking } from './hooks/useProgressTracking';
 import { useDownloadManager } from './hooks/useDownloadManager';
 import { useTourNavigation } from './hooks/useTourNavigation';
-import { useAudioPreloader } from './hooks/useAudioPreloader';
+import { useAudioPreloader, eagerPreloadImage, eagerPreloadAudio } from './hooks/useAudioPreloader';
 import { RatingProvider } from './context/RatingContext';
 
 // Module-level flag to track if Media Session handlers are initialized
@@ -92,6 +92,8 @@ const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [scrollToStopId, setScrollToStopId] = useState<{ id: string; timestamp: number } | null>(null);
   const [hasShownCompletionSheet, setHasShownCompletionSheet] = useState(false);
+  const [assetsReady, setAssetsReady] = useState(false);
+  const hasPreloadedEagerRef = useRef(false);
 
   const getArtworkType = (src: string | undefined) => {
     if (!src) return undefined;
@@ -117,6 +119,64 @@ const App: React.FC = () => {
     isPlaying,
     preloadCount: 1,
   });
+
+  // EAGER PRELOADING: Preload assets when tour loads (before TourStart shows)
+  useEffect(() => {
+    if (!tour) {
+      setAssetsReady(false);
+      return;
+    }
+    if (hasPreloadedEagerRef.current) return;
+
+    console.log('[EAGER] Starting eager preload for tour:', tour.title);
+
+    const preloadTourAssets = async () => {
+      try {
+        // Get first audio stop
+        const firstAudioStop = tour.stops.find(stop => stop.type === 'audio' && 'audioFile' in stop);
+        if (!firstAudioStop || firstAudioStop.type !== 'audio') {
+          console.error('[EAGER] No audio stops found in tour');
+          setAssetsReady(true);
+          return;
+        }
+
+        // PRIORITY 1: Preload first audio (wait for completion)
+        console.log('[EAGER] ⏳ Loading first audio:', firstAudioStop.audioFile);
+        await eagerPreloadAudio(firstAudioStop.audioFile);
+        console.log('[EAGER] ✅ First audio ready');
+
+        // PRIORITY 2: Preload ALL images in parallel (max 3 concurrent to avoid overwhelming browser)
+        console.log('[EAGER] ⏳ Loading all images...');
+        const imageStops = tour.stops.filter(stop =>
+          (stop.type === 'audio' || stop.type === 'poi') && 'image' in stop && stop.image
+        );
+
+        // Load images in batches of 3
+        const BATCH_SIZE = 3;
+        for (let i = 0; i < imageStops.length; i += BATCH_SIZE) {
+          const batch = imageStops.slice(i, i + BATCH_SIZE);
+          await Promise.all(
+            batch.map(stop => {
+              const image = 'image' in stop ? stop.image : undefined;
+              return image ? eagerPreloadImage(image).catch(err => {
+                console.warn(`[EAGER] Failed to load image ${image}:`, err);
+              }) : Promise.resolve();
+            })
+          );
+        }
+
+        console.log('[EAGER] ✅ All assets ready');
+        hasPreloadedEagerRef.current = true;
+        setAssetsReady(true);
+      } catch (error) {
+        console.error('[EAGER] Error during preload:', error);
+        // Still mark as ready to not block the UI forever
+        setAssetsReady(true);
+      }
+    };
+
+    preloadTourAssets();
+  }, [tour]);
 
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
@@ -187,6 +247,36 @@ const App: React.FC = () => {
   const lastPositionUpdateRef = useRef(0);
   const lastPositionValuesRef = useRef({ duration: 0, position: 0 });
 
+  // EARLY Media Session metadata - set initial metadata on tour load
+  // This ensures Control Center shows controls immediately, even before playback starts
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (!tour) return;
+
+    // Find first audio stop
+    const firstAudioStop = tour.stops.find(stop => stop.type === 'audio' && 'audioFile' in stop);
+    if (!firstAudioStop || firstAudioStop.type !== 'audio') return;
+
+    // Set initial metadata with first stop
+    const artworkType = getArtworkType(firstAudioStop.image);
+    const artworkArray = firstAudioStop.image
+      ? [{
+          src: firstAudioStop.image,
+          sizes: '512x512',
+          type: artworkType || 'image/png'
+        }]
+      : [];
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: firstAudioStop.title,
+      artist: tour.title,
+      album: 'Audio Tour',
+      artwork: artworkArray,
+    });
+
+    console.log('[MediaSession] Initial metadata set:', firstAudioStop.title);
+  }, [tour]);
+
   // Media Session metadata - only update when track actually changes
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
@@ -226,6 +316,69 @@ const App: React.FC = () => {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }, [isPlaying]);
+
+  // Visibility change handler - refresh metadata when app becomes visible
+  // This ensures Control Center has fresh data when user returns to app
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if (!('mediaSession' in navigator)) return;
+        if (!tour || !currentAudioStop) return;
+        if (isTransitioning) return;
+
+        const artworkType = getArtworkType(currentAudioStop.image);
+        const artworkArray = currentAudioStop.image
+          ? [{
+              src: currentAudioStop.image,
+              sizes: '512x512',
+              type: artworkType || 'image/png'
+            }]
+          : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentAudioStop.title,
+          artist: tour.title,
+          album: 'Audio Tour',
+          artwork: artworkArray,
+        });
+
+        console.log('[MediaSession] Metadata refreshed on visibility change:', currentAudioStop.title);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [tour, currentAudioStop, isTransitioning]);
+
+  // Periodic metadata refresh - keep iOS audio session alive
+  // Re-assert metadata every 30s to prevent iOS from thinking session is stale
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (!currentAudioStop || !tour) return;
+    if (isTransitioning) return;
+
+    const refreshInterval = setInterval(() => {
+      const artworkType = getArtworkType(currentAudioStop.image);
+      const artworkArray = currentAudioStop.image
+        ? [{
+            src: currentAudioStop.image,
+            sizes: '512x512',
+            type: artworkType || 'image/png'
+          }]
+        : [];
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentAudioStop.title,
+        artist: tour.title,
+        album: 'Audio Tour',
+        artwork: artworkArray,
+      });
+
+      console.log('[MediaSession] Periodic metadata refresh:', currentAudioStop.title);
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, [currentAudioStop, tour, isTransitioning]);
 
   // Refs for navigation state - used by Media Session handlers
   const canGoNextRef = useRef(canGoNext);
@@ -310,11 +463,6 @@ const App: React.FC = () => {
 
     // Function to update position state from audio element
     const updatePositionState = () => {
-      // SAFETY: Don't update position state when paused to prevent Safari crashes
-      if (!isPlaying) {
-        return;
-      }
-
       // Read values DIRECTLY from audio element to avoid stale React state
       const duration = audio.duration;
       const currentTime = audio.currentTime;
@@ -358,14 +506,13 @@ const App: React.FC = () => {
       }
     };
 
-    // Only update position when actually playing
-    if (!isPlaying) return;
-
     // Update immediately
     updatePositionState();
 
-    // Update every 2 seconds while playing
-    const interval = setInterval(updatePositionState, 2000);
+    // Update periodically: 2s when playing, 10s when paused
+    // This keeps iOS audio session alive even when paused
+    const updateInterval = isPlaying ? 2000 : 10000;
+    const interval = setInterval(updatePositionState, updateInterval);
 
     return () => clearInterval(interval);
   }, [audioPlayer.audioElement, isPlaying, isTransitioning, isSwitchingTracks]);
@@ -516,6 +663,23 @@ const App: React.FC = () => {
   }
 
   if (!tour || !languages || !selectedLanguage) return null;
+
+  // Show loading screen while assets are being preloaded
+  if (!assetsReady) {
+    return (
+      <MobileFrame>
+        <div className="flex items-center justify-center h-full bg-black">
+          <div className="text-center p-8">
+            <div className="mb-4">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-700 border-t-white"></div>
+            </div>
+            <p className="text-white text-lg font-medium">Preparing your tour...</p>
+            <p className="text-zinc-400 text-sm mt-2">Loading audio and images</p>
+          </div>
+        </div>
+      </MobileFrame>
+    );
+  }
 
   return (
     <MobileFrame>
