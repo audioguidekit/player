@@ -77,11 +77,11 @@ Edit `/public/data/tours/index.json` to add your tour to the list.
 {
   "tours": [
     {
-      "id": "rome-01",
-      "filename": "ancient-rome.json",
-      "title": "Ancient Rome",
-      "description": "Explore rich history of the one of the greatest Europe's nations",
-      "thumbnail": "https://images.unsplash.com/photo-rome.jpg"
+      "id": "barcelona",
+      "filename": "tour.json",
+      "title": "Unlimited Barcelona",
+      "description": "Discover the rich history and culture of Barcelona",
+      "thumbnail": "https://your-storage.com/thumbnails/barcelona.jpg"
     }
   ]
 }
@@ -92,11 +92,11 @@ Edit `/public/data/tours/index.json` to add your tour to the list.
 {
   "tours": [
     {
-      "id": "rome-01",
-      "filename": "ancient-rome.json",
-      "title": "Ancient Rome",
-      "description": "Explore rich history of the one of the greatest Europe's nations",
-      "thumbnail": "https://images.unsplash.com/photo-rome.jpg"
+      "id": "barcelona",
+      "filename": "tour.json",
+      "title": "Unlimited Barcelona",
+      "description": "Discover the rich history and culture of Barcelona",
+      "thumbnail": "https://your-storage.com/thumbnails/barcelona.jpg"
     },
     {
       "id": "your-tour-id",
@@ -127,7 +127,7 @@ Edit `App.tsx` and change the `DEFAULT_TOUR_ID`:
 
 ```typescript
 // Change this line:
-const DEFAULT_TOUR_ID = 'rome-01';
+const DEFAULT_TOUR_ID = 'barcelona';
 
 // To your tour ID:
 const DEFAULT_TOUR_ID = 'your-tour-id';
@@ -153,60 +153,37 @@ function TourSelector() {
 - [ ] Check that all images load
 - [ ] Test navigation between stops
 
-## Complete Example: Adding "Paris Tour"
+## Complete Example: Adding "London Tour"
 
-### 1. Create `/public/data/tours/paris-highlights.json`
+### 1. Create `/public/data/tours/london-highlights.json`
 
 ```json
 {
-  "id": "paris-01",
-  "title": "Paris Highlights",
-  "description": "Discover the most iconic landmarks of the City of Light",
-  "totalDuration": "52 mins",
-  "totalStops": 6,
-  "image": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1000&auto=format&fit=crop",
+  "id": "london-01",
+  "title": "London Highlights",
+  "description": "Discover the most iconic landmarks of London",
+  "totalDuration": "45 mins",
+  "totalStops": 5,
+  "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1000&auto=format&fit=crop",
+  "offlineAvailable": false,
   "stops": [
     {
       "id": "1",
-      "title": "Eiffel Tower",
+      "type": "audio",
+      "title": "Big Ben",
       "duration": "8 min audio",
       "isCompleted": false,
-      "image": "https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800&auto=format&fit=crop"
+      "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&auto=format&fit=crop",
+      "audioFile": "https://your-storage.com/audio/london-01-bigben.mp3"
     },
     {
       "id": "2",
-      "title": "Arc de Triomphe",
+      "type": "audio",
+      "title": "Tower Bridge",
       "duration": "6 min audio",
       "isCompleted": false,
-      "image": "https://images.unsplash.com/photo-1560624619-3c2b74ab6d4b?w=800&auto=format&fit=crop"
-    },
-    {
-      "id": "3",
-      "title": "Notre-Dame Cathedral",
-      "duration": "10 min audio",
-      "isCompleted": false,
-      "image": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop"
-    },
-    {
-      "id": "4",
-      "title": "Louvre Museum",
-      "duration": "12 min audio",
-      "isCompleted": false,
-      "image": "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&auto=format&fit=crop"
-    },
-    {
-      "id": "5",
-      "title": "Sacré-Cœur",
-      "duration": "7 min audio",
-      "isCompleted": false,
-      "image": "https://images.unsplash.com/photo-1548082284-8ecee23183f3?w=800&auto=format&fit=crop"
-    },
-    {
-      "id": "6",
-      "title": "Champs-Élysées",
-      "duration": "9 min audio",
-      "isCompleted": false,
-      "image": "https://images.unsplash.com/photo-1569949381669-ecf31ae8e613?w=800&auto=format&fit=crop"
+      "image": "https://images.unsplash.com/photo-1461949814715-0e9ad3b9e75a?w=800&auto=format&fit=crop",
+      "audioFile": "https://your-storage.com/audio/london-02-tower.mp3"
     }
   ]
 }
@@ -218,27 +195,27 @@ function TourSelector() {
 {
   "tours": [
     {
-      "id": "rome-01",
-      "filename": "ancient-rome.json",
-      "title": "Ancient Rome",
-      "description": "Explore rich history of the one of the greatest Europe's nations",
-      "thumbnail": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&auto=format&fit=crop"
+      "id": "barcelona",
+      "filename": "tour.json",
+      "title": "Unlimited Barcelona",
+      "description": "Discover the rich history and culture of Barcelona",
+      "thumbnail": "https://your-storage.com/thumbnails/barcelona.jpg"
     },
     {
-      "id": "paris-01",
-      "filename": "paris-highlights.json",
-      "title": "Paris Highlights",
-      "description": "Discover the most iconic landmarks of the City of Light",
-      "thumbnail": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&auto=format&fit=crop"
+      "id": "london-01",
+      "filename": "london-highlights.json",
+      "title": "London Highlights",
+      "description": "Discover the most iconic landmarks of London",
+      "thumbnail": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&auto=format&fit=crop"
     }
   ]
 }
 ```
 
-### 3. Update `App.tsx`
+### 3. Update `src/config/tours.ts` (or App.tsx)
 
 ```typescript
-const DEFAULT_TOUR_ID = 'paris-01';  // Changed from 'rome-01'
+export const DEFAULT_TOUR_ID = 'london-01';  // Changed from 'barcelona'
 ```
 
 ### 4. Test
@@ -468,4 +445,4 @@ async function createTourFromAPI(apiData) {
 
 ---
 
-**Need more help?** Check the documentation files or review the example tour (`ancient-rome.json`).
+**Need more help?** Check the documentation files or review the example tour (`tour.json`).

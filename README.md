@@ -1,13 +1,13 @@
 # AudioTour Pro
 
-A high-fidelity mobile-first progressive web application for guided audio tours. This interactive prototype showcases an immersive audio tour experience for Ancient Rome, featuring sophisticated animations, gesture-based navigation, and a modern mobile UI.
+A high-fidelity mobile-first progressive web application for guided audio tours. This interactive prototype showcases an immersive audio tour experience for Barcelona, featuring sophisticated animations, gesture-based navigation, and a modern mobile UI.
 
 ## 📚 Documentation
 
 - **[Complete Documentation Index](docs/README.md)** - All project documentation
 - **[PWA Architecture](docs/PWA_ARCHITECTURE.md)** - Progressive Web App implementation guide
 - **[Adding Tours](docs/ADDING_TOURS.md)** - Guide for adding new tours
-- **[Data Structure](public/data/README.md)** - Tour data format
+- **[Product Specification](docs/spec.md)** - Full product requirements
 
 ## Overview
 
@@ -17,17 +17,18 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 
 ### Core Functionality
 - **Interactive Tour Experience** - Self-guided audio tours with multiple stops and detailed descriptions
-- **Audio Player Simulation** - Full-featured mock audio player with playback controls and progress tracking
+- **Real Audio Playback** - Full-featured audio player with playback controls, seeking, and progress tracking
 - **Multi-language Support** - Switch between Czech, English, and German
-- **Progress Tracking** - Visual indicators showing tour completion status
+- **Progress Tracking** - Visual indicators showing tour completion status (85% threshold)
 - **Rating System** - Built-in feedback mechanism for tour ratings
+- **Multiple Stop Types** - Audio, text, image-text, video, 3D objects, headlines, quotes, ratings, and email collection
 
 ### User Interface
 - **Bottom Sheet Navigation** - Draggable sheet interface with smooth spring animations
-  - Collapsed state: Tour summary card
+  - Collapsed state: Tour summary card with video/image background
   - Expanded state: Complete stop list with progress indicators
 - **Mini Player** - Floating audio control bar with circular progress indicator
-- **Full-Screen Player** - Immersive player view with large images and drag-to-dismiss gestures
+- **Feed-Style Layout** - Vertical scrolling through different card types
 - **Parallax Effects** - Dynamic background scrolling for enhanced visual depth
 - **Mobile-First Design** - Desktop view displays a centered mobile frame (400px) simulating a phone
 
@@ -37,6 +38,7 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 - **Type-Safe** - Full TypeScript implementation with comprehensive type definitions
 - **Modern React** - Built with React 19 hooks and functional components
 - **Dynamic Data Loading** - Tour data loaded from external JSON files with caching support
+- **Media Session API** - Background audio playback with lock screen controls
 
 ### Progressive Web App (PWA)
 - **Offline Support** - Full offline functionality with Service Worker caching
@@ -44,7 +46,6 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 - **URL Routing** - Deep linking and shareable tour URLs
 - **Persistent Storage** - IndexedDB for progress tracking and downloads
 - **Automatic Caching** - Intelligent caching strategies for optimal performance
-- **Fast Loading** - Self-hosted assets and optimized bundle (~380KB)
 
 > 📖 **See [PWA Architecture Guide](docs/PWA_ARCHITECTURE.md)** for complete implementation details
 
@@ -55,14 +56,17 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 - **TypeScript 5.8.2** - Full type safety
 - **Vite 6.2.0** - Fast development server and optimized builds
 - **Tailwind CSS 3.4** - Self-hosted utility-first styling
-- **React Router 6.28** - URL-based routing and navigation
+- **React Router 6.30** - URL-based routing and navigation
 
 ### Libraries
 - **Framer Motion 12.23.24** - Animation and gesture library
 - **Lucide React 0.554.0** - Icon system
-- **Google Fonts** - Inter font family
+- **Styled Components 6.1** - CSS-in-JS styling
+- **@google/model-viewer 4.1** - 3D model rendering
+- **idb 8.0** - IndexedDB wrapper for storage
 
 ### Integrations
+- **Supabase Storage** - Cloud storage for audio/video/image assets
 - **Google Gemini AI API** - Configured for potential AI features
 
 ## Project Structure
@@ -70,36 +74,70 @@ AudioTour Pro is a React-based mobile web application designed to simulate a pre
 ```
 superguided-audio/
 ├── screens/                    # Main screen components
-│   ├── TourStart.tsx          # Landing screen with parallax background
-│   ├── TourDetail.tsx         # Tour details with progress tracking
-│   └── StopDetail.tsx         # Full-screen stop player
+│   ├── TourStart.tsx          # Landing screen with video/image background
+│   └── TourDetail.tsx         # Tour details with feed-style stop list
 ├── components/                 # Reusable UI components
+│   ├── feed/                  # Feed card components
+│   │   ├── AudioStopCard.tsx  # Audio stop with playback
+│   │   ├── VideoCard.tsx      # Video content card
+│   │   ├── TextCard.tsx       # Text-only card
+│   │   ├── ImageTextCard.tsx  # Image with text overlay
+│   │   ├── ThreeDObjectCard.tsx # 3D model viewer
+│   │   ├── HeadlineCard.tsx   # Large headline text
+│   │   ├── QuoteCard.tsx      # Quote with attribution
+│   │   ├── RatingCard.tsx     # Star rating input
+│   │   ├── EmailCard.tsx      # Email collection
+│   │   └── FeedItemRenderer.tsx # Dynamic card renderer
 │   ├── sheets/                # Modal bottom sheets
-│   │   ├── RatingSheet.tsx   # User rating interface
-│   │   └── LanguageSheet.tsx # Language selector
+│   │   ├── RatingSheet.tsx    # User rating interface
+│   │   ├── LanguageSheet.tsx  # Language selector
+│   │   └── TourCompleteSheet.tsx # Tour completion modal
+│   ├── player/                # Audio player components
+│   │   ├── PlayPauseButton.tsx
+│   │   ├── SkipButton.tsx
+│   │   └── ProgressRing.tsx
+│   ├── shared/                # Shared utilities
+│   │   ├── MobileFrame.tsx    # Desktop mobile simulator
+│   │   └── AnimatedCounter.tsx
 │   ├── MainSheet.tsx          # Primary draggable sheet
 │   ├── BottomSheet.tsx        # Base sheet component
 │   ├── MiniPlayer.tsx         # Floating mini player
 │   ├── StartCard.tsx          # Tour start/resume card
-│   └── TourListItem.tsx       # Tour stop list items
-├── services/                   # Data services
-│   └── dataService.ts         # Dynamic data loading with caching
+│   └── TourHeaderAlt.tsx      # Tour header with progress
 ├── hooks/                      # Custom React hooks
-│   └── useDataLoader.ts       # Hooks for loading tours and languages
+│   ├── useDataLoader.ts       # Tour and language data loading
+│   ├── useAudioPlayer.ts      # Audio playback management
+│   ├── useBackgroundAudio.ts  # iOS background audio keep-alive
+│   ├── useProgressTracking.ts # Tour progress persistence
+│   ├── useDownloadManager.ts  # Offline download management
+│   ├── useTourNavigation.ts   # Tour navigation state
+│   └── useAudioPreloader.ts   # Audio preloading
+├── context/                    # React context providers
+│   └── RatingContext.tsx      # Rating state management
+├── src/
+│   ├── config/
+│   │   └── tours.ts           # Tour configuration (DEFAULT_TOUR_ID)
+│   ├── services/
+│   │   ├── dataService.ts     # Dynamic data loading with caching
+│   │   ├── db.ts              # IndexedDB schema
+│   │   └── storageService.ts  # Storage API layer
+│   ├── utils/
+│   │   └── swManager.ts       # Service Worker manager
+│   ├── routes/
+│   │   └── index.tsx          # Route definitions
+│   └── index.css              # Tailwind directives
 ├── public/                     # Static assets
 │   └── data/                  # Tour data (JSON files)
-│       ├── README.md          # Data structure documentation
 │       ├── languages.json     # Supported languages
 │       └── tours/             # Tour definitions
 │           ├── index.json     # Tour manifest
-│           └── *.json         # Individual tour files
+│           └── tour.json      # Barcelona tour
 ├── App.tsx                    # Main application & state management
-├── index.tsx                  # React entry point
+├── index.tsx                  # React entry point with router
 ├── types.ts                   # TypeScript type definitions
-├── constants.ts               # Legacy constants (deprecated)
-├── vite.config.ts            # Vite configuration
-├── tsconfig.json             # TypeScript configuration
-└── package.json              # Dependencies and scripts
+├── vite.config.ts             # Vite + PWA configuration
+├── tsconfig.json              # TypeScript configuration
+└── package.json               # Dependencies and scripts
 ```
 
 ## Getting Started
@@ -123,8 +161,9 @@ superguided-audio/
 
 3. **Set up environment variables**
 
-   Create or update `.env.local` with your Gemini API key:
+   Create or update `.env.local` with your API keys:
    ```bash
+   VITE_CLOUD_BASE_URL=https://your-supabase-url/storage/v1/object/public/
    GEMINI_API_KEY=your_api_key_here
    ```
 
@@ -135,7 +174,7 @@ superguided-audio/
 
 5. **Open in browser**
 
-   Navigate to `http://localhost:3000`
+   Navigate to `http://localhost:3001`
 
 ### Build for Production
 
@@ -152,21 +191,21 @@ npm run preview
 
 ### Navigation Flow
 
-1. **Start Screen** - Welcome screen with parallax background image
+1. **Start Screen** - Welcome screen with video/image background
 2. **Detail View** - Tap the "Start Tour" button to view all tour stops
-3. **Audio Playback** - Select any stop to begin "playback"
+3. **Audio Playback** - Select any stop to begin playback
 4. **Mini Player** - A floating player bar appears during playback
-5. **Full Player** - Tap the mini player to expand to full-screen view
+5. **Feed Navigation** - Scroll through different card types
 6. **Sheet Interactions** - Drag the bottom sheet up/down to expand/collapse
 
 ### Key Interactions
 
 - **Drag Sheet** - Swipe up/down on the bottom sheet to expand or collapse
-- **Play/Pause** - Control audio playback from mini player or full player
-- **Navigate Stops** - Use arrow buttons to skip between tour stops
+- **Play/Pause** - Control audio playback from mini player or stop cards
+- **Navigate Stops** - Use skip buttons or click cards to navigate
 - **Change Language** - Tap the language icon to switch tour language
 - **Rate Tour** - Tap the star icon to provide feedback
-- **Dismiss Player** - Drag down on full-screen player to return to mini player
+- **Background Playback** - Audio continues when device screen locks
 
 ## Architecture
 
@@ -174,49 +213,89 @@ npm run preview
 
 The app uses React hooks for state management in `App.tsx`:
 
-- **Navigation State** - `activeScreen` controls which screen is visible
-- **Playback State** - `isPlaying`, `activeStop`, `progress` track audio status
-- **Sheet State** - `sheetExpanded`, `activeSheet` manage bottom sheet UI
-- **Language State** - `activeLanguage` controls content language
+- **Navigation State** - `useTourNavigation` hook manages current stop, playback state
+- **Playback State** - `useAudioPlayer` hook handles audio playback
+- **Progress State** - `useProgressTracking` hook persists completion data
+- **Sheet State** - `activeSheet` manages bottom sheet UI
+- **Language State** - `selectedLanguage` controls content language
 
 ### Component Hierarchy
 
 ```
 App.tsx
-├── TourStart
-├── TourDetail
+├── MobileFrame
+│   ├── TourStart (video/image background)
 │   ├── MainSheet (draggable)
-│   │   └── StartCard
-│   │       └── TourListItem (multiple)
+│   │   ├── StartCard (collapsed)
+│   │   └── TourDetail (expanded)
+│   │       └── FeedItemRenderer
+│   │           ├── AudioStopCard
+│   │           ├── VideoCard
+│   │           ├── TextCard
+│   │           └── ... (other card types)
 │   ├── MiniPlayer
 │   ├── RatingSheet
-│   └── LanguageSheet
-└── StopDetail (full-screen)
+│   ├── LanguageSheet
+│   └── TourCompleteSheet
 ```
 
 ### Data Model
 
-Tour data is defined in `constants.ts`:
-- **TourData** - Contains title, description, duration, and stops
-- **Stop** - Individual tour location with images, audio metadata, and descriptions
-- **Language** - Supported languages with ISO codes and labels
+Tour data is defined in `types.ts`:
+
+```typescript
+// Stop types
+type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email' | 'quote';
+
+// Audio stop (most common)
+interface AudioStop {
+  id: string;
+  type: 'audio';
+  title: string;
+  duration: string;
+  isCompleted: boolean;
+  image: string;
+  audioFile?: string;  // URL to audio file
+}
+
+// Tour data
+interface TourData {
+  id: string;
+  title: string;
+  description: string;
+  totalDuration: string;
+  totalStops: number;
+  image: string;                // Cover image/video URL
+  offlineAvailable?: boolean;   // Enable offline download requirement
+  transitionAudio?: string;     // Audio between stops
+  stops: Stop[];
+}
+
+// Language
+interface Language {
+  code: string;
+  name: string;
+  flag: string;
+}
+```
 
 ### Key Files
 
 - **App.tsx** - Main component with routing and state logic
 - **MainSheet.tsx** - Implements drag gestures and animation springs
-- **StopDetail.tsx** - Full-screen stop player with swipe-to-dismiss
-- **types.ts** - Type definitions for Stop, TourData, Language, SheetType
-- **dataService.ts** - Dynamic tour data loading with caching
+- **FeedItemRenderer.tsx** - Dynamic card type renderer
+- **useAudioPlayer.ts** - Audio playback with Media Session API
+- **types.ts** - Type definitions for all stop types
 
 ## Configuration
 
 ### Vite Configuration (`vite.config.ts`)
 
-- Dev server runs on port 3000
+- Dev server runs on port 3001
 - Gemini API key injected as environment variable
 - Path alias `@/` points to project root
 - React plugin enabled for fast refresh
+- PWA plugin with caching strategies
 
 ### TypeScript Configuration (`tsconfig.json`)
 
@@ -232,13 +311,17 @@ The app loads tour data dynamically from JSON files in the `/public/data/` direc
 
 ### Current Tours
 
-**Ancient Rome Tour** (`rome-01`):
-1. The Colosseum
-2. Roman Forum
-3. Palatine Hill
-4. Arch of Constantine
-5. Trajan's Market
-6. Pantheon
+**Unlimited Barcelona** (`barcelona`):
+1. Welcome and Instructions
+2. The Urquinaona Tower
+3. A City with a Thousand-Year History
+4. Ciutat Vella
+5. Plaza Urquinaona
+6. Industrialisation
+7. Expo 1888 and the 1992 Olympic Games
+8. The Sagrada Família and Gaudí
+9. Eixample
+10. Roof Terraces, Tibidabo and Goodbye
 
 ### Adding New Tours
 
@@ -246,34 +329,9 @@ Quick steps to add a tour:
 
 1. **Create a tour JSON file** in `/public/data/tours/`
 2. **Update the manifest** in `/public/data/tours/index.json`
-3. **Test the new tour** by updating `DEFAULT_TOUR_ID` in `App.tsx`
+3. **Update DEFAULT_TOUR_ID** in `src/config/tours.ts` (optional)
 
-For complete step-by-step guide with examples, see **[ADDING_TOURS.md](ADDING_TOURS.md)**
-
-### Data Structure
-
-```typescript
-// Tour data
-interface TourData {
-  id: string;
-  title: string;
-  description: string;
-  totalDuration: string;
-  totalStops: number;
-  image: string;
-  stops: Stop[];
-}
-
-// Individual stop
-interface Stop {
-  id: string;
-  title: string;
-  duration: string;
-  isCompleted: boolean;
-  isPlaying?: boolean;
-  image: string;
-}
-```
+For complete step-by-step guide with examples, see **[ADDING_TOURS.md](docs/ADDING_TOURS.md)**
 
 ### Loading Data
 
@@ -281,31 +339,19 @@ The app uses custom React hooks for data loading:
 
 ```typescript
 // Load a specific tour
-const { data: tour, loading, error } = useTourData('rome-01');
+const { data: tour, loading, error } = useTourData('barcelona');
 
 // Load all languages
 const { data: languages } = useLanguages();
 ```
 
-Data is automatically cached for performance. See [`services/dataService.ts`](/services/dataService.ts) for the caching implementation.
-
-## Future Enhancements
-
-Potential features to implement:
-- Real audio file playback (currently simulated)
-- GPS-based auto-play when approaching stops
-- Offline mode with cached content
-- Multiple tour options
-- User authentication
-- Booking and payment integration
-- Social sharing features
-- AI-powered tour customization via Gemini API
+Data is automatically cached for performance. See [`src/services/dataService.ts`](src/services/dataService.ts) for the caching implementation.
 
 ## Development
 
 ### Available Scripts
 
-- `npm run dev` - Start development server (port 3000)
+- `npm run dev` - Start development server (port 3001)
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build locally
 
@@ -327,13 +373,8 @@ The application uses dynamic data loading from JSON files:
 To add or modify tours, edit the JSON files directly. The app will load changes automatically on refresh.
 
 **Documentation:**
-- Data structure: [public/data/README.md](public/data/README.md)
-- Adding tours: [ADDING_TOURS.md](ADDING_TOURS.md)
-
-## AI Studio Integration
-
-This project was created using Google's AI Studio platform. You can view the original app configuration at:
-https://ai.studio/apps/drive/1rWX8uVZA-_IAOffOB2t5BC42KIaAB8qr
+- Data structure: [ADDING_TOURS.md](docs/ADDING_TOURS.md)
+- PWA details: [PWA_ARCHITECTURE.md](docs/PWA_ARCHITECTURE.md)
 
 ## Browser Support
 
@@ -348,11 +389,9 @@ This project is private and not currently licensed for public use.
 
 ## Acknowledgments
 
-- Images from [Unsplash](https://unsplash.com)
 - Icons from [Lucide](https://lucide.dev)
-- Font from [Google Fonts](https://fonts.google.com)
 - Built with [AI Studio](https://ai.studio)
 
 ---
 
-**Note**: This is a prototype application designed for demonstration purposes. Audio files are simulated, and some features are mocked for UI/UX showcase.
+**Note**: This is a prototype application designed for demonstration purposes.

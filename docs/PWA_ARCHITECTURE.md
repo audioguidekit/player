@@ -659,17 +659,17 @@ npm run preview
    ↓
 2. Server sends HTML, JS, CSS
    ↓
-3. React app loads → Redirects to /tour/rome-01
+3. React app loads → Redirects to /tour/barcelona
    ↓
 4. Service Worker registers (production only)
    ↓
 5. Service Worker caches app shell (HTML, JS, CSS)
    ↓
-6. App fetches tour data from /public/data/tours/rome-01.json
+6. App fetches tour data from /public/data/tours/tour.json
    ↓
 7. Service Worker caches tour data (NetworkFirst)
    ↓
-8. Images load from Unsplash CDN
+8. Images load from Supabase CDN
    ↓
 9. Service Worker caches images (CacheFirst)
    ↓
@@ -685,7 +685,7 @@ npm run preview
    ↓
 3. Serves cached HTML, JS, CSS (instant load!)
    ↓
-4. React app loads → Redirects to /tour/rome-01
+4. React app loads → Redirects to /tour/barcelona
    ↓
 5. Fetches tour data → Service Worker serves from cache
    ↓
@@ -697,34 +697,34 @@ npm run preview
 ### Navigation Flow
 
 ```
-User clicks stop → navigate('/tour/rome-01/stop/1')
-                            ↓
-                    URL updates in browser
-                            ↓
-                    useParams() detects change
-                            ↓
-                    useEffect syncs state
-                            ↓
-                    setCurrentStopId('1')
-                    setShowStopDetail(true)
-                            ↓
-                    StopDetail component renders
+User clicks stop → navigate('/tour/barcelona/stop/1')
+                        ↓
+                URL updates in browser
+                        ↓
+                useParams() detects change
+                        ↓
+                useEffect syncs state
+                        ↓
+                setCurrentStopId('1')
+                setShowStopDetail(true)
+                        ↓
+                StopDetail component renders
 ```
 
 ### Storage Flow
 
 ```
-User completes stop → markStopCompleted('rome-01', '1')
-                            ↓
-                    storageService.updateStopProgress()
-                            ↓
-                    IndexedDB transaction
-                            ↓
-                    Update tour-progress store
-                            ↓
-                    Recalculate overall progress
-                            ↓
-                    Data persists across sessions
+User completes stop → markStopCompleted('barcelona', '1')
+                        ↓
+                storageService.updateStopProgress()
+                        ↓
+                IndexedDB transaction
+                        ↓
+                Update tour-progress store
+                        ↓
+                Recalculate overall progress
+                        ↓
+                Data persists across sessions
 ```
 
 ---
@@ -1099,6 +1099,6 @@ content: [
 
 ---
 
-**Last Updated**: December 7, 2024
-**Version**: 1.1.0
+**Last Updated**: December 10, 2025
+**Version**: 1.1.1
 **Status**: All Phases Complete (1-5), Offline Configuration Added

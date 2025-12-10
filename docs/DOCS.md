@@ -86,7 +86,7 @@ npm run dev
 import { useTourData, useLanguages } from './hooks/useDataLoader';
 
 function MyComponent() {
-  const { data: tour, loading, error } = useTourData('rome-01');
+  const { data: tour, loading, error } = useTourData('barcelona');
   const { data: languages } = useLanguages();
 
   if (loading) return <div>Loading...</div>;
@@ -166,10 +166,10 @@ npm run preview  # Preview production build
 ## 🆘 Getting Help
 
 1. **Check documentation** - Start with relevant doc above
-2. **Review examples** - Look at existing tour: `/public/data/tours/ancient-rome.json`
+2. **Review examples** - Look at existing tour: `/public/data/tours/tour.json`
 3. **Check types** - See `types.ts` for TypeScript definitions
 4. **Read comments** - Inline JSDoc in `services/` and `hooks/`
 
 ---
 
-**Last Updated:** 2025-11-25 | **Version:** 1.0.0
+**Last Updated:** 2025-12-10 | **Version:** 1.0.1
