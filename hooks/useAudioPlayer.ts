@@ -305,7 +305,10 @@ export const useAudioPlayer = ({
       const dur = audioRef.current.duration;
       const ct = audioRef.current.currentTime;
       if (isFinite(dur) && isFinite(ct)) {
-        audioRef.current.currentTime = Math.min(ct + seconds, dur);
+        // Only apply buffer for longer tracks (> 5 seconds)
+        // Short transition audio needs to reach natural end to fire ended event properly
+        const maxPosition = dur > 5 ? dur - 0.5 : dur;
+        audioRef.current.currentTime = Math.min(ct + seconds, maxPosition);
       }
     }
   }, []);

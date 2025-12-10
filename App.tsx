@@ -173,52 +173,43 @@ const App: React.FC = () => {
   // Background audio keep-alive for iOS
   useBackgroundAudio({ enabled: isPlaying });
 
-  // Media Session metadata - only update when track actually changes
+  // Media Session refs for position state management
   const lastMetadataTrackIdRef = useRef<string | null>(null);
+  const lastPositionUpdateRef = useRef(0);
+  const lastPositionValuesRef = useRef({ duration: 0, position: 0 });
+
+  // Media Session metadata - only update when track actually changes
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
     if (!tour || !currentAudioStop) return;
-    
+
+    // Don't update metadata during transitions - transition audio should not show metadata
+    if (isTransitioning) return;
+
     // Only update metadata if track changed
     if (lastMetadataTrackIdRef.current === currentAudioStop.id) return;
     lastMetadataTrackIdRef.current = currentAudioStop.id;
 
     const artworkType = getArtworkType(currentAudioStop.image);
-    
-    // Provide multiple artwork sizes for iOS compatibility
-    // iOS may use different sizes for different UI contexts (compact player vs full screen)
+
+    // Use single artwork entry with type always present for iOS compatibility
     const artworkArray = currentAudioStop.image
-      ? [
-          // Small size for compact player
-          {
-            src: currentAudioStop.image,
-            sizes: '96x96',
-            ...(artworkType ? { type: artworkType } : {})
-          },
-          // Medium size
-          {
-            src: currentAudioStop.image,
-            sizes: '256x256',
-            ...(artworkType ? { type: artworkType } : {})
-          },
-          // Large size for full screen
-          {
-            src: currentAudioStop.image,
-            sizes: '512x512',
-            ...(artworkType ? { type: artworkType } : {})
-          }
-        ]
+      ? [{
+          src: currentAudioStop.image,
+          sizes: '512x512',
+          type: artworkType || 'image/png'  // Always provide type with fallback
+        }]
       : [];
-    
+
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentAudioStop.title,
       artist: tour.title,
       album: 'Audio Tour',
       artwork: artworkArray,
     });
-    
+
     console.log('[MediaSession] Metadata updated:', currentAudioStop.title);
-  }, [tour, currentAudioStop]);
+  }, [tour, currentAudioStop, isTransitioning]);
 
   // Media Session playback state - keep in sync with isPlaying
   // IMPORTANT: Never set to 'none' as this can cause iOS to drop the session
@@ -226,6 +217,20 @@ const App: React.FC = () => {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
   }, [isPlaying]);
+
+  // Refs for navigation state - used by Media Session handlers
+  const canGoNextRef = useRef(canGoNext);
+  const canGoPrevRef = useRef(canGoPrev);
+  const handleNextStopRef = useRef(handleNextStop);
+  const handlePrevStopRef = useRef(handlePrevStop);
+
+  // Keep refs updated with latest values
+  useEffect(() => {
+    canGoNextRef.current = canGoNext;
+    canGoPrevRef.current = canGoPrev;
+    handleNextStopRef.current = handleNextStop;
+    handlePrevStopRef.current = handlePrevStop;
+  }, [canGoNext, canGoPrev, handleNextStop, handlePrevStop]);
 
   // Media Session action handlers - set once and DON'T clean up
   // Cleaning up handlers (setting to null) can cause iOS to think the session ended
@@ -249,10 +254,14 @@ const App: React.FC = () => {
       audioEl.pause();
     });
     navigator.mediaSession.setActionHandler('nexttrack', () => {
-      // Handler uses current state via refs/closure
+      if (canGoNextRef.current) {
+        handleNextStopRef.current();
+      }
     });
     navigator.mediaSession.setActionHandler('previoustrack', () => {
-      // Handler uses current state via refs/closure
+      if (canGoPrevRef.current) {
+        handlePrevStopRef.current();
+      }
     });
     navigator.mediaSession.setActionHandler('seekforward', (details) => {
       const seekOffset = details.seekOffset ?? 10;
@@ -278,57 +287,49 @@ const App: React.FC = () => {
     // NO CLEANUP - keeping handlers prevents iOS from dropping the session
   }, [audioPlayer.audioElement, setIsPlaying]);
 
-  // Separate effect to update next/prev handlers when navigation state changes
-  // We need refs to track current navigation state for the handlers
-  const canGoNextRef = useRef(canGoNext);
-  const canGoPrevRef = useRef(canGoPrev);
-  const handleNextStopRef = useRef(handleNextStop);
-  const handlePrevStopRef = useRef(handlePrevStop);
-  
-  useEffect(() => {
-    canGoNextRef.current = canGoNext;
-    canGoPrevRef.current = canGoPrev;
-    handleNextStopRef.current = handleNextStop;
-    handlePrevStopRef.current = handlePrevStop;
-  }, [canGoNext, canGoPrev, handleNextStop, handlePrevStop]);
-
-  // Update the nexttrack/previoustrack handlers to use the refs
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    if (!mediaSessionInitialized) return;
-    
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
-      if (canGoNextRef.current) {
-        handleNextStopRef.current();
-      }
-    });
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
-      if (canGoPrevRef.current) {
-        handlePrevStopRef.current();
-      }
-    });
-  }, [canGoNext, canGoPrev]);
-
-  // Media Session position state update - throttled to prevent time reset issues
-  const lastPositionUpdateRef = useRef(0);
-  const lastPositionValuesRef = useRef({ duration: 0, position: 0 });
+  // Media Session position state update - periodic timer reading directly from audio element
+  // CRITICAL: We read from audio element directly, NOT React state, to avoid stale values
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
     if (!navigator.mediaSession.setPositionState) return;
-    if (!isPlaying) return; // Only update position when playing
-    
-    const duration = audioPlayer.duration;
-    const currentTime = audioPlayer.currentTime;
-    const now = Date.now();
-    
-    // Only update if more than 2 seconds have passed AND values have changed significantly
-    const timeSinceLastUpdate = now - lastPositionUpdateRef.current;
-    const durationChanged = Math.abs(duration - lastPositionValuesRef.current.duration) > 0.5;
-    const positionChanged = Math.abs(currentTime - lastPositionValuesRef.current.position) > 2;
-    
-    if (timeSinceLastUpdate < 2000 && !durationChanged) return;
-    
-    if (duration > 0 && isFinite(duration) && isFinite(currentTime) && currentTime >= 0) {
+
+    // Don't update position during transitions or track switching
+    if (isTransitioning || isSwitchingTracks) return;
+
+    const audio = audioPlayer.audioElement;
+    if (!audio) return;
+
+    // Function to update position state from audio element
+    const updatePositionState = () => {
+      // Read values DIRECTLY from audio element to avoid stale React state
+      const duration = audio.duration;
+      const currentTime = audio.currentTime;
+      const now = Date.now();
+
+      // Guard against invalid values
+      if (duration < 0.5 || !isFinite(duration)) return;
+      if (!isFinite(currentTime) || currentTime < 0) return;
+
+      // Guard against track loading state
+      // If currentTime is very close to 0 but last position was much higher,
+      // AND duration changed significantly, we're likely loading a new track
+      const likelyTrackLoading =
+        currentTime < 1.0 &&
+        lastPositionValuesRef.current.position > 5.0 &&
+        Math.abs(duration - lastPositionValuesRef.current.duration) > 2.0;
+
+      if (likelyTrackLoading) {
+        console.log('[MediaSession] Skipping position update - track loading detected');
+        return;
+      }
+
+      // Throttle updates
+      const timeSinceLastUpdate = now - lastPositionUpdateRef.current;
+      const durationChanged = Math.abs(duration - lastPositionValuesRef.current.duration) > 0.5;
+      const positionChanged = Math.abs(currentTime - lastPositionValuesRef.current.position) > 2;
+
+      if (lastPositionUpdateRef.current > 0 && timeSinceLastUpdate < 2000 && !durationChanged && !positionChanged) return;
+
       try {
         const position = Math.min(Math.max(0, currentTime), duration);
         navigator.mediaSession.setPositionState({
@@ -339,10 +340,19 @@ const App: React.FC = () => {
         lastPositionUpdateRef.current = now;
         lastPositionValuesRef.current = { duration, position };
       } catch (e) {
-        // Ignore position state errors
+        console.warn('[MediaSession] Position state update failed:', e);
       }
-    }
-  }, [audioPlayer.duration, audioPlayer.currentTime, isPlaying]);
+    };
+
+    // Update immediately on mount
+    updatePositionState();
+
+    // Update periodically - slower when paused to keep session alive without excessive updates
+    const updateInterval = isPlaying ? 2000 : 10000; // 2s when playing, 10s when paused
+    const interval = setInterval(updatePositionState, updateInterval);
+
+    return () => clearInterval(interval);
+  }, [audioPlayer.audioElement, isPlaying, isTransitioning, isSwitchingTracks]);
 
   // Global error logging to surface crashes
   useEffect(() => {
