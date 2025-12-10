@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 // Debug flag: enable via VITE_DEBUG_AUDIO=true or automatically in dev mode
-// @ts-expect-error - Vite env types are injected at build time
-const DEBUG_AUDIO = import.meta.env.VITE_DEBUG_AUDIO === 'true' || import.meta.env.DEV;
+const DEBUG_AUDIO = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEBUG_AUDIO === 'true') || 
+  (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
 
 const debugLog = (...args: unknown[]) => {
   if (DEBUG_AUDIO) {
@@ -38,25 +38,13 @@ export interface UseAudioPlayerReturn {
 /**
  * Custom hook for audio playback.
  * 
- * ⚠️ IMPORTANT: This hook creates a single HTMLAudioElement instance.
- * Use this hook ONCE at the app/player level, NOT per track/item in a list.
+ * CRITICAL FOR iOS: This hook creates a SINGLE HTMLAudioElement that persists
+ * across track changes. Recreating audio elements causes:
+ * - Safari "A problem repeatedly occurred" crashes
+ * - Control Center time resetting to 0
+ * - Audio session being dropped
  * 
- * ❌ WRONG - Don't do this:
- *   {tracks.map(track => {
- *     const player = useAudioPlayer({ audioUrl: track.url, ... });
- *     // This creates multiple Audio elements!
- *   })}
- * 
- * ✅ CORRECT - Do this:
- *   // In App.tsx or a global player component
- *   const audioPlayer = useAudioPlayer({
- *     audioUrl: currentTrack?.url,
- *     isPlaying: isPlaying,
- *     ...
- *   });
- * 
- * The hook manages a single audio element and switches URLs as needed.
- * For sequential playback (like audio tours), use one instance and update audioUrl.
+ * The same audio element is reused by changing only its src property.
  */
 export const useAudioPlayer = ({
   audioUrl,
@@ -71,8 +59,9 @@ export const useAudioPlayer = ({
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const isInitializedRef = useRef(false);
 
-  const logAudioState = (label: string) => {
+  const logAudioState = useCallback((label: string) => {
     if (!DEBUG_AUDIO) return;
     const audio = audioRef.current;
     if (!audio) {
@@ -92,16 +81,15 @@ export const useAudioPlayer = ({
         visibility: document.visibilityState,
       }
     );
-  };
+  }, []);
 
-  // Use refs for callbacks and id to avoid effect re-runs and ensure current values
+  // Use refs for callbacks and id to avoid effect re-runs
   const onEndedRef = useRef(onEnded);
   const onProgressRef = useRef(onProgress);
   const isPlayingRef = useRef(isPlaying);
   const idRef = useRef(id);
   const onPlayBlockedRef = useRef(onPlayBlocked);
 
-  // Update refs when values change
   useEffect(() => {
     onEndedRef.current = onEnded;
     onProgressRef.current = onProgress;
@@ -110,80 +98,41 @@ export const useAudioPlayer = ({
     onPlayBlockedRef.current = onPlayBlocked;
   }, [onEnded, onProgress, isPlaying, id, onPlayBlocked]);
 
-  // 1) Audio element lifecycle & listeners – depends only on audioUrl
+  // Create audio element ONCE on mount - never recreate
   useEffect(() => {
-    if (!audioUrl) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-        currentAudioUrlRef.current = null;
-      }
-      setProgress(0);
-      setCurrentTime(0);
-      setDuration(0);
-      return;
-    }
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true;
 
-    // Don't recreate audio if URL hasn't changed
-    // BUT: We still need to ensure listeners are attached (they might have been removed by cleanup)
-    if (currentAudioUrlRef.current === audioUrl && audioRef.current) {
-      debugLog('Audio URL unchanged, keeping existing audio element');
-      const audio = audioRef.current;
-      
-      // Ensure duration is set if metadata has loaded
-      if (audio.duration && isFinite(audio.duration) && duration === 0) {
-        setDuration(audio.duration);
-      }
-      
-      // Listeners should already be attached, but if effect re-ran due to other deps,
-      // cleanup may have removed them. Since we're reusing the element, listeners should persist.
-      // No need to re-attach - they're already there from the initial setup.
-    }
-
-    debugLog('Loading audio:', audioUrl);
-
-    // Clean up old audio if it exists
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-    }
-
-    // Reset progress state immediately when switching tracks
-    setProgress(0);
-    setCurrentTime(0);
-    setDuration(0);
-
-    currentAudioUrlRef.current = audioUrl;
-
-    // Create new audio element
+    debugLog('[AUDIO] Creating persistent audio element');
     const audio = new Audio();
-    audioRef.current = audio;
-
-    // Set audio properties
-    audio.src = audioUrl;
-    audio.preload = 'metadata'; // Load metadata only - less aggressive on mobile
+    audio.preload = 'metadata';
     audio.volume = 1.0;
     audio.muted = false;
-    // Note: Setting src already triggers loading. Explicit load() not needed.
+    audioRef.current = audio;
 
-    // Set up event listeners
     const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
+      if (audioRef.current) {
+        setDuration(audioRef.current.duration);
+      }
     };
 
     const handleTimeUpdate = () => {
-      const currentTime = audio.currentTime;
-      const duration = audio.duration;
+      const audio = audioRef.current;
+      if (!audio) return;
       
-      setCurrentTime(currentTime);
+      const ct = audio.currentTime;
+      const dur = audio.duration;
       
-      if (duration && isFinite(duration)) {
-        const percentComplete = (currentTime / duration) * 100;
+      if (!isFinite(ct)) return;
+      
+      setCurrentTime(ct);
+      
+      if (dur && isFinite(dur) && dur > 0) {
+        const percentComplete = (ct / dur) * 100;
         setProgress(percentComplete);
 
-        // Call progress callback if provided
         if (onProgressRef.current) {
-          onProgressRef.current(idRef.current, currentTime, duration, percentComplete);
+          onProgressRef.current(idRef.current, ct, dur, percentComplete);
         }
       }
     };
@@ -197,38 +146,13 @@ export const useAudioPlayer = ({
 
     const handleError = (e: Event) => {
       console.error('❌ Audio loading error:', e);
-      console.error('Failed to load:', audioUrl);
-      logAudioState('error');
+      console.error('Failed to load:', audioRef.current?.src);
     };
 
-    const handlePlay = () => {
-      debugLog('▶️ Audio playing');
-    };
-
-    const handlePause = () => {
-      debugLog('⏸️ Audio paused');
-      logAudioState('paused');
-    };
-
-    const handleStalled = () => {
-      debugWarn('⚠️ Audio stalled - readyState:', audio.readyState, 'networkState:', audio.networkState);
-    };
-
-    const handleWaiting = () => {
-      debugWarn('⏳ Audio waiting for data - readyState:', audio.readyState, 'networkState:', audio.networkState);
-    };
-
-    const handleSuspend = () => {
-      debugWarn('⚠️ Audio loading suspended - readyState:', audio.readyState, 'networkState:', audio.networkState);
-    };
-
-    const handleAbort = () => {
-      debugWarn('⚠️ Audio load aborted - readyState:', audio.readyState, 'networkState:', audio.networkState);
-    };
-
-    const handleEmptied = () => {
-      debugWarn('⚠️ Audio emptied - readyState:', audio.readyState, 'networkState:', audio.networkState);
-    };
+    const handlePlay = () => debugLog('▶️ Audio playing');
+    const handlePause = () => debugLog('⏸️ Audio paused');
+    const handleStalled = () => debugWarn('⚠️ Audio stalled');
+    const handleWaiting = () => debugWarn('⏳ Audio waiting for data');
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -238,11 +162,56 @@ export const useAudioPlayer = ({
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('stalled', handleStalled);
     audio.addEventListener('waiting', handleWaiting);
-    audio.addEventListener('suspend', handleSuspend);
-    audio.addEventListener('abort', handleAbort);
-    audio.addEventListener('emptied', handleEmptied);
 
-    // Auto-play after track change if isPlaying is true
+    return () => {
+      debugLog('[AUDIO] Cleaning up audio element');
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('stalled', handleStalled);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
+      isInitializedRef.current = false;
+    };
+  }, []);
+
+  // Handle URL changes - just update src, don't recreate element
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (!audioUrl) {
+      if (currentAudioUrlRef.current) {
+        debugLog('[AUDIO] Clearing audio source');
+        audio.pause();
+        audio.src = '';
+        currentAudioUrlRef.current = null;
+        setProgress(0);
+        setCurrentTime(0);
+        setDuration(0);
+      }
+      return;
+    }
+
+    if (currentAudioUrlRef.current === audioUrl) {
+      return;
+    }
+
+    debugLog('[AUDIO] Changing source to:', audioUrl);
+    currentAudioUrlRef.current = audioUrl;
+    
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
+
+    audio.src = audioUrl;
+    audio.load();
+
     if (isPlayingRef.current) {
       const attemptPlay = () => {
         if (audio.readyState >= 2) {
@@ -263,107 +232,74 @@ export const useAudioPlayer = ({
       };
       attemptPlay();
     }
+  }, [audioUrl]);
 
-    return () => {
-      console.log('[AUDIO DEBUG] ⚠️ CLEANUP: Removing event listeners');
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('stalled', handleStalled);
-      audio.removeEventListener('waiting', handleWaiting);
-      audio.removeEventListener('suspend', handleSuspend);
-      audio.removeEventListener('abort', handleAbort);
-      audio.removeEventListener('emptied', handleEmptied);
-      audio.pause();
-      // Note: We don't null audioRef here because that only happens when audioUrl changes
-    };
-  }, [audioUrl]); // Only depend on audioUrl - callbacks and id are handled via refs
-
-  // 2) Play/pause control – depends on isPlaying and audioUrl
+  // Play/pause control
   useEffect(() => {
     debugLog('🎮 Play/pause effect - isPlaying:', isPlaying, 'url:', audioUrl);
-    if (!audioRef.current) {
-      debugLog('⚠️ No audio ref');
+    const audio = audioRef.current;
+    if (!audio || !audioUrl) {
+      debugLog('⚠️ No audio ref or URL');
       return;
     }
 
-    const audio = audioRef.current;
-
-    // Only control playback if this is the current audio URL
     if (currentAudioUrlRef.current !== audioUrl) {
       return;
     }
 
     if (isPlaying) {
+      if (!audio.paused && !audio.ended) {
+        return;
+      }
       debugLog('▶️ Attempting to play...');
-      logAudioState('before play');
-      // Wait for audio to be ready before playing
-      const attemptPlay = () => {
-        // If already playing, no-op
-        if (!audio.paused && !audio.ended) {
-          return;
-        }
-        if (audio.readyState >= 2) {
-          debugLog('✅ Audio ready, playing');
+      if (audio.readyState >= 2) {
+        audio.play().catch((error) => {
+          console.error('❌ Play failed:', error);
+          onPlayBlocked?.(error);
+        });
+      } else {
+        audio.load();
+        const handleCanPlay = () => {
           audio.play().catch((error) => {
-            console.error('❌ Play failed:', error);
-            logAudioState('play failed');
+            console.error('❌ Play failed after canplay:', error);
             onPlayBlocked?.(error);
           });
-        } else {
-          debugLog('⏳ Waiting for audio to be ready...');
-          audio.load(); // Explicitly trigger load
-          // Audio not ready yet, wait for canplay event
-          const handleCanPlay = () => {
-            debugLog('✅ Audio ready, playing after canplay');
-            audio.play().catch((error) => {
-              console.error('❌ Play failed after canplay:', error);
-              logAudioState('play failed after canplay');
-              onPlayBlocked?.(error);
-            });
-          };
-          audio.addEventListener('canplay', handleCanPlay, { once: true });
-        }
-      };
-
-      attemptPlay();
+        };
+        audio.addEventListener('canplay', handleCanPlay, { once: true });
+      }
     } else {
       debugLog('⏸️ Pausing audio');
       audio.pause();
     }
   }, [isPlaying, audioUrl, onPlayBlocked]);
 
-  const seek = (time: number) => {
+  const seek = useCallback((time: number) => {
     if (audioRef.current && isFinite(time) && time >= 0) {
-      const duration = audioRef.current.duration;
-      if (isFinite(duration)) {
-        audioRef.current.currentTime = Math.min(time, duration);
+      const dur = audioRef.current.duration;
+      if (isFinite(dur)) {
+        audioRef.current.currentTime = Math.min(time, dur);
       }
     }
-  };
+  }, []);
 
-  const skipForward = (seconds: number = 15) => {
+  const skipForward = useCallback((seconds: number = 15) => {
     if (audioRef.current) {
-      const duration = audioRef.current.duration;
-      const currentTime = audioRef.current.currentTime;
-      if (isFinite(duration) && isFinite(currentTime)) {
-        audioRef.current.currentTime = Math.min(currentTime + seconds, duration);
+      const dur = audioRef.current.duration;
+      const ct = audioRef.current.currentTime;
+      if (isFinite(dur) && isFinite(ct)) {
+        audioRef.current.currentTime = Math.min(ct + seconds, dur);
       }
     }
-  };
+  }, []);
 
-  const skipBackward = (seconds: number = 15) => {
+  const skipBackward = useCallback((seconds: number = 15) => {
     if (audioRef.current) {
-      const currentTime = audioRef.current.currentTime;
-      if (isFinite(currentTime)) {
-        audioRef.current.currentTime = Math.max(currentTime - seconds, 0);
+      const ct = audioRef.current.currentTime;
+      if (isFinite(ct)) {
+        audioRef.current.currentTime = Math.max(ct - seconds, 0);
       }
     }
-  };
-
+  }, []);
 
   return {
     progress,

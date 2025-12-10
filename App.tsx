@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { SheetType, Language, AudioStop } from './types';
@@ -19,6 +19,7 @@ import { MobileFrame } from './components/shared/MobileFrame';
 import { useProgressTracking } from './hooks/useProgressTracking';
 import { useDownloadManager } from './hooks/useDownloadManager';
 import { useTourNavigation } from './hooks/useTourNavigation';
+import { useAudioPreloader } from './hooks/useAudioPreloader';
 import { RatingProvider } from './context/RatingContext';
 
 const App: React.FC = () => {
@@ -105,6 +106,13 @@ const App: React.FC = () => {
     () => tour?.stops.filter((stop): stop is AudioStop => stop.type === 'audio') || [],
     [tour]
   );
+
+  useAudioPreloader({
+    audioPlaylist,
+    currentStopId,
+    preloadCount: 1,
+  });
+
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
 
@@ -240,21 +248,27 @@ const App: React.FC = () => {
     };
   }, [audioPlayer.audioElement, canGoNext, canGoPrev, handleNextStop, handlePrevStop, setIsPlaying]);
 
-  // Media Session position state update
+  // Media Session position state update - throttled to prevent time reset issues
+  const lastPositionUpdateRef = useRef(0);
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
     if (!navigator.mediaSession.setPositionState) return;
     
     const duration = audioPlayer.duration;
     const currentTime = audioPlayer.currentTime;
+    const now = Date.now();
     
-    if (duration > 0 && isFinite(duration) && isFinite(currentTime)) {
+    // Only update once per second to prevent Control Center time resets
+    if (now - lastPositionUpdateRef.current < 1000) return;
+    
+    if (duration > 0 && isFinite(duration) && isFinite(currentTime) && currentTime >= 0) {
       try {
         navigator.mediaSession.setPositionState({
           duration: duration,
-          position: Math.min(currentTime, duration),
+          position: Math.min(Math.max(0, currentTime), duration),
           playbackRate: 1.0,
         });
+        lastPositionUpdateRef.current = now;
       } catch (e) {
         // Ignore position state errors
       }
