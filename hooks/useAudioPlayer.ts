@@ -337,23 +337,30 @@ export const useAudioPlayer = ({
   }, [isPlaying, audioUrl, onPlayBlocked]);
 
   const seek = (time: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = time;
+    if (audioRef.current && isFinite(time) && time >= 0) {
+      const duration = audioRef.current.duration;
+      if (isFinite(duration)) {
+        audioRef.current.currentTime = Math.min(time, duration);
+      }
     }
   };
 
   const skipForward = (seconds: number = 15) => {
     if (audioRef.current) {
-      audioRef.current.currentTime = Math.min(
-        audioRef.current.currentTime + seconds,
-        audioRef.current.duration
-      );
+      const duration = audioRef.current.duration;
+      const currentTime = audioRef.current.currentTime;
+      if (isFinite(duration) && isFinite(currentTime)) {
+        audioRef.current.currentTime = Math.min(currentTime + seconds, duration);
+      }
     }
   };
 
   const skipBackward = (seconds: number = 15) => {
     if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - seconds, 0);
+      const currentTime = audioRef.current.currentTime;
+      if (isFinite(currentTime)) {
+        audioRef.current.currentTime = Math.max(currentTime - seconds, 0);
+      }
     }
   };
 

@@ -14,6 +14,7 @@ import { TourHeaderAlt } from './components/TourHeaderAlt';
 import { useTourData, useLanguages } from './hooks/useDataLoader';
 import { DEFAULT_TOUR_ID } from './src/config/tours';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
+import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 import { MobileFrame } from './components/shared/MobileFrame';
 import { useProgressTracking } from './hooks/useProgressTracking';
 import { useDownloadManager } from './hooks/useDownloadManager';
@@ -157,6 +158,9 @@ const App: React.FC = () => {
     },
   });
 
+  // Background audio keep-alive for iOS
+  useBackgroundAudio({ enabled: isPlaying });
+
   // Media Session metadata
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
@@ -184,9 +188,13 @@ const App: React.FC = () => {
     if (!audioEl) return;
 
     const safePlay = () => {
+      setIsPlaying(true);
       audioEl.play().catch((err) => console.error('MediaSession play failed', err));
     };
-    const safePause = () => audioEl.pause();
+    const safePause = () => {
+      setIsPlaying(false);
+      audioEl.pause();
+    };
 
     navigator.mediaSession.setActionHandler('play', safePlay);
     navigator.mediaSession.setActionHandler('pause', safePause);
@@ -202,11 +210,23 @@ const App: React.FC = () => {
     });
     navigator.mediaSession.setActionHandler('seekforward', (details) => {
       const seekOffset = details.seekOffset ?? 10;
-      audioEl.currentTime = Math.min(audioEl.currentTime + seekOffset, audioEl.duration || audioEl.currentTime);
+      const duration = audioEl.duration;
+      const currentTime = audioEl.currentTime;
+      if (isFinite(duration) && isFinite(currentTime)) {
+        audioEl.currentTime = Math.min(currentTime + seekOffset, duration);
+      }
     });
     navigator.mediaSession.setActionHandler('seekbackward', (details) => {
       const seekOffset = details.seekOffset ?? 10;
-      audioEl.currentTime = Math.max(audioEl.currentTime - seekOffset, 0);
+      const currentTime = audioEl.currentTime;
+      if (isFinite(currentTime)) {
+        audioEl.currentTime = Math.max(currentTime - seekOffset, 0);
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime !== undefined && isFinite(details.seekTime)) {
+        audioEl.currentTime = details.seekTime;
+      }
     });
 
     return () => {
@@ -216,8 +236,30 @@ const App: React.FC = () => {
       navigator.mediaSession.setActionHandler('previoustrack', null);
       navigator.mediaSession.setActionHandler('seekforward', null);
       navigator.mediaSession.setActionHandler('seekbackward', null);
+      navigator.mediaSession.setActionHandler('seekto', null);
     };
-  }, [audioPlayer.audioElement, canGoNext, canGoPrev, handleNextStop, handlePrevStop]);
+  }, [audioPlayer.audioElement, canGoNext, canGoPrev, handleNextStop, handlePrevStop, setIsPlaying]);
+
+  // Media Session position state update
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (!navigator.mediaSession.setPositionState) return;
+    
+    const duration = audioPlayer.duration;
+    const currentTime = audioPlayer.currentTime;
+    
+    if (duration > 0 && isFinite(duration) && isFinite(currentTime)) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: duration,
+          position: Math.min(currentTime, duration),
+          playbackRate: 1.0,
+        });
+      } catch (e) {
+        // Ignore position state errors
+      }
+    }
+  }, [audioPlayer.duration, audioPlayer.currentTime]);
 
   // Global error logging to surface crashes
   useEffect(() => {
