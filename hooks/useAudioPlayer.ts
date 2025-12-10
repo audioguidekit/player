@@ -56,6 +56,7 @@ export const useAudioPlayer = ({
 }: UseAudioPlayerProps): UseAudioPlayerReturn => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrlRef = useRef<string | null>(null);
+  const hasEndedForCurrentUrlRef = useRef(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -138,7 +139,12 @@ export const useAudioPlayer = ({
     };
 
     const handleEnded = () => {
-      debugLog('🏁 Audio ended');
+      if (hasEndedForCurrentUrlRef.current) {
+        debugLog('🏁 Audio ended - IGNORING (already handled for this URL)');
+        return;
+      }
+      hasEndedForCurrentUrlRef.current = true;
+      debugLog('🏁 Audio ended - firing onEnded callback');
       setProgress(0);
       setCurrentTime(0);
       onEndedRef.current?.();
@@ -191,6 +197,7 @@ export const useAudioPlayer = ({
         audio.pause();
         audio.src = '';
         currentAudioUrlRef.current = null;
+        hasEndedForCurrentUrlRef.current = false;
         setProgress(0);
         setCurrentTime(0);
         setDuration(0);
@@ -204,6 +211,7 @@ export const useAudioPlayer = ({
 
     debugLog('[AUDIO] Changing source to:', audioUrl);
     currentAudioUrlRef.current = audioUrl;
+    hasEndedForCurrentUrlRef.current = false;
     
     setProgress(0);
     setCurrentTime(0);
