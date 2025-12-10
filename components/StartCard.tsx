@@ -63,7 +63,7 @@ const ErrorTip = styled.p`
 `;
 
 const ActionButton = styled.button<{ $disabled: boolean }>(({ $disabled }) => [
-  tw`w-full bg-black text-white py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl relative overflow-hidden`,
+  tw`w-full bg-black text-white py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300`,
   $disabled && tw`opacity-50 cursor-not-allowed active:scale-100`,
 ]);
 

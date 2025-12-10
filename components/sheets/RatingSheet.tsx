@@ -177,7 +177,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                     <Star
                       size={36}
                       fill={rating >= star ? "#FFD700" : "transparent"}
-                      className={rating >= star ? "text-[#FFD700]" : "text-gray-300"}
+                      className={rating >= star ? "text-[#ffdc19]" : "text-gray-300"}
                       strokeWidth={1.5}
                     />
                   </StarButton>

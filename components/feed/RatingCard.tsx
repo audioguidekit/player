@@ -117,8 +117,8 @@ export const RatingCard: React.FC<RatingCardProps> = ({ item }) => {
           >
             <Star
               size={36}
-              fill={rating >= star ? 'black' : 'transparent'}
-              className={rating >= star ? 'text-black' : 'text-gray-300'}
+              fill={rating >= star ? '#FFD700' : 'transparent'}
+              className={rating >= star ? 'text-[#ffdc19]' : 'text-gray-300'}
               strokeWidth={1.5}
             />
           </StarButton>

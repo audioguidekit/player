@@ -97,6 +97,12 @@
       "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/10.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/10.mp3"
+    },
+    {
+      "id": "11",
+      "type": "rating",
+      "question": "How did you like this tour?",
+      "description": "We'd love to hear your thoughts about this tour!"
     }
   ]
 }
