@@ -67,7 +67,7 @@ const Input = styled.input`
 `;
 
 const Button = styled.button<{ $disabled?: boolean }>(({ $disabled }) => [
-  tw`w-full py-4 rounded-3xl font-bold text-base transition-all duration-300`,
+  tw`w-full py-4 rounded-full font-bold text-base transition-all duration-300`,
   $disabled && tw`bg-gray-100 text-gray-400 cursor-not-allowed`,
   !$disabled && tw`bg-black text-white shadow-lg active:scale-[0.98]`,
 ]);
@@ -298,7 +298,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
               transition={{ duration: 0.3 }}
             >
               <SuccessIconCircle>
-                <CircleCheckBig size={40} strokeWidth={1.5} />
+                <CircleCheckBig size={40} strokeWidth={2} />
               </SuccessIconCircle>
 
               <SuccessTitle>Thank you!</SuccessTitle>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, CircleCheckBig } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -11,11 +11,11 @@ interface RatingCardProps {
 }
 
 const Container = styled.div`
-  ${tw`bg-white rounded-2xl p-6 mb-4 shadow-sm border border-gray-100`}
+  ${tw`relative rounded-2xl bg-white shadow-[0_2px_15px_rgba(0,0,0,0.05)] p-6 mb-4 border border-gray-100 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
 `;
 
 const SuccessContainer = styled(motion.div)`
-  ${tw`bg-white rounded-2xl p-6 mb-4 shadow-sm border border-gray-100`}
+  ${tw`relative rounded-2xl bg-white shadow-[0_2px_15px_rgba(0,0,0,0.05)] p-10 mb-4 border border-gray-100 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
 `;
 
 const CenterContent = styled.div`
@@ -23,7 +23,7 @@ const CenterContent = styled.div`
 `;
 
 const SuccessIconCircle = styled.div`
-  ${tw`w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4`}
+  ${tw`w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-600 mx-auto`}
 `;
 
 const Checkmark = styled.span`
@@ -31,7 +31,7 @@ const Checkmark = styled.span`
 `;
 
 const Title = styled.h3`
-  ${tw`text-xl font-bold text-gray-900 mb-2`}
+  ${tw`text-xl font-bold text-gray-900`}
 `;
 
 const Description = styled.p`
@@ -90,7 +90,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ item }) => {
       >
         <CenterContent>
           <SuccessIconCircle>
-            <Checkmark>✓</Checkmark>
+            <CircleCheckBig size={40} strokeWidth={2} />
           </SuccessIconCircle>
           <Title>Thank you!</Title>
           <Description>We appreciate your feedback.</Description>
@@ -172,7 +172,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ item }) => {
               disabled={isFeedbackButtonDisabled}
               $disabled={isFeedbackButtonDisabled}
             >
-              Submit Feedback
+              Submit feedback
             </SubmitButton>
           </FeedbackForm>
         )}

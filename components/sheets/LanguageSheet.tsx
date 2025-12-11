@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { Check } from 'lucide-react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';
@@ -18,11 +18,11 @@ const Container = styled.div`
 `;
 
 const LanguageList = styled.div`
-  ${tw`space-y-2`}
+  ${tw`space-y-0.5`}
 `;
 
 const LanguageButton = styled.button<{ $isSelected: boolean }>(({ $isSelected }) => [
-  tw`w-full flex items-center justify-between p-4 rounded-3xl transition-all duration-200`,
+  tw`w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200`,
   $isSelected ? tw`bg-gray-100` : tw`active:scale-[0.98]`,
 ]);
 
@@ -63,7 +63,7 @@ export const LanguageSheet: React.FC<LanguageSheetProps> = ({
                 </LanguageName>
               </LanguageContent>
               {selectedLanguage.code === lang.code && (
-                <CheckCircle2 size={20} className="text-green-500" strokeWidth={2.5} />
+                <Check size={20} className="text-gray-500" strokeWidth={4} />
               )}
             </LanguageButton>
           ))}

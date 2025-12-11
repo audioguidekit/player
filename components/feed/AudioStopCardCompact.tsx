@@ -20,7 +20,13 @@ const OuterContainer = styled.div`
 `;
 
 const CardContainer = styled.div`
-  ${tw`relative rounded-2xl bg-white shadow-[0_2px_15px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
+  ${tw`relative rounded-2xl bg-white shadow-[0_2px_15px_rgba(0,0,0,0.05)] border border-gray-100 cursor-pointer overflow-hidden`}
+  transition: transform 0.15s ease-out;
+  transform-origin: center;
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 const ImageContainer = styled.div`
@@ -104,14 +110,14 @@ export const AudioStopCardCompact = memo<AudioStopCardCompactProps>(({
 
         <BottomSection>
           <NumberContainer>
-            {isPlaying && (
+            {isPlaying && !isCompleted && (
               <SpinnerRing viewBox="0 0 28 28" className="audio-spinner-ring">
                 <circle
                   cx="14"
                   cy="14"
                   r="12.5"
                   fill="none"
-                  stroke="#22BD53"
+                  stroke="#000000"
                   strokeWidth="3"
                   strokeDasharray="20 58.5"
                   strokeLinecap="round"
