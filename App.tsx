@@ -105,6 +105,11 @@ const App: React.FC = () => {
   const [assetsReady, setAssetsReady] = useState(false);
   const hasPreloadedEagerRef = useRef(false);
 
+  // Resume tracking refs
+  const resumeStopIdRef = useRef<string | null>(null);
+  const resumePositionRef = useRef<number>(0);
+  const pendingSeekRef = useRef<number | null>(null);
+
   const getArtworkType = (src: string | undefined) => {
     if (!src) return undefined;
     const lower = src.toLowerCase();
@@ -188,6 +193,26 @@ const App: React.FC = () => {
     preloadTourAssets();
   }, [tour]);
 
+  // AUTO-RESUME: Detect first unfinished track on mount
+  useEffect(() => {
+    if (!tour || currentStopId !== null) return;
+
+    const audioStops = tour.stops.filter(stop => stop.type === 'audio');
+    const firstUnfinished = audioStops.find(stop =>
+      !progressTracking.isStopCompleted(stop.id)
+    );
+
+    if (firstUnfinished) {
+      resumeStopIdRef.current = firstUnfinished.id;
+      resumePositionRef.current = progressTracking.getStopPosition(firstUnfinished.id);
+      console.log(`[RESUME] Detected unfinished track: ${firstUnfinished.id} at ${resumePositionRef.current}s`);
+    } else {
+      // All complete or no progress - start from beginning
+      resumeStopIdRef.current = null;
+      resumePositionRef.current = 0;
+    }
+  }, [tour, currentStopId, progressTracking]);
+
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
 
@@ -248,6 +273,22 @@ const App: React.FC = () => {
     onProgress: handleAudioProgress,
     onPlayBlocked: handlePlayBlocked,
   });
+
+  // AUTO-RESUME: Restore playback position when resuming
+  useEffect(() => {
+    if (!audioPlayer?.audioElement || !currentStopId) return;
+    if (pendingSeekRef.current === null) return;
+
+    const audio = audioPlayer.audioElement;
+
+    // Wait for audio metadata to load before seeking
+    if (audio.readyState >= 1 && audio.duration > 0) {
+      const seekPosition = pendingSeekRef.current;
+      console.log(`[RESUME] Seeking to ${seekPosition}s`);
+      audioPlayer.seek(seekPosition);
+      pendingSeekRef.current = null;
+    }
+  }, [audioPlayer, currentStopId, audioPlayer?.audioElement?.readyState, audioPlayer?.duration]);
 
   // Background audio keep-alive for iOS
   useBackgroundAudio({ enabled: isPlaying });
@@ -548,13 +589,23 @@ const App: React.FC = () => {
     if (!tour || tour.stops.length === 0) return;
     setHasStarted(true);
     setAllowAutoPlay(true); // user initiated
-    // Only auto-play if this is the first time starting (no current stop set)
+
+    // Only auto-select if no current stop
     if (!currentStopId) {
-      const firstAudioStop = tour.stops.find(s => s.type === 'audio');
-      if (firstAudioStop) {
-        setCurrentStopId(firstAudioStop.id);
+      // Use resume point if available, otherwise first audio stop
+      const stopToStart = resumeStopIdRef.current ||
+                         tour.stops.find(s => s.type === 'audio')?.id;
+
+      if (stopToStart) {
+        setCurrentStopId(stopToStart);
         setIsPlaying(true);
-        setIsMiniPlayerExpanded(true); // Always expand player on fresh start
+        setIsMiniPlayerExpanded(true);
+
+        // Queue position restoration if resuming
+        if (resumeStopIdRef.current && resumePositionRef.current > 0) {
+          pendingSeekRef.current = resumePositionRef.current;
+          console.log(`[RESUME] Queued seek to ${resumePositionRef.current}s`);
+        }
       }
     }
   };
@@ -567,6 +618,12 @@ const App: React.FC = () => {
     if (!tour) return;
     progressTracking.resetProgress();
     setHasShownCompletionSheet(false);
+
+    // Clear resume refs
+    resumeStopIdRef.current = null;
+    resumePositionRef.current = 0;
+    pendingSeekRef.current = null;
+
     const firstAudioStop = tour.stops.find(s => s.type === 'audio');
     if (firstAudioStop) {
       setCurrentStopId(firstAudioStop.id);
