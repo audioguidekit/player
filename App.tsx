@@ -21,6 +21,10 @@ import { useDownloadManager } from './hooks/useDownloadManager';
 import { useTourNavigation } from './hooks/useTourNavigation';
 import { useAudioPreloader, eagerPreloadImage, eagerPreloadAudio } from './hooks/useAudioPreloader';
 import { RatingProvider, useRating } from './context/RatingContext';
+import { TranslationProvider } from './src/translations';
+import { LoadingScreen } from './src/components/screens/LoadingScreen';
+import { ErrorScreen } from './src/components/screens/ErrorScreen';
+import { AssetsLoadingScreen } from './src/components/screens/AssetsLoadingScreen';
 
 // Module-level flag to track if Media Session handlers are initialized
 // Prevents re-initialization on HMR which can cause iOS issues
@@ -712,36 +716,18 @@ const App: React.FC = () => {
   // Loading state
   if (tourLoading || languagesLoading) {
     return (
-      <MobileFrame>
-        <div className="flex items-center justify-center h-full bg-white">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900 mx-auto mb-4"></div>
-            <p className="text-zinc-600">Loading tour data...</p>
-          </div>
-        </div>
-      </MobileFrame>
+      <TranslationProvider language={selectedLanguage?.code || 'en'}>
+        <LoadingScreen />
+      </TranslationProvider>
     );
   }
 
   // Error state
   if (tourError || languagesError) {
     return (
-      <MobileFrame>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center p-8">
-            <h2 className="text-xl font-bold text-red-600 mb-2">Error Loading Data</h2>
-            <p className="text-zinc-600 mb-4">
-              {tourError?.message || languagesError?.message || 'Failed to load tour data'}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-zinc-900 text-white rounded-lg"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </MobileFrame>
+      <TranslationProvider language={selectedLanguage?.code || 'en'}>
+        <ErrorScreen error={tourError || languagesError} />
+      </TranslationProvider>
     );
   }
 
@@ -750,23 +736,16 @@ const App: React.FC = () => {
   // Show loading screen while assets are being preloaded
   if (!assetsReady) {
     return (
-      <MobileFrame>
-        <div className="flex items-center justify-center h-full bg-white">
-          <div className="text-center p-8">
-            <div className="mb-4">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-zinc-200 border-t-zinc-900"></div>
-            </div>
-            <p className="text-zinc-900 text-lg font-medium">Preparing your tour...</p>
-            <p className="text-zinc-600 text-sm mt-2">Loading audio and images</p>
-          </div>
-        </div>
-      </MobileFrame>
+      <TranslationProvider language={selectedLanguage?.code || 'en'}>
+        <AssetsLoadingScreen />
+      </TranslationProvider>
     );
   }
 
   return (
-    <MobileFrame>
-      <div className="relative w-full h-full bg-white overflow-hidden flex flex-col font-sans text-base" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
+    <TranslationProvider language={selectedLanguage?.code || 'en'}>
+      <MobileFrame>
+        <div className="relative w-full h-full bg-white overflow-hidden flex flex-col font-sans text-base" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
           {/* Main Content Area */}
           <div className="flex-1 relative overflow-hidden bg-white">
             <TourStart
@@ -875,7 +854,8 @@ const App: React.FC = () => {
             onReplay={handleResetTour}
           />
         </div>
-    </MobileFrame>
+      </MobileFrame>
+    </TranslationProvider>
   );
 };
 

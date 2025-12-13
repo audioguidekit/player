@@ -3,6 +3,7 @@ import { CircleCheckBig } from 'lucide-react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';
+import { useTranslation } from '../../src/translations';
 
 interface TourCompleteSheetProps {
   isOpen: boolean;
@@ -39,6 +40,8 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
   onClose,
   onRateTour
 }) => {
+  const { t } = useTranslation();
+
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <Container>
@@ -46,9 +49,9 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
           <CircleCheckBig size={40} className="text-green-600" strokeWidth={2} />
         </IconCircle>
 
-        <Title>Tour completed!</Title>
+        <Title>{t.tourComplete.title}</Title>
         <Description>
-          You've listened to all the audio stops. We hope you enjoyed the tour.
+          {t.tourComplete.message}
         </Description>
 
         <RateButton
@@ -57,11 +60,11 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
             onRateTour();
           }}
         >
-          <span>Rate this tour</span>
+          <span>{t.tourComplete.rateTour}</span>
         </RateButton>
 
         <SkipButton onClick={onClose}>
-          Skip rating
+          {t.tourComplete.skipRating}
         </SkipButton>
       </Container>
     </BottomSheet>

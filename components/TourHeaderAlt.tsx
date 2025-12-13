@@ -4,6 +4,7 @@ import { motion, MotionValue } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { AnimatedCounter } from './shared/AnimatedCounter';
+import { useTranslation } from '../src/translations';
 
 interface TourHeaderAltProps {
     onBack: () => void;
@@ -47,6 +48,8 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
     consumedMinutes,
     totalMinutes,
 }) => {
+    const { t } = useTranslation();
+
     return (
         <Container
             initial={{ opacity: 0, y: -10 }}
@@ -69,7 +72,7 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
 
                     {/* Time Remaining Text */}
                     <TimeText>
-                        <AnimatedCounter value={totalMinutes - consumedMinutes} /> min left
+                        <AnimatedCounter value={totalMinutes - consumedMinutes} /> {t.tourHeader.minLeft}
                     </TimeText>
                 </ProgressSection>
             </FlexContainer>

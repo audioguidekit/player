@@ -3,6 +3,7 @@ import { ArrowUpToLine, Clock3, Headphones, Sparkles, RotateCw } from 'lucide-re
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { TourData } from '../types';
+import { useTranslation } from '../src/translations';
 
 interface StartCardProps {
   tour: TourData;
@@ -96,6 +97,7 @@ export const StartCard: React.FC<StartCardProps> = ({
   tourProgress = 0,
   onResetProgress,
 }) => {
+  const { t } = useTranslation();
   const [loadingDots, setLoadingDots] = React.useState('');
 
   React.useEffect(() => {
@@ -147,10 +149,10 @@ export const StartCard: React.FC<StartCardProps> = ({
       {/* Download Error Message */}
       {downloadError && (
         <ErrorBox>
-          <ErrorTitle>Download Failed</ErrorTitle>
+          <ErrorTitle>{t.errors.downloadFailed}</ErrorTitle>
           <ErrorMessage>{downloadError}</ErrorMessage>
           <ErrorTip>
-            💡 Tip: Use HTTPS or access via localhost for offline downloads
+            {t.errors.httpsTooltip}
           </ErrorTip>
         </ErrorBox>
       )}
@@ -188,32 +190,32 @@ export const StartCard: React.FC<StartCardProps> = ({
               <Sparkles size={20} strokeWidth={2.5} className="animate-pulse" />
               {downloadProgress === 0 ? (
                 <span className="relative">
-                  <span className="opacity-0">Preparing...</span>
-                  <span className="absolute left-0 top-0">Preparing{loadingDots}</span>
+                  <span className="opacity-0">{t.startCard.preparing}</span>
+                  <span className="absolute left-0 top-0">{t.startCard.preparing.replace('...', '')}{loadingDots}</span>
                 </span>
               ) : (
-                `Loading tour... ${downloadProgress}%`
+                `${t.startCard.loadingTour} ${downloadProgress}%`
               )}
             </>
           ) : isTourCompleted ? (
             <>
               <RotateCw size={20} strokeWidth={2.5} />
-              Replay tour
+              {t.startCard.replayTour}
             </>
           ) : hasStarted ? (
             <>
               <ArrowUpToLine size={20} strokeWidth={2.5} />
-              Resume tour
+              {t.startCard.resumeTour}
             </>
           ) : tour.offlineAvailable === true && !isDownloaded ? (
             <>
               <Sparkles size={20} strokeWidth={2.5} />
-              Download tour
+              {t.startCard.downloadTour}
             </>
           ) : (
             <>
               <Headphones size={20} strokeWidth={2.5} />
-              Start tour
+              {t.startCard.startTour}
             </>
           )}
         </ButtonContent>
@@ -222,7 +224,7 @@ export const StartCard: React.FC<StartCardProps> = ({
       {tour.offlineAvailable === true && !isDownloaded && !isDownloading && (
         <OfflineBox>
           <OfflineMessage>
-            Download this tour now to enjoy it offline in areas with limited connectivity.
+            {t.startCard.offlineInfo}
           </OfflineMessage>
         </OfflineBox>
       )}

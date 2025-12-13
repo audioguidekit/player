@@ -5,6 +5,7 @@ import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';
 import { useRating } from '../../context/RatingContext';
+import { useTranslation } from '../../src/translations';
 
 interface RatingSheetProps {
   isOpen: boolean;
@@ -104,6 +105,8 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
     isSubmitted, submitRating
   } = useRating();
 
+  const { t } = useTranslation();
+
   const [step, setStep] = useState<RatingStep>('RATING');
 
   // Sync step with submission state
@@ -155,8 +158,8 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
             >
               {/* Header */}
               <Header>
-                <Title>How did you like this tour?</Title>
-                <Description>Your feedback is valuable for us!</Description>
+                <Title>{t.rating.title}</Title>
+                <Description>{t.rating.subtitle}</Description>
               </Header>
 
               {/* Stars Container */}
@@ -190,7 +193,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        Tap to rate
+                        {t.rating.tapToRate}
                       </HintText>
                     ) : (
                       <HintText
@@ -200,7 +203,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        Mind sharing more details?
+                        {t.rating.shareDetails}
                       </HintText>
                     )}
                   </AnimatePresence>
@@ -218,7 +221,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                       <Textarea
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
-                        placeholder="Describe what you liked or disliked..."
+                        placeholder={t.rating.feedbackPlaceholder}
                       />
 
                       <Button
@@ -226,7 +229,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                         disabled={isFeedbackButtonDisabled}
                         $disabled={isFeedbackButtonDisabled}
                       >
-                        Next
+                        {t.rating.next}
                       </Button>
                     </FormArea>
                   )}
@@ -249,9 +252,9 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
               </IconCircle>
 
               <Header>
-                <Title>Stay in the loop?</Title>
+                <Title>{t.rating.stayInLoop}</Title>
                 <Description>
-                  Enter your email to receive updates about new tours and exclusive offers from this property.
+                  {t.rating.emailInfo}
                 </Description>
               </Header>
 
@@ -260,7 +263,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder={t.rating.emailPlaceholder}
                 />
 
                 <ButtonGroup>
@@ -269,11 +272,11 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                     disabled={!isEmailValid}
                     $disabled={!isEmailValid}
                   >
-                    Subscribe
+                    {t.rating.subscribe}
                   </Button>
 
                   <SkipButton onClick={handleSkip}>
-                    Skip
+                    {t.rating.skip}
                   </SkipButton>
                 </ButtonGroup>
               </ContentContainer>
@@ -293,11 +296,11 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                 <CircleCheckBig size={40} strokeWidth={2} />
               </SuccessIconCircle>
 
-              <SuccessTitle>Thank you!</SuccessTitle>
-              <SuccessDescription>We appreciate your feedback.</SuccessDescription>
+              <SuccessTitle>{t.rating.thankYou}</SuccessTitle>
+              <SuccessDescription>{t.rating.appreciateFeedback}</SuccessDescription>
 
               <Button onClick={handleFinalClose}>
-                Close
+                {t.rating.close}
               </Button>
             </StepContainer>
           )}
