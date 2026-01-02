@@ -13,6 +13,7 @@ export interface AudioStop extends BaseStop {
   isPlaying?: boolean;
   image: string;
   audioFile?: string;
+  transcription?: string;
 }
 
 export interface TextStop extends BaseStop {
@@ -78,6 +79,7 @@ export interface TourData {
   offlineAvailable?: boolean;
   transitionAudio?: string;
   themeId?: string; // Optional theme ID for custom branding
+  transcriptionAvailable?: boolean;
 }
 
 export interface Language {

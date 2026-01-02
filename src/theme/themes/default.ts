@@ -73,6 +73,11 @@ export const defaultTheme: ThemeConfig = {
       borderColor: '#E5E7EB',
       hoverBackground: '#E5E7EB',
     },
+    transcription: {
+      backgroundColor: '#FFFFFF',
+      iconColor: '#5B96C2',
+      hoverBackground: '#4A85B1',
+    },
   },
 
   typography: {

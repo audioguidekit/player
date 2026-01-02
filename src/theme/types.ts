@@ -77,6 +77,11 @@ export interface ThemeConfig {
       borderColor?: string;
       hoverBackground?: string;
     };
+    transcription: {
+      backgroundColor: string;
+      iconColor: string;
+      hoverBackground?: string;
+    };
   };
 
   // Typography

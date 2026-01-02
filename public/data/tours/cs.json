@@ -9,6 +9,7 @@
   "offlineAvailable": false,
   "transitionAudio": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/end.m4a",
   "themeId": "default",
+  "transcriptionAvailable": true,
   "stops": [
     {
       "id": "1",
@@ -17,7 +18,8 @@
       "duration": "1:30 mins",
       "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/01.jpeg",
-      "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/01.mp3"
+      "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/01.mp3",
+      "transcription": "Vítejte v Barceloně! Tento audio průvodce vás provede bohatou historií a kulturou tohoto úžasného města. Během naší procházky objevíte fascinující příběhy, které formovaly Barcelonu od starověku po současnost. Připravte se na nezapomenutelný zážitek plný architektury, umění a místní tradice. Vítejte v Barceloně! Tento audio průvodce vás provede bohatou historií a kulturou tohoto úžasného města. Během naší procházky objevíte fascinující příběhy, které formovaly Barcelonu od starověku po současnost. Připravte se na nezapomenutelný zážitek plný architektury, umění a místní tradice."
     },
     {
       "id": "2",
@@ -26,7 +28,8 @@
       "duration": "2:03 mins",
       "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/02.jpeg",
-      "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/02.mp3"
+      "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/02.mp3",
+      "transcription": "Před vámi stojí ikonická Věž Urquinaona, jeden z nejvýznamnějších symbolů barcelonské architektury. Tato impozantní stavba byla dokončena v roce 1925 a představuje dokonalý příklad katalánského modernismu. Věž získala své jméno po generálovi Urquinaonovi, významné osobnosti španělské historie. Všimněte si detailních ornamentů na fasádě, které vypovídají o bohatém kulturním dědictví této oblasti."
     },
     {
       "id": "11",

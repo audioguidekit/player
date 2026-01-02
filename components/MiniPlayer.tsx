@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SkipBack, SkipForward, X } from 'lucide-react';
+import { SkipBack, SkipForward, X, Captions, CaptionsOff } from 'lucide-react';
 import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -28,6 +28,11 @@ interface MiniPlayerProps {
   onPrevTrack?: () => void;
   canGoNext?: boolean;
   canGoPrev?: boolean;
+  // Transcription
+  transcription?: string;
+  transcriptionAvailable?: boolean;
+  isTranscriptionExpanded?: boolean;
+  onToggleTranscription?: (expanded: boolean) => void;
 }
 
 const Container = styled(motion.div)`
@@ -79,7 +84,7 @@ const ExpandedInner = styled(motion.div)`
 `;
 
 const ControlsRow = styled.div`
-  ${tw`flex items-center justify-center gap-4 mb-1`}
+  ${tw`relative flex items-center justify-center gap-4 mb-1`}
 `;
 
 const ProgressContainer = styled.div`
@@ -119,6 +124,53 @@ const MinimizedTitle = styled.span`
   color: ${({ theme }) => theme.miniPlayer.textColor};
 `;
 
+const TranscriptionButton = styled.button<{ $isExpanded: boolean }>(({ $isExpanded, theme }) => [
+  tw`w-12 h-12 rounded-full flex items-center justify-center`,
+  tw`active:scale-90 transition-transform duration-100 ease-in-out`,
+  tw`absolute right-8`,
+  {
+    backgroundColor: theme.buttons.transcription.backgroundColor,
+    color: theme.buttons.transcription.iconColor,
+  },
+]);
+
+const TranscriptionContainer = styled(motion.div)`
+  ${tw`relative w-full overflow-hidden border-t mt-4`}
+  border-color: ${({ theme }) => theme.colors.border?.light || 'rgba(0,0,0,0.1)'};
+`;
+
+const TranscriptionContent = styled.div`
+  ${tw`px-6 py-4 overflow-y-auto`}
+  max-height: 200px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: ${({ theme }) => theme.colors.border?.medium || 'rgba(0,0,0,0.2)'};
+    border-radius: 2px;
+  }
+`;
+
+const TranscriptionText = styled.p`
+  ${tw`text-sm leading-relaxed`}
+  color: ${({ theme }) => theme.miniPlayer.textColor};
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+`;
+
+const EmptyStateText = styled.p`
+  ${tw`text-sm text-center italic`}
+  color: ${({ theme }) => theme.colors.text.tertiary};
+  padding: 12px 0;
+  margin: 0;
+`;
+
 
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   currentStop,
@@ -135,12 +187,26 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onNextTrack,
   onPrevTrack,
   canGoNext = true,
-  canGoPrev = true
+  canGoPrev = true,
+  transcription,
+  transcriptionAvailable,
+  isTranscriptionExpanded: externalIsTranscriptionExpanded,
+  onToggleTranscription
 }) => {
   // Use external state if provided, otherwise fall back to local state
   const [localIsExpanded, setLocalIsExpanded] = useState(true);
   const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : localIsExpanded;
   const setIsExpanded = onToggleExpanded || setLocalIsExpanded;
+
+  // Transcription state (dual-mode: external or local)
+  const [localIsTranscriptionExpanded, setLocalIsTranscriptionExpanded] = useState(false);
+  const isTranscriptionExpanded = externalIsTranscriptionExpanded !== undefined
+    ? externalIsTranscriptionExpanded
+    : localIsTranscriptionExpanded;
+  const setIsTranscriptionExpanded = onToggleTranscription || setLocalIsTranscriptionExpanded;
+
+  // Only show transcription if both flag and text exist
+  const hasTranscription = transcriptionAvailable && transcription && transcription.trim().length > 0;
 
   // Use real progress from audio player
   const visualProgress = Math.max(0, Math.min(100, progress || 0));
@@ -341,6 +407,25 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                     <SkipButton direction="forward" onClick={onForward} seconds={15} className="w-14 h-14">
                       <ForwardIcon size={32} className="mr-1 mb-0.5" />
                     </SkipButton>
+
+                    {hasTranscription && (
+                      <TranscriptionButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsTranscriptionExpanded(!isTranscriptionExpanded);
+                        }}
+                        onPointerDownCapture={(e) => e.stopPropagation()}
+                        $isExpanded={isTranscriptionExpanded}
+                        className="w-14 h-14"
+                        aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
+                      >
+                        {isTranscriptionExpanded ? (
+                          <CaptionsOff size={28} />
+                        ) : (
+                          <Captions size={28} />
+                        )}
+                      </TranscriptionButton>
+                    )}
                   </ControlsRow>
 
                   {/* Title */}
@@ -361,6 +446,26 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                       </TitleText>
                     </TitleContainer>
                   </TitleSection>
+
+                  {/* Transcription Panel */}
+                  <AnimatePresence>
+                    {hasTranscription && isTranscriptionExpanded && (
+                      <TranscriptionContainer
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      >
+                        <TranscriptionContent>
+                          {transcription ? (
+                            <TranscriptionText>{transcription}</TranscriptionText>
+                          ) : (
+                            <EmptyStateText>No transcription available for this stop</EmptyStateText>
+                          )}
+                        </TranscriptionContent>
+                      </TranscriptionContainer>
+                    )}
+                  </AnimatePresence>
                 </ExpandedInner>
               </ExpandedContent>
             ) : (

@@ -73,6 +73,11 @@ export const modernTheme: ThemeConfig = {
       borderColor: '#E5E7EB',
       hoverBackground: '#E5E7EB',
     },
+    transcription: {
+      backgroundColor: '#FFFFFF',
+      iconColor: '#A78BFA',
+      hoverBackground: '#8B5CF6',
+    },
   },
 
   typography: {

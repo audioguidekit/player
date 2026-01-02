@@ -79,6 +79,7 @@ const App: React.FC = () => {
 
   // Mini Player State
   const [isMiniPlayerExpanded, setIsMiniPlayerExpanded] = useState(false);
+  const [isTranscriptionExpanded, setIsTranscriptionExpanded] = useState(false);
 
   // Tour Navigation Hook
   const {
@@ -841,6 +842,10 @@ const App: React.FC = () => {
                   onPrevTrack={handlePrevStop}
                   canGoNext={canGoNext}
                   canGoPrev={canGoPrev}
+                  transcription={currentAudioStop.transcription}
+                  transcriptionAvailable={tour?.transcriptionAvailable}
+                  isTranscriptionExpanded={isTranscriptionExpanded}
+                  onToggleTranscription={setIsTranscriptionExpanded}
                 />
               )}
             </AnimatePresence>
