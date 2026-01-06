@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SkipBack, SkipForward, X, Captions, CaptionsOff } from 'lucide-react';
+import { SkipBackIcon, SkipForwardIcon, XIcon, ClosedCaptioningIcon } from '@phosphor-icons/react';
 import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -332,9 +332,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             $canNavigate={canGoPrev}
           >
             {canGoPrev ? (
-              <SkipBack size={28} fill="currentColor" className="opacity-90" />
+              <SkipBackIcon size={24} weight="bold" className="opacity-90" />
             ) : (
-              <X size={28} className="opacity-40" />
+              <XIcon size={28} className="opacity-40" weight="bold" />
             )}
           </SwipeIcon>
 
@@ -344,9 +344,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             $canNavigate={canGoNext}
           >
             {canGoNext ? (
-              <SkipForward size={28} fill="currentColor" className="opacity-90" />
+              <SkipForwardIcon size={24} weight="bold" className="opacity-90" />
             ) : (
-              <X size={28} className="opacity-40" />
+              <XIcon size={28} className="opacity-40" weight="bold" />
             )}
           </SwipeIcon>
         </BackgroundLayer>
@@ -425,9 +425,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                         aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
                       >
                         {isTranscriptionExpanded ? (
-                          <CaptionsOff size={28} />
+                          <ClosedCaptioningIcon size={28} weight="fill" />
                         ) : (
-                          <Captions size={28} />
+                          <ClosedCaptioningIcon size={28} weight="duotone" />
                         )}
                       </TranscriptionButton>
                     )}

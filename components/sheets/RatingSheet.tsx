@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, CircleCheckBig, Mail } from 'lucide-react';
+import { StarIcon, CheckCircleIcon, AtIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';
@@ -46,7 +46,7 @@ const StarButton = styled.button`
   ${tw`transition-transform focus:outline-none active:scale-95`}
 `;
 
-const StyledStar = styled(Star) <{ $isActive: boolean }>`
+const StyledStar = styled(StarIcon) <{ $isActive: boolean }>`
   color: ${({ $isActive, theme }) => $isActive ? theme.status.warning : theme.colors.border.dark};
 `;
 
@@ -221,9 +221,8 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
                   >
                     <StyledStar
                       size={36}
-                      fill={rating >= star ? "currentColor" : "transparent"}
+                      weight={rating >= star ? "fill" : "regular"}
                       $isActive={rating >= star}
-                      strokeWidth={1.5}
                     />
                   </StarButton>
                 ))}
@@ -298,7 +297,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
               transition={{ duration: 0.2 }}
             >
               <IconCircle>
-                <Mail size={32} strokeWidth={1.5} />
+                <AtIcon size={32} weight="bold" />
               </IconCircle>
 
               <Header>
@@ -343,7 +342,7 @@ export const RatingSheet: React.FC<RatingSheetProps> = ({ isOpen, onClose, onSub
               transition={{ duration: 0.3 }}
             >
               <SuccessIconCircle>
-                <CircleCheckBig size={40} strokeWidth={2} />
+                <CheckCircleIcon size={40} weight="bold" />
               </SuccessIconCircle>
 
               <SuccessTitle>{t.rating.thankYou}</SuccessTitle>

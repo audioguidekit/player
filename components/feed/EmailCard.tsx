@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail } from 'lucide-react';
+import { EnvelopeSimpleIcon } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -114,7 +114,7 @@ export const EmailCard: React.FC<EmailCardProps> = ({ item }) => {
       >
         <CenterContent>
           <SuccessIconCircle>
-            <Mail size={32} strokeWidth={1.5} />
+            <EnvelopeSimpleIcon size={32} weight="light" />
           </SuccessIconCircle>
           <Title>You're subscribed!</Title>
           <Description>Check your inbox for updates.</Description>

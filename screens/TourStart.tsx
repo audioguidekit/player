@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useTransform, MotionValue, useMotionTemplate } from 'framer-motion';
-import { MessageCircleMore, ChevronDown } from 'lucide-react';
+import { ChatCircleDotsIcon, CaretDownIcon } from '@phosphor-icons/react';
 import * as flags from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -74,7 +74,7 @@ const LanguageName = styled.span`
   font-size: 15px;
 `;
 
-const ChevronIcon = styled(ChevronDown)`
+const ChevronIcon = styled(CaretDownIcon)`
   opacity: 0.8;
 `;
 
@@ -168,14 +168,14 @@ export const TourStart: React.FC<TourStartProps> = ({
         {/* Top Buttons */}
         <TopButtonsContainer>
           <ActionButton onClick={onOpenRating}>
-            <MessageCircleMore size={24} />
+            <ChatCircleDotsIcon size={24} weight="bold" />
           </ActionButton>
           <LanguageButton onClick={onOpenLanguage}>
             <LanguageFlag>
               <FlagIcon />
             </LanguageFlag>
             <LanguageName>{selectedLanguage.name}</LanguageName>
-            <ChevronIcon size={18} strokeWidth={2.5} />
+            <ChevronIcon size={18} weight="bold" />
           </LanguageButton>
         </TopButtonsContainer>
       </MediaContainer>

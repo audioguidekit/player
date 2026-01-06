@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Play, Pause, Check } from 'lucide-react';
+import { PlayIcon, PauseIcon, CheckIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 
@@ -117,7 +117,7 @@ export const PlayPauseButton: React.FC<PlayPauseButtonProps> = ({
                         exit="exit"
                         transition={iconTransition}
                     >
-                        <Check size={checkSize} strokeWidth={5} />
+                        <CheckIcon size={checkSize} weight="bold" />
                     </IconContainer>
                 ) : isPlaying ? (
                     <IconContainer
@@ -128,7 +128,7 @@ export const PlayPauseButton: React.FC<PlayPauseButtonProps> = ({
                         exit="exit"
                         transition={iconTransition}
                     >
-                        <Pause size={isMini ? 16 : icon} fill="currentColor" />
+                        <PauseIcon size={isMini ? 20 : icon} weight="fill" />
                     </IconContainer>
                 ) : (
                     <PlayIconContainer
@@ -139,7 +139,7 @@ export const PlayPauseButton: React.FC<PlayPauseButtonProps> = ({
                         exit="exit"
                         transition={iconTransition}
                     >
-                        <Play size={isMini ? 16 : icon} fill="currentColor" />
+                        <PlayIcon size={isMini ? 20 : icon} weight="fill" />
                     </PlayIconContainer>
                 )}
             </AnimatePresence>

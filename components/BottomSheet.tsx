@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { XIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 
@@ -122,7 +122,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               <Header>
                 <Title>{title}</Title>
                 <CloseButton onClick={onClose}>
-                  <X size={20} />
+                  <XIcon size={20} weight="bold"/>
                 </CloseButton>
               </Header>
             )}

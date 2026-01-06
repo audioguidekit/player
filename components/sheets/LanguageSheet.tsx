@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { CheckIcon } from '@phosphor-icons/react';
 import * as flags from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -95,7 +95,7 @@ export const LanguageSheet: React.FC<LanguageSheetProps> = ({
                   </LanguageName>
                 </LanguageContent>
                 {selectedLanguage.code === lang.code && (
-                  <Check size={20} strokeWidth={4} style={{ color: 'inherit', opacity: 0.5 }} />
+                  <CheckIcon size={20} weight="bold" style={{ color: 'inherit', opacity: 0.5 }} />
                 )}
               </LanguageButton>
             );

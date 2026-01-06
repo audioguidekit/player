@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpToLine, Clock3, Headphones, Sparkles, RotateCw } from 'lucide-react';
+import { ArrowLineUpIcon, ClockIcon, HeadphonesIcon, SparkleIcon, ArrowClockwiseIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { TourData } from '../types';
@@ -174,7 +174,7 @@ export const StartCard: React.FC<StartCardProps> = ({
     <Container>
       {/* Icon Container */}
       <IconContainer>
-        <Headphones size={32} style={{ color: 'currentColor' }} strokeWidth={1.5} />
+        <HeadphonesIcon size={32} style={{ color: 'currentColor' }} weight="duotone" />
       </IconContainer>
 
       <TitleSection>
@@ -182,7 +182,7 @@ export const StartCard: React.FC<StartCardProps> = ({
       </TitleSection>
       <MetaContainer>
         <MetaItem>
-          <Clock3 size={18} />
+          <ClockIcon size={18} />
           <span>{tour.totalDuration}</span>
         </MetaItem>
       </MetaContainer>
@@ -231,7 +231,7 @@ export const StartCard: React.FC<StartCardProps> = ({
         <ButtonContent>
           {isDownloading ? (
             <>
-              <Sparkles size={20} strokeWidth={2.5} className="animate-pulse" />
+              <SparkleIcon size={20} weight="bold" className="animate-pulse" />
               {downloadProgress === 0 ? (
                 <span className="relative">
                   <span className="opacity-0">{t.startCard.preparing}</span>
@@ -243,22 +243,22 @@ export const StartCard: React.FC<StartCardProps> = ({
             </>
           ) : isTourCompleted ? (
             <>
-              <RotateCw size={20} strokeWidth={2.5} />
+              <ArrowClockwiseIcon size={20} weight="bold" />
               {t.startCard.replayTour}
             </>
           ) : hasStarted ? (
             <>
-              <ArrowUpToLine size={20} strokeWidth={2.5} />
+              <ArrowLineUpIcon size={20} weight="bold" />
               {t.startCard.resumeTour}
             </>
           ) : tour.offlineAvailable === true && !isDownloaded ? (
             <>
-              <Sparkles size={20} strokeWidth={2.5} />
+              <SparkleIcon size={20} weight="bold" />
               {t.startCard.downloadTour}
             </>
           ) : (
             <>
-              <Headphones size={20} strokeWidth={2.5} />
+              <HeadphonesIcon size={20} weight="bold" />
               {t.startCard.startTour}
             </>
           )}

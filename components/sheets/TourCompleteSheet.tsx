@@ -1,5 +1,5 @@
 import React from 'react';
-import { CircleCheckBig } from 'lucide-react';
+import { CheckCircleIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';
@@ -59,7 +59,7 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <Container>
         <IconCircle>
-          <CircleCheckBig size={40} strokeWidth={2} />
+          <CheckCircleIcon size={40} weight="bold" />
         </IconCircle>
 
         <Title>{t.tourComplete.title}</Title>
