@@ -21,9 +21,9 @@ const OuterContainer = styled.div`
 
 const CardContainer = styled.div`
   ${tw`relative cursor-pointer overflow-hidden`}
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  box-shadow: 0 2px 15px ${({ theme }) => theme.cards.shadowColor};
+  box-shadow: ${({ theme }) => theme.cards.shadow};
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
   transition: transform 0.15s ease-out;
   transform-origin: center;
@@ -52,12 +52,13 @@ const LoaderContainer = styled(motion.div)`
 `;
 
 const DurationText = styled.span`
-  ${tw`text-sm font-normal`}
   font-family: ${({ theme }) =>
     theme?.typography?.fontFamily?.numbers
       ? theme.typography.fontFamily.numbers.join(', ')
       : theme?.typography?.fontFamily?.sans?.join(', ') || 'Inter, sans-serif'
   };
+  font-size: ${({ theme }) => theme.cards.durationBadgeFontSize};
+  font-weight: 400;
   color: ${({ theme }) => theme.cards.image.durationBadgeText};
 `;
 
@@ -96,13 +97,13 @@ const NumberCircle = styled.div<{ $isPlaying: boolean }>(({ $isPlaying, theme })
 ]);
 
 const NumberText = styled.span<{ $isPlaying: boolean }>`
-  ${tw`text-sm font-sans`}
   font-family: ${({ theme }) =>
     theme?.typography?.fontFamily?.numbers
       ? theme.typography.fontFamily.numbers.join(', ')
       : theme?.typography?.fontFamily?.sans?.join(', ') || 'Inter, sans-serif'
   };
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  font-size: ${({ theme }) => theme.cards.numberFontSize};
+  font-weight: ${({ theme }) => theme.cards.numberFontWeight};
   color: ${({ $isPlaying, theme }) =>
     $isPlaying
       ? theme.stepIndicators.active.numberColor
@@ -111,9 +112,10 @@ const NumberText = styled.span<{ $isPlaying: boolean }>`
 `;
 
 const Title = styled.h3`
-  ${tw`text-lg leading-tight flex-1 font-sans`}
+  ${tw`leading-tight flex-1`}
   font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-size: ${({ theme }) => theme.cards.titleFontSize};
+  font-weight: ${({ theme }) => theme.cards.titleFontWeight};
   color: ${({ theme }) => theme.cards.textColor};
 `;
 

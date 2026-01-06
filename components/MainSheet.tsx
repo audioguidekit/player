@@ -25,7 +25,7 @@ const Backdrop = styled.div`
 const SheetContainer = styled(motion.div)<{ $isExpanded: boolean }>`
   ${tw`absolute inset-x-0 bottom-0 overflow-hidden z-20 flex flex-col pointer-events-auto`}
   background-color: ${({ theme }) => theme.sheets.backgroundColor};
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   padding-bottom: max(${({ theme }) => theme.platform.safeArea.bottom}, 0px);
   top: ${({ $isExpanded, theme }) => $isExpanded ? `calc(-1 * ${theme.platform.safeArea.top})` : '0'};
 `;

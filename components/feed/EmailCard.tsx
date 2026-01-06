@@ -12,16 +12,16 @@ interface EmailCardProps {
 const Container = styled.div`
   ${tw`p-6 mb-4`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
-  box-shadow: ${({ theme }) => theme.shadows.sm};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
 const SuccessContainer = styled(motion.div)`
   ${tw`p-6 mb-4`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
-  box-shadow: ${({ theme }) => theme.shadows.sm};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
@@ -66,7 +66,7 @@ const FormContainer = styled.div`
 const EmailInput = styled.input`
   ${tw`w-full p-4 text-base focus:outline-none transition-colors`}
   border: 1px solid ${({ theme }) => theme.inputs.borderColor};
-  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
 
@@ -89,7 +89,7 @@ const SubmitButton = styled.button<{ $isValid: boolean }>(({ $isValid, theme }) 
   $isValid && {
     backgroundColor: theme.buttons.primary.backgroundColor,
     color: theme.buttons.primary.textColor,
-    boxShadow: theme.shadows.lg,
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
   },
   $isValid && tw`active:scale-[0.98]`,
 ]);

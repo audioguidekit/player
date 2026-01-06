@@ -15,6 +15,8 @@ export const calmTheme: ThemeConfig = {
     backgroundColor: '#E8DDD0', // Top header bar background
     iconColor: '#5C9F8F', // Header icons (home button, settings, etc.)
     textColor: '#2B2B2B', // Header title text (remaining time, etc.)
+    timeFontSize: '14px', // Remaining time display
+    timeFontWeight: '400',
     progressBar: {
       backgroundColor: 'rgba(115, 107, 97, 0.15)', // Header progress bar track
       highlightColor: '#5C9F8F', // Header progress bar fill/completion
@@ -29,8 +31,13 @@ export const calmTheme: ThemeConfig = {
     backgroundColor: '#FFFFFF', // Card container background (all content cards)
     textColor: '#2B2B2B', // Card text content (titles, descriptions)
     borderColor: '#E8DDD0', // Card border outline
-    shadowColor: 'rgba(115, 107, 97, 0.08)', // Card drop shadow for elevation
-    cornerRadius: '12px', // Card corner rounding
+    borderRadius: '12px', // Card corner rounding
+    shadow: '0 2px 15px rgba(115, 107, 97, 0.08)', // Card drop shadow
+    titleFontSize: '18px', // Card title text
+    titleFontWeight: '500',
+    durationBadgeFontSize: '14px', // Duration badge on card images
+    numberFontSize: '14px', // Step number in audio stops
+    numberFontWeight: '600',
     image: {
       placeholderColor: '#E8DDD0', // Card image placeholder/loading state background
       durationBadgeBackground: 'rgba(43, 43, 43, 0.45)', // Duration/time badge overlay background on card images
@@ -61,12 +68,16 @@ export const calmTheme: ThemeConfig = {
       textColor: '#FFFFFF', // Primary button text
       hoverBackground: '#4D8A7B', // Primary button background on hover/press
       iconColor: '#FFFFFF', // Primary button icon color
+      fontSize: '18px',
+      fontWeight: '600',
     },
     secondary: {
       backgroundColor: '#F5F1EB', // Secondary action button background (Cancel, Skip)
       textColor: '#2B2B2B', // Secondary button text
       borderColor: '#E8DDD0', // Secondary button border
       hoverBackground: '#E8DDD0', // Secondary button background on hover/press
+      fontSize: '16px',
+      fontWeight: '500',
     },
     transcription: {
       backgroundColor: '#FFFFFF', // Transcription toggle button background
@@ -81,21 +92,6 @@ export const calmTheme: ThemeConfig = {
       heading: ['Space Grotesk', 'IBM Plex Sans', 'sans-serif'], // Contemporary grotesk for character
       numbers: ['Space Grotesk'], // Contemporary grotesk for numerical displays
     },
-    fontSize: {
-      xs: '0.75rem',    // 12px - metadata
-      sm: '0.875rem',   // 14px - secondary text
-      base: '1rem',     // 16px - body text
-      lg: '1.125rem',   // 18px - emphasized content
-      xl: '1.375rem',   // 22px - subheadings
-      '2xl': '1.75rem', // 28px - section titles
-      '3xl': '2.25rem', // 36px - page titles
-    },
-    fontWeight: {
-      regular: '400',   // Body text
-      medium: '500',    // Subtle emphasis
-      semibold: '600',  // Strong hierarchy
-      bold: '700',      // Display headings
-    },
   },
 
   branding: {
@@ -106,6 +102,11 @@ export const calmTheme: ThemeConfig = {
   miniPlayer: {
     backgroundColor: '#FFFFFF', // Mini player bar background
     textColor: '#2B2B2B', // Mini player title and time text
+    titleFontSize: '16px', // Track title
+    titleFontWeight: '400',
+    timeFontSize: '16px', // Time display
+    timeFontWeight: '600',
+    transcriptionFontSize: '14px', // Transcription text
     progressBar: {
       backgroundColor: '#E7F0EE', // Mini player progress bar track
       highlightColor: '#478B7B', // Mini player progress bar fill/completion
@@ -124,8 +125,10 @@ export const calmTheme: ThemeConfig = {
   sheets: {
     backgroundColor: '#FFFFFF', // Bottom sheet modal background
     handleColor: '#D4C9BC', // Bottom sheet drag handle
-    textColor: '#FF00FF', // Bottom sheet text content
+    textColor: '#2B2B2B', // Bottom sheet text content
     borderColor: '#E8DDD0', // Bottom sheet top border
+    titleFontSize: '18px', // Sheet title
+    titleFontWeight: '700',
   },
 
   status: {
@@ -138,6 +141,20 @@ export const calmTheme: ThemeConfig = {
   loading: {
     spinnerColor: '#5C9F8F', // Loading spinner/indicator color
     backgroundColor: '#F5F1EB', // Loading screen background
+    messageFontSize: '16px', // Loading message text
+    messageFontWeight: '500',
+  },
+
+  startCard: {
+    titleFontSize: '30px', // Main tour title
+    titleFontWeight: '700',
+    metaFontSize: '14px', // Duration, stops count
+    metaFontWeight: '400',
+    metaColor: '#736B61', // Meta items color (duration, stops)
+    descriptionFontSize: '16px', // Tour description
+    sectionLabelFontSize: '14px', // "What's included", "What to expect"
+    sectionLabelFontWeight: '500',
+    sectionDescriptionFontSize: '12px', // Section content text
   },
 
   inputs: {
@@ -151,7 +168,7 @@ export const calmTheme: ThemeConfig = {
   colors: {
     text: {
       primary: '#2B2B2B',   // Primary text (headings, main content, body text)
-      secondary: '#736B61', // Secondary text (subtitles, supporting text, labels)
+      secondary: '#736B61', // Secondary text (subtitles, suppor  ting text, labels)
       tertiary: '#9B9186',  // Tertiary text (metadata, timestamps, helper text)
       inverse: '#FFFFFF',   // Inverse text (on dark backgrounds)
     },
@@ -165,38 +182,5 @@ export const calmTheme: ThemeConfig = {
       secondary: '#F5F1EB', // Secondary background (page background, sections)
       tertiary: '#E8DDD0',  // Tertiary background (hover states, disabled elements)
     },
-  },
-
-  borderRadius: {
-    none: '0',
-    sm: '0.125rem',    // 2px
-    base: '0.25rem',   // 4px
-    md: '0.5rem',      // 8px
-    lg: '0.75rem',     // 12px - architectural rounding
-    xl: '1rem',        // 16px
-    '2xl': '1.25rem',  // 20px
-    '3xl': '1.75rem',  // 28px
-    full: '9999px',
-  },
-
-  shadows: {
-    sm: '0 1px 3px 0 rgba(115, 107, 97, 0.06)',
-    base: '0 2px 4px 0 rgba(115, 107, 97, 0.08), 0 1px 2px -1px rgba(115, 107, 97, 0.06)',
-    md: '0 4px 8px -2px rgba(115, 107, 97, 0.10), 0 2px 4px -2px rgba(115, 107, 97, 0.06)',
-    lg: '0 12px 20px -4px rgba(115, 107, 97, 0.12), 0 4px 6px -4px rgba(115, 107, 97, 0.08)',
-    xl: '0 20px 32px -6px rgba(115, 107, 97, 0.14), 0 8px 12px -6px rgba(115, 107, 97, 0.10)',
-    '2xl': '0 32px 48px -12px rgba(115, 107, 97, 0.18)',
-  },
-
-  spacing: {
-    0: '0',
-    1: '0.25rem',  // 4px
-    2: '0.5rem',   // 8px
-    3: '0.75rem',  // 12px
-    4: '1rem',     // 16px
-    6: '1.75rem',  // 28px - more generous spacing
-    8: '2.5rem',   // 40px - breathable rhythm
-    12: '3.5rem',  // 56px - intentional whitespace
-    16: '5rem',    // 80px - editorial breathing room
   },
 };

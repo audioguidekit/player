@@ -26,7 +26,7 @@ const Container = styled.div`
 const IconContainer = styled.div`
   ${tw`w-20 h-20 rounded-2xl flex items-center justify-center mb-6`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   border: 1px solid ${({ theme }) => theme.colors.border.light};
   color: ${({ theme }) => theme.branding.iconColor};
 `;
@@ -36,21 +36,23 @@ const TitleSection = styled.div`
 `;
 
 const Title = styled.h1`
-  ${tw`text-3xl mb-2 tracking-tight`}
+  ${tw`mb-2 tracking-tight`}
   font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-size: ${({ theme }) => theme.startCard.titleFontSize};
+  font-weight: ${({ theme }) => theme.startCard.titleFontWeight};
   color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const MetaContainer = styled.div`
-  ${tw`flex items-center gap-6 mb-4 text-sm uppercase tracking-wider`}
+  ${tw`flex items-center gap-6 mb-4 uppercase tracking-wider`}
   font-family: ${({ theme }) =>
     theme?.typography?.fontFamily?.numbers
       ? theme.typography.fontFamily.numbers.join(', ')
       : theme?.typography?.fontFamily?.sans?.join(', ') || 'Inter, sans-serif'
   };
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.normal};
+  font-size: ${({ theme }) => theme.startCard.metaFontSize};
+  font-weight: ${({ theme }) => theme.startCard.metaFontWeight};
+  color: ${({ theme }) => theme.startCard.metaColor};
 `;
 
 const MetaItem = styled.div`
@@ -58,8 +60,9 @@ const MetaItem = styled.div`
 `;
 
 const Description = styled.p`
-  ${tw`text-base mb-6 leading-relaxed px-2`}
+  ${tw`mb-6 leading-relaxed px-2`}
   font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
+  font-size: ${({ theme }) => theme.startCard.descriptionFontSize};
   color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
@@ -67,7 +70,7 @@ const ErrorBox = styled.div`
   ${tw`w-full p-4 mb-4`}
   background-color: ${({ theme }) => `${theme.status.error}15`};
   border: 1px solid ${({ theme }) => `${theme.status.error}40`};
-  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border-radius: 16px;
 `;
 
 const ErrorTitle = styled.p`
@@ -88,12 +91,13 @@ const ErrorTip = styled.p`
 `;
 
 const ActionButton = styled.button<{ $disabled: boolean }>(({ $disabled, theme }) => [
-  tw`w-full py-4 rounded-full text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden`,
+  tw`w-full py-4 rounded-full flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden`,
   {
     backgroundColor: theme.buttons.primary.backgroundColor,
     color: theme.buttons.primary.textColor,
     fontFamily: theme?.typography?.fontFamily?.sans?.join(', '),
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: theme.buttons.primary.fontSize,
+    fontWeight: theme.buttons.primary.fontWeight,
     '& svg': {
       color: theme.buttons.primary.iconColor || theme.buttons.primary.textColor,
     },
@@ -116,7 +120,7 @@ const OfflineBox = styled.div`
   ${tw`w-full mt-4 p-4`}
   background-color: ${({ theme }) => `${theme.status.warning}15`};
   border: 1px solid ${({ theme }) => `${theme.status.warning}40`};
-  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border-radius: 16px;
 `;
 
 const OfflineMessage = styled.p`

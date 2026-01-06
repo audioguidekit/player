@@ -10,8 +10,8 @@ interface ImageTextCardProps {
 const Container = styled.div`
   ${tw`overflow-hidden mb-4`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
-  box-shadow: ${({ theme }) => theme.shadows.sm};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 

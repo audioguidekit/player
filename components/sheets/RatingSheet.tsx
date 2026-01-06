@@ -71,7 +71,7 @@ const FormArea = styled(motion.div)`
 const Textarea = styled.textarea`
   ${tw`w-full p-4 text-base focus:outline-none resize-none h-28 transition-colors`}
   border: 1px solid ${({ theme }) => theme.inputs.borderColor};
-  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
 
@@ -87,7 +87,7 @@ const Textarea = styled.textarea`
 const Input = styled.input`
   ${tw`w-full p-4 text-base focus:outline-none transition-colors`}
   border: 1px solid ${({ theme }) => theme.inputs.borderColor};
-  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
 
@@ -110,7 +110,7 @@ const Button = styled.button<{ $disabled?: boolean }>(({ $disabled, theme }) => 
   !$disabled && {
     backgroundColor: theme.buttons.primary.backgroundColor,
     color: theme.buttons.primary.textColor,
-    boxShadow: theme.shadows.lg,
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
   },
   !$disabled && tw`active:scale-[0.98]`,
 ]);

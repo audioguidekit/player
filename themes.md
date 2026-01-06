@@ -31,8 +31,8 @@ All properties are used and working:
 - ✅ `backgroundColor` - Card container background
 - ✅ `textColor` - Card text content (titles, descriptions)
 - ✅ `borderColor` - Card border outline
-- ✅ `shadowColor` - Card drop shadow for elevation
-- ✅ `cornerRadius` - Card corner rounding
+- ✅ `borderRadius` - Card corner rounding (component-specific, direct pixels)
+- ✅ `shadow` - Card drop shadow for elevation (component-specific, direct CSS value)
 - ✅ `image.placeholderColor` - Card image placeholder/loading state background
 - ✅ `image.durationBadgeBackground` - Duration/time badge overlay background on card images
 - ✅ `image.durationBadgeText` - Duration/time badge text on card images
@@ -181,20 +181,9 @@ All properties are used:
 ### typography
 
 #### fontFamily
-- ✅ `numbers` - Contemporary grotesk for numerical displays (Space Grotesk)
-- ✅ `heading` - Contemporary grotesk for character (Space Grotesk)
-- ❌ **`sans`** - Humanist sans for clarity (IBM Plex Sans) - **ONLY IN MIGRATION_PLAN.md, NOT IN ACTUAL CODE**
-
-#### fontSize
-- ❌ **`xs`** - 12px - metadata - **NOT USED**
-- ❌ **`sm`** - 14px - secondary text - **NOT USED**
-- ❌ **`base`** - 16px - body text - **NOT USED**
-- ❌ **`lg`** - 18px - emphasized content - **NOT USED**
-- ❌ **`xl`** - 22px - subheadings - **NOT USED**
-- ❌ **`'2xl'`** - 28px - section titles - **NOT USED**
-- ❌ **`'3xl'`** - 36px - page titles - **NOT USED**
-
-**Status:** All fontSize values are completely unused
+- ✅ `sans` - Primary font family for body text, buttons, and UI elements
+- ✅ `heading` - Font family for headings (Space Grotesk)
+- ✅ `numbers` - Font family for numerical displays (Space Grotesk)
 
 #### fontWeight
 - ✅ `regular` - Body text (400)
@@ -202,66 +191,33 @@ All properties are used:
 - ✅ `semibold` - Strong hierarchy (600)
 - ✅ `bold` - Display headings (700)
 
-**Files:** Multiple components for fontFamily and fontWeight
-
----
-
-### borderRadius
-- ❌ **`none`** - 0 - **NOT USED**
-- ❌ **`sm`** - 2px - **NOT USED**
-- ❌ **`base`** - 4px - **NOT USED**
-- ❌ **`md`** - 8px - **NOT USED**
-- ✅ `lg` - 12px - architectural rounding
-- ❌ **`xl`** - 16px - **NOT USED**
-- ❌ **`'2xl'`** - 20px - **NOT USED**
-- ❌ **`'3xl'`** - 28px - **NOT USED**
-- ❌ **`full`** - 9999px - **NOT USED**
-
-**Status:** Only `lg` is used, all other values are unused
-
-**Files:** `src/components/screens/ErrorScreen.tsx`
-
----
-
-### shadows
-- ✅ `sm` - Small shadow
-- ✅ `base` - Base shadow
-- ❌ **`md`** - Medium shadow - **NOT USED**
-- ✅ `lg` - Large shadow
-- ❌ **`xl`** - Extra large shadow - **NOT USED**
-- ❌ **`'2xl'`** - 2X large shadow - **NOT USED**
-
-**Files:** Multiple card components and sheets
-
----
-
-### spacing
-- ❌ **`0`** - 0 - **NOT USED**
-- ❌ **`1`** - 4px - **NOT USED**
-- ❌ **`2`** - 8px - **NOT USED**
-- ❌ **`3`** - 12px - **NOT USED**
-- ❌ **`4`** - 16px - **NOT USED**
-- ❌ **`6`** - 28px - **NOT USED**
-- ❌ **`8`** - 40px - **NOT USED**
-- ❌ **`12`** - 56px - **NOT USED**
-- ❌ **`16`** - 80px - **NOT USED**
-
-**Status:** Spacing system is completely unused
+**Files:**
+- fontFamily.sans: `GlobalStyles.tsx`, `TourStart.tsx`, `MiniPlayer.tsx`, `StartCard.tsx`, `RatingSheet.tsx`, `LanguageSheet.tsx`, `AudioStopCardCompact.tsx`, `TourHeaderAlt.tsx`
+- fontFamily.heading: `GlobalStyles.tsx`
+- fontFamily.numbers: `TourHeaderAlt.tsx`, `AudioStopCardCompact.tsx`, `StartCard.tsx`
+- fontWeight: Multiple components
 
 ---
 
 ## Summary
 
-### Completely Unused Sections
-1. **`typography.fontSize.*`** - All font size values
-2. **`spacing.*`** - All spacing values
-3. **Most of `borderRadius.*`** - Only `lg` is used
+### Architecture Changes
+**Generic Design Scales Removed:**
+The theme system has been refactored to remove unused generic design token scales in favor of component-specific semantic properties with direct pixel values:
+
+- ❌ **`typography.fontSize.*`** - Removed entirely (all 7 sizes were unused)
+- ❌ **`spacing.*`** - Removed entirely (all 9 values were unused)
+- ❌ **`borderRadius.*`** - Removed entirely (generic scale was mostly unused)
+- ❌ **`shadows.*`** - Removed entirely (generic scale was partially unused)
+
+**Component-Specific Properties Added:**
+- ✅ `cards.borderRadius` - Direct pixel value (e.g., '12px') instead of scale reference
+- ✅ `cards.shadow` - Direct CSS shadow value instead of scale reference
+
+This architecture change makes themes simpler, more maintainable, and removes the cognitive overhead of unused generic scales.
 
 ### Partially Unused Properties
 - `status.info`
-- `typography.fontFamily.sans`
-- Most `borderRadius` values
-- Some `shadows` values (md, xl, 2xl)
 
 ### Suspicious/Debug Values
 - `sheets.textColor: '#FF00FF'` (magenta) - Appears to be a debug/placeholder value
@@ -281,11 +237,13 @@ All properties are used:
 ### Recently Removed
 - `buttons.ghost.*` - Removed ghost button variant as it was completely unused in the application. Cleaned up from all theme files (calm.ts, default.ts, modern.ts) and TypeScript types.
 
+### Corrections
+- `typography.fontFamily.sans` - Previously incorrectly marked as unused. This property is actually **extensively used** throughout the application in 8+ components including GlobalStyles, MiniPlayer, StartCard, and more.
+
 ---
 
 ## Recommendations
 
-1. **Remove unused properties** to reduce theme file size and complexity
-2. **Investigate `sheets.textColor`** - Replace magenta debug color with proper theme color
-3. **Consider implementing spacing system** - Currently defined but never used
-4. **Standardize fontSize usage** - Either implement the system or remove it
+1. ✅ **COMPLETED: Remove unused generic scales** - fontSize, spacing, borderRadius, and shadows have been removed and replaced with component-specific properties where needed
+2. **Investigate `sheets.textColor`** - Replace magenta debug color with proper theme color (#FF00FF in calm.ts)
+3. **Consider adding more component-specific properties** - As new components are added, define properties directly on relevant theme sections rather than creating new generic scales

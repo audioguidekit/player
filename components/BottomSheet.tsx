@@ -40,8 +40,8 @@ const Header = styled.div`
 `;
 
 const Title = styled.h3`
-  ${tw`text-lg`}
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-size: ${({ theme }) => theme.sheets.titleFontSize};
+  font-weight: ${({ theme }) => theme.sheets.titleFontWeight};
   color: ${({ theme }) => theme.sheets.textColor};
 `;
 

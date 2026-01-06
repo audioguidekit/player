@@ -23,7 +23,9 @@
       "Bash(grep:*)",
       "Bash(xargs cat:*)",
       "WebFetch(domain:fonts.googleapis.com)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash({ echo '=== Checking for theme.shadows ===')",
+      "Bash(})"
     ],
     "deny": [],
     "ask": []

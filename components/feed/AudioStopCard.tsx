@@ -24,16 +24,16 @@ const OuterContainer = styled.div`
 const CardContainer = styled.div`
   ${tw`relative cursor-pointer transition-transform active:scale-[0.99]`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
-  box-shadow: ${({ theme }) => theme.shadows.base};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
 const ImageContainer = styled.div`
   ${tw`h-40 w-full relative overflow-hidden`}
   background-color: ${({ theme }) => theme.cards.image.placeholderColor};
-  border-top-left-radius: ${({ theme }) => theme.cards.cornerRadius};
-  border-top-right-radius: ${({ theme }) => theme.cards.cornerRadius};
+  border-top-left-radius: ${({ theme }) => theme.cards.borderRadius};
+  border-top-right-radius: ${({ theme }) => theme.cards.borderRadius};
 `;
 
 const Image = styled.img`

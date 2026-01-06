@@ -13,16 +13,16 @@ interface RatingCardProps {
 const Container = styled.div`
   ${tw`relative p-6 mb-4 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
-  box-shadow: ${({ theme }) => theme.shadows.base};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
 const SuccessContainer = styled(motion.div)`
   ${tw`relative p-10 mb-4 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
-  border-radius: ${({ theme }) => theme.cards.cornerRadius};
-  box-shadow: ${({ theme }) => theme.shadows.base};
+  border-radius: ${({ theme }) => theme.cards.borderRadius};
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
@@ -82,7 +82,7 @@ const FeedbackForm = styled(motion.div)`
 const Textarea = styled.textarea`
   ${tw`w-full p-4 text-base focus:outline-none resize-none h-28 transition-colors`}
   border: 1px solid ${({ theme }) => theme.inputs.borderColor};
-  border-radius: ${({ theme }) => theme.borderRadius['2xl']};
+  border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
 
@@ -105,7 +105,7 @@ const SubmitButton = styled.button<{ $disabled: boolean }>(({ $disabled, theme }
   !$disabled && {
     backgroundColor: theme.buttons.primary.backgroundColor,
     color: theme.buttons.primary.textColor,
-    boxShadow: theme.shadows.lg,
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
   },
   !$disabled && tw`active:scale-[0.98]`,
 ]);

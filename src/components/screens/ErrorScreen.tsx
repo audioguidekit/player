@@ -21,23 +21,25 @@ const ContentWrapper = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 1.25rem;
+  font-size: ${({ theme }) => theme.sheets.titleFontSize};
   margin-bottom: 0.5rem;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-weight: ${({ theme }) => theme.sheets.titleFontWeight};
   color: ${({ theme }) => theme.status.error};
 `;
 
 const Message = styled.p`
   margin-bottom: 1rem;
+  font-size: ${({ theme }) => theme.loading.messageFontSize};
   color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
 const RetryButton = styled.button`
   padding: 0.5rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  border-radius: 8px;
   background-color: ${({ theme }) => theme.buttons.primary.backgroundColor};
   color: ${({ theme }) => theme.buttons.primary.textColor};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-size: ${({ theme }) => theme.buttons.secondary.fontSize};
+  font-weight: ${({ theme }) => theme.buttons.secondary.fontWeight};
   cursor: pointer;
   transition: all 0.2s;
 

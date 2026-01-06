@@ -14,6 +14,8 @@ export interface ThemeConfig {
     backgroundColor: string;
     iconColor: string;
     textColor: string;
+    timeFontSize: string; // Remaining time display
+    timeFontWeight: string;
     progressBar: {
       backgroundColor: string;
       highlightColor: string;
@@ -30,8 +32,13 @@ export interface ThemeConfig {
     backgroundColor: string;
     textColor: string;
     borderColor: string;
-    shadowColor: string;
-    cornerRadius: string; // e.g., "16px" or "1rem"
+    borderRadius: string; // e.g., "12px"
+    shadow: string; // e.g., "0 2px 15px rgba(0, 0, 0, 0.1)"
+    titleFontSize: string; // Card title text
+    titleFontWeight: string;
+    durationBadgeFontSize: string; // Duration badge on card images
+    numberFontSize: string; // Step number in audio stops
+    numberFontWeight: string;
     image: {
       placeholderColor: string;
       durationBadgeBackground: string;
@@ -64,12 +71,16 @@ export interface ThemeConfig {
       textColor: string;
       hoverBackground?: string;
       iconColor?: string;
+      fontSize: string;
+      fontWeight: string;
     };
     secondary: {
       backgroundColor: string;
       textColor: string;
       borderColor?: string;
       hoverBackground?: string;
+      fontSize: string;
+      fontWeight: string;
     };
     transcription: {
       backgroundColor: string;
@@ -85,21 +96,6 @@ export interface ThemeConfig {
       heading?: string[];
       numbers?: string[]; // For numerical displays (time, duration, progress, etc.)
     };
-    fontSize: {
-      xs: string;
-      sm: string;
-      base: string;
-      lg: string;
-      xl: string;
-      '2xl': string;
-      '3xl': string;
-    };
-    fontWeight: {
-      regular: string;
-      medium: string;
-      semibold: string;
-      bold: string;
-    };
   };
 
   // Icons & Logo
@@ -114,6 +110,11 @@ export interface ThemeConfig {
   miniPlayer: {
     backgroundColor: string;
     textColor: string;
+    titleFontSize: string; // Track title
+    titleFontWeight: string;
+    timeFontSize: string; // Time display
+    timeFontWeight: string;
+    transcriptionFontSize: string; // Transcription text
     progressBar: {
       backgroundColor: string;
       highlightColor: string;
@@ -135,6 +136,8 @@ export interface ThemeConfig {
     handleColor: string;
     textColor: string;
     borderColor?: string;
+    titleFontSize: string; // Sheet title
+    titleFontWeight: string;
   };
 
   // Status & Feedback Colors
@@ -149,6 +152,21 @@ export interface ThemeConfig {
   loading: {
     spinnerColor: string;
     backgroundColor: string;
+    messageFontSize: string; // Loading message text
+    messageFontWeight: string;
+  };
+
+  // Start Card (Tour start screen)
+  startCard: {
+    titleFontSize: string; // Main tour title
+    titleFontWeight: string;
+    metaFontSize: string; // Duration, stops count
+    metaFontWeight: string;
+    metaColor: string; // Meta items color (duration, stops)
+    descriptionFontSize: string; // Tour description
+    sectionLabelFontSize: string; // "What's included", "What to expect"
+    sectionLabelFontWeight: string;
+    sectionDescriptionFontSize: string; // Section content text
   };
 
   // Form Inputs
@@ -178,42 +196,6 @@ export interface ThemeConfig {
       secondary: string;
       tertiary: string;
     };
-  };
-
-  // Border Radius Tokens
-  borderRadius: {
-    none: string;
-    sm: string;
-    base: string;
-    md: string;
-    lg: string;
-    xl: string;
-    '2xl': string;
-    '3xl': string;
-    full: string;
-  };
-
-  // Shadows
-  shadows: {
-    sm: string;
-    base: string;
-    md: string;
-    lg: string;
-    xl: string;
-    '2xl': string;
-  };
-
-  // Spacing (if you want theme-specific spacing)
-  spacing: {
-    0: string;
-    1: string;
-    2: string;
-    3: string;
-    4: string;
-    6: string;
-    8: string;
-    12: string;
-    16: string;
   };
 }
 

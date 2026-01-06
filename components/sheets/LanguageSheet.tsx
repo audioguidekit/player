@@ -55,11 +55,13 @@ const LanguageName = styled.span<{ $isSelected: boolean }>(({ $isSelected, theme
     fontFamily: theme?.typography?.fontFamily?.sans?.join(', '),
   },
   $isSelected && {
-    fontWeight: theme.typography.fontWeight.medium,
+    fontSize: theme.buttons.secondary.fontSize,
+    fontWeight: theme.buttons.secondary.fontWeight,
     color: theme.colors.text.primary,
   },
   !$isSelected && {
-    fontWeight: theme.typography.fontWeight.normal,
+    fontSize: theme.buttons.secondary.fontSize,
+    fontWeight: '400',
     color: theme.colors.text.secondary,
   },
 ]);

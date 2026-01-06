@@ -37,8 +37,8 @@ const Spinner = styled.div`
 `;
 
 const Title = styled.p`
-  font-size: 1.125rem;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  font-size: ${({ theme }) => theme.loading.messageFontSize};
+  font-weight: ${({ theme }) => theme.loading.messageFontWeight};
   color: ${({ theme }) => theme.colors.text.primary};
 `;
 
