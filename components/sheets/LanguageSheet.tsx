@@ -95,7 +95,7 @@ export const LanguageSheet: React.FC<LanguageSheetProps> = ({
                   </LanguageName>
                 </LanguageContent>
                 {selectedLanguage.code === lang.code && (
-                  <CheckIcon size={20} weight="bold" style={{ color: 'inherit', opacity: 0.5 }} />
+                  <CheckIcon size={24} weight="bold" style={{ color: 'inherit', opacity: 0.5 }} />
                 )}
               </LanguageButton>
             );
