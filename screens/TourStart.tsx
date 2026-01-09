@@ -43,14 +43,14 @@ const TopButtonsContainer = styled.div`
 const ActionButton = styled.button`
   ${tw`w-14 h-14 backdrop-blur-md rounded-full flex items-center justify-center transition-colors`}
   background-color: rgba(0, 0, 0, 0.4);
-  color: ${({ theme }) => theme.colors.text.inverse};
+  color: #FFFFFF;
 `;
 
 const LanguageButton = styled.button`
   ${tw`backdrop-blur-md rounded-full flex items-center gap-2 px-3 transition-all active:scale-95`}
   height: 48px;
   background-color: rgba(0, 0, 0, 0.4);
-  color: ${({ theme }) => theme.colors.text.inverse};
+  color: #FFFFFF;
 `;
 
 const LanguageFlag = styled.div`

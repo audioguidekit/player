@@ -73,6 +73,7 @@ export interface ThemeConfig {
       iconColor?: string;
       fontSize: string;
       fontWeight: string;
+      fontFamily?: string[]; // Optional: defaults to sans if not specified
     };
     secondary: {
       backgroundColor: string;
@@ -81,6 +82,7 @@ export interface ThemeConfig {
       hoverBackground?: string;
       fontSize: string;
       fontWeight: string;
+      fontFamily?: string[]; // Optional: defaults to sans if not specified
     };
     transcription: {
       backgroundColor: string;
