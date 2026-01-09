@@ -7,7 +7,7 @@ import { DEFAULT_TOUR_ID } from '../config/tours';
  * Route structure:
  * / → Redirect to default tour
  * /tour/:tourId → Tour detail (collapsed sheet)
- * /tour/:tourId/stop/:stopId → Playing specific stop
+ * /tour/:tourId/:stopId → Playing specific stop (simplified, no /stop/ segment)
  */
 export const AppRoutes: React.FC = () => {
   return (
@@ -15,9 +15,9 @@ export const AppRoutes: React.FC = () => {
       {/* Root redirects to default tour */}
       <Route path="/" element={<Navigate to={`/tour/${DEFAULT_TOUR_ID}`} replace />} />
 
-      {/* Tour routes */}
+      {/* Tour routes - more specific route first */}
+      <Route path="/tour/:tourId/:stopId" element={<App />} />
       <Route path="/tour/:tourId" element={<App />} />
-      <Route path="/tour/:tourId/stop/:stopId" element={<App />} />
 
       {/* Catch-all route - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
