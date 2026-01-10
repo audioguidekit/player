@@ -130,9 +130,6 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
   onClick,
   id
 }) => {
-  // DEBUG: Log render and isPlaying state
-  console.log(`[AudioStopCardCompact] Render - stopId: ${item.id}, isActive: ${isActive}, isPlaying: ${isPlaying}, isCompleted: ${isCompleted}`);
-
   // Use conditional rendering to remove animated elements from DOM when not playing
   // When elements are removed, their CSS animations stop immediately
   return (
@@ -154,7 +151,6 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
                 </LoaderContainer>
               )}
             </AnimatePresence>
-            {!isPlaying && console.log(`[AudioStopCardCompact] Audio loader REMOVED for stop ${item.id}`)}
             <DurationText>{item.duration}</DurationText>
           </DurationBadge>
         </ImageContainer>
@@ -186,7 +182,6 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
                 </SpinnerRing>
               )}
             </AnimatePresence>
-            {(!isPlaying || isCompleted) && console.log(`[AudioStopCardCompact] Spinner REMOVED for stop ${item.id}`)}
             <NumberCircle $isPlaying={isPlaying}>
               <NumberText $isPlaying={isPlaying}>{index + 1}</NumberText>
             </NumberCircle>
