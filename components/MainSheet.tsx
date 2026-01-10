@@ -42,7 +42,9 @@ const DetailContentLayer = styled(motion.div)`
   ${tw`absolute inset-0 z-20 h-full flex flex-col`}
 `;
 
-export const MainSheet = React.memo<MainSheetProps>(({
+// Remove React.memo to allow children to re-render when their props change
+// The sheet animation is already optimized with framer-motion
+export const MainSheet: React.FC<MainSheetProps> = ({
   isExpanded,
   onExpand,
   onCollapse,
@@ -206,13 +208,4 @@ export const MainSheet = React.memo<MainSheetProps>(({
       </SheetContainer>
     </Container>
   );
-}, (prevProps, nextProps) => {
-  // Only re-render if isExpanded changes or callback references change
-  // Note: We don't compare ReactNode content as it's typically recreated
-  return (
-    prevProps.isExpanded === nextProps.isExpanded &&
-    prevProps.onExpand === nextProps.onExpand &&
-    prevProps.onCollapse === nextProps.onCollapse &&
-    prevProps.onLayoutChange === nextProps.onLayoutChange
-  );
-});
+};

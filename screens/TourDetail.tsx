@@ -52,6 +52,9 @@ export const TourDetail = React.memo<TourDetailProps>(({
   scrollTrigger,
   onScrollComplete
 }) => {
+  // DEBUG: Log render and critical props
+  console.log(`[TourDetail] Render - currentStopId: ${currentStopId}, isPlaying: ${isPlaying}`);
+
   // Slower spring: reduced stiffness from 75 to 35 to match counter
   const progressSpring = useSpring(0, { mass: 0.8, stiffness: 35, damping: 15 });
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -190,23 +193,52 @@ export const TourDetail = React.memo<TourDetailProps>(({
     </Container>
   );
   }, (prevProps, nextProps) => {
-    // Custom comparison: only re-render if relevant props change
-    return (
-      prevProps.tour.id === nextProps.tour.id &&
-      prevProps.currentStopId === nextProps.currentStopId &&
-      prevProps.isPlaying === nextProps.isPlaying &&
-      prevProps.tourProgress === nextProps.tourProgress &&
-      prevProps.consumedMinutes === nextProps.consumedMinutes &&
-      prevProps.totalMinutes === nextProps.totalMinutes &&
-      prevProps.completedStopsCount === nextProps.completedStopsCount &&
-      prevProps.scrollToStopId === nextProps.scrollToStopId &&
-      prevProps.scrollTrigger === nextProps.scrollTrigger &&
-      // Compare function references for stability
-      prevProps.onStopClick === nextProps.onStopClick &&
-      prevProps.onTogglePlay === nextProps.onTogglePlay &&
-      prevProps.onStopPlayPause === nextProps.onStopPlayPause &&
-      prevProps.onBack === nextProps.onBack &&
-      prevProps.isStopCompleted === nextProps.isStopCompleted &&
-      prevProps.onScrollComplete === nextProps.onScrollComplete
-    );
+    // CRITICAL: isPlaying changes MUST trigger re-render for animations to stop
+    // Return true = skip re-render, Return false = do re-render
+
+    console.log('[TourDetail Memo] Comparing props:', {
+      isPlayingChanged: prevProps.isPlaying !== nextProps.isPlaying,
+      prevIsPlaying: prevProps.isPlaying,
+      nextIsPlaying: nextProps.isPlaying,
+      currentStopIdChanged: prevProps.currentStopId !== nextProps.currentStopId,
+      prevCurrentStopId: prevProps.currentStopId,
+      nextCurrentStopId: nextProps.currentStopId
+    });
+
+    // Always re-render if these critical props change
+    if (prevProps.isPlaying !== nextProps.isPlaying) {
+      console.log('[TourDetail Memo] RE-RENDER: isPlaying changed');
+      return false;
+    }
+    if (prevProps.currentStopId !== nextProps.currentStopId) {
+      console.log('[TourDetail Memo] RE-RENDER: currentStopId changed');
+      return false;
+    }
+    if (prevProps.tour.id !== nextProps.tour.id) {
+      console.log('[TourDetail Memo] RE-RENDER: tour.id changed');
+      return false;
+    }
+    if (prevProps.scrollTrigger !== nextProps.scrollTrigger) {
+      console.log('[TourDetail Memo] RE-RENDER: scrollTrigger changed');
+      return false;
+    }
+
+    // Re-render if completed state changes (affects checkmarks)
+    if (prevProps.completedStopsCount !== nextProps.completedStopsCount) {
+      console.log('[TourDetail Memo] RE-RENDER: completedStopsCount changed');
+      return false;
+    }
+
+    // Skip re-render if only progress/time updates (these animate smoothly via springs)
+    if (prevProps.tourProgress !== nextProps.tourProgress) return false;
+    if (prevProps.consumedMinutes !== nextProps.consumedMinutes) return false;
+    if (prevProps.totalMinutes !== nextProps.totalMinutes) return false;
+
+    // Skip re-render if only scroll target changes (but not trigger)
+    if (prevProps.scrollToStopId !== nextProps.scrollToStopId) return false;
+
+    console.log('[TourDetail Memo] SKIP RE-RENDER: All props same');
+    // All relevant props are the same, skip re-render
+    // Note: Function props intentionally excluded from comparison
+    return true;
   });

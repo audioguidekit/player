@@ -19,7 +19,7 @@ import { MobileFrame } from './components/shared/MobileFrame';
 import { useProgressTracking } from './hooks/useProgressTracking';
 import { useDownloadManager } from './hooks/useDownloadManager';
 import { useTourNavigation } from './hooks/useTourNavigation';
-import { useAudioPreloader, eagerPreloadImage, eagerPreloadAudio } from './hooks/useAudioPreloader';
+import { useAudioPreloader } from './hooks/useAudioPreloader';
 import { RatingProvider, useRating } from './context/RatingContext';
 import { TranslationProvider } from './src/translations';
 import { ThemeProvider } from './src/theme/ThemeProvider';
@@ -28,10 +28,12 @@ import { LoadingScreen } from './src/components/screens/LoadingScreen';
 import { ErrorScreen } from './src/components/screens/ErrorScreen';
 import { AssetsLoadingScreen } from './src/components/screens/AssetsLoadingScreen';
 import { storageService } from './src/services/storageService';
-
-// Module-level flag to track if Media Session handlers are initialized
-// Prevents re-initialization on HMR which can cause iOS issues
-let mediaSessionInitialized = false;
+import { useLanguageSelection } from './hooks/useLanguageSelection';
+import { useEagerAssetPreloader } from './hooks/useEagerAssetPreloader';
+import { useDeepLink } from './hooks/useDeepLink';
+import { useAutoResume } from './hooks/useAutoResume';
+import { useMediaSession } from './hooks/useMediaSession';
+import { TourProgressTracker } from './components/TourProgressTracker';
 
 const App: React.FC = () => {
   // Get route params
@@ -62,46 +64,8 @@ const App: React.FC = () => {
     }
   }, [tour?.id, setTourId]);
 
-  // Set default language when languages are loaded
-  useEffect(() => {
-    if (languages && languages.length > 0 && !selectedLanguage) {
-      let languageToUse: Language | undefined;
-
-      // 1. Check for saved user preference (user explicitly chose a language)
-      const preferences = storageService.getPreferences();
-      const savedLanguageCode = preferences.selectedLanguage;
-
-      if (savedLanguageCode) {
-        languageToUse = languages.find(l => l.code === savedLanguageCode);
-      }
-
-      // 2. If no saved preference, detect browser/device language
-      if (!languageToUse) {
-        const browserLanguage = navigator.language || navigator.languages?.[0];
-        if (browserLanguage) {
-          // Extract language code (e.g., "cs-CZ" -> "cs", "en-US" -> "en")
-          const browserLangCode = browserLanguage.split('-')[0].toLowerCase();
-          languageToUse = languages.find(l => l.code === browserLangCode);
-
-          if (languageToUse) {
-            console.log(`[LANGUAGE] Detected browser language: ${browserLanguage}, using: ${languageToUse.code}`);
-          }
-        }
-      }
-
-      // 3. Fall back to English
-      if (!languageToUse) {
-        languageToUse = languages.find(l => l.code === 'en');
-      }
-
-      // 4. Fall back to first available language
-      if (!languageToUse) {
-        languageToUse = languages[0];
-      }
-
-      setSelectedLanguage(languageToUse);
-    }
-  }, [languages, selectedLanguage]);
+  // Language selection hook
+  useLanguageSelection({ languages, selectedLanguage, setSelectedLanguage });
 
   // Shared Animation State
   const sheetY = useMotionValue(0);
@@ -118,8 +82,6 @@ const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [scrollToStopId, setScrollToStopId] = useState<{ id: string; timestamp: number } | null>(null);
   const [hasShownCompletionSheet, setHasShownCompletionSheet] = useState(false);
-  const [assetsReady, setAssetsReady] = useState(false);
-  const hasPreloadedEagerRef = useRef(false);
 
   // Resume tracking refs
   const resumeStopIdRef = useRef<string | null>(null);
@@ -156,15 +118,6 @@ const App: React.FC = () => {
     onTrackChange: handleTrackChange
   });
 
-  const getArtworkType = (src: string | undefined) => {
-    if (!src) return undefined;
-    const lower = src.toLowerCase();
-    if (lower.endsWith('.png')) return 'image/png';
-    if (lower.endsWith('.webp')) return 'image/webp';
-    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-    return undefined;
-  };
-
   // Derived State
   const currentStop = currentStopId && tour ? tour.stops.find(s => s.id === currentStopId) : undefined;
   // Get current audio stop (type-safe)
@@ -181,140 +134,35 @@ const App: React.FC = () => {
     preloadCount: 1,
   });
 
-  // EAGER PRELOADING: Preload assets when tour loads (before TourStart shows)
-  useEffect(() => {
-    if (!tour) {
-      setAssetsReady(false);
-      return;
-    }
-    if (hasPreloadedEagerRef.current) return;
+  // Eager asset preloading hook
+  const { assetsReady } = useEagerAssetPreloader({ tour });
 
-    console.log('[EAGER] Starting eager preload for tour:', tour.title);
+  // Deep link hook
+  useDeepLink({
+    urlStopId,
+    tour,
+    currentStopId,
+    setCurrentStopId,
+    setIsPlaying,
+    setIsMiniPlayerExpanded,
+    setAllowAutoPlay,
+    setHasStarted,
+    setScrollToStopId,
+    progressTracking,
+    resumeStopIdRef,
+    resumePositionRef,
+    pendingSeekRef,
+  });
 
-    const preloadTourAssets = async () => {
-      try {
-        // Get first audio stop
-        const firstAudioStop = tour.stops.find(stop => stop.type === 'audio' && 'audioFile' in stop);
-        if (!firstAudioStop || firstAudioStop.type !== 'audio') {
-          console.error('[EAGER] No audio stops found in tour');
-          setAssetsReady(true);
-          return;
-        }
-
-        // PRIORITY 1: Preload first audio (wait for completion)
-        console.log('[EAGER] ⏳ Loading first audio:', firstAudioStop.audioFile);
-        await eagerPreloadAudio(firstAudioStop.audioFile);
-        console.log('[EAGER] ✅ First audio ready');
-
-        // PRIORITY 2: Preload ALL images in parallel (max 3 concurrent to avoid overwhelming browser)
-        console.log('[EAGER] ⏳ Loading all images...');
-        const imageStops = tour.stops.filter(stop =>
-          (stop.type === 'audio' || stop.type === 'poi') && 'image' in stop && stop.image
-        );
-
-        // Load images in batches of 3
-        const BATCH_SIZE = 3;
-        for (let i = 0; i < imageStops.length; i += BATCH_SIZE) {
-          const batch = imageStops.slice(i, i + BATCH_SIZE);
-          await Promise.all(
-            batch.map(stop => {
-              const image = 'image' in stop ? stop.image : undefined;
-              return image ? eagerPreloadImage(image).catch(err => {
-                console.warn(`[EAGER] Failed to load image ${image}:`, err);
-              }) : Promise.resolve();
-            })
-          );
-        }
-
-        console.log('[EAGER] ✅ All assets ready');
-        hasPreloadedEagerRef.current = true;
-        setAssetsReady(true);
-      } catch (error) {
-        console.error('[EAGER] Error during preload:', error);
-        // Still mark as ready to not block the UI forever
-        setAssetsReady(true);
-      }
-    };
-
-    preloadTourAssets();
-  }, [tour]);
-
-  // DEEP LINK: Handle deep link to specific stop from URL
-  useEffect(() => {
-    // Only process deep link if stopId is in URL
-    if (!urlStopId || !tour) return;
-    
-    // Skip if we're already on this stop
-    if (currentStopId === urlStopId) return;
-
-    // Find the stop in the tour
-    const targetStop = tour.stops.find(s => s.id === urlStopId);
-
-    // Validate stop exists
-    if (!targetStop) {
-      console.warn(`[DEEP_LINK] Stop ${urlStopId} not found in tour ${tour.id}, falling back to normal behavior`);
-      return;
-    }
-
-    // Validate stop is an audio stop (only audio stops can be deep linked)
-    if (targetStop.type !== 'audio') {
-      console.warn(`[DEEP_LINK] Stop ${urlStopId} is not an audio stop (type: ${targetStop.type}), falling back to normal behavior`);
-      return;
-    }
-
-    // Deep link is valid - navigate to the stop
-    console.log(`[DEEP_LINK] Navigating to stop ${urlStopId}: ${targetStop.title}`);
-    
-    // Set up the stop
-    setCurrentStopId(urlStopId);
-    setHasStarted(true);
-    setIsPlaying(true);
-    setIsMiniPlayerExpanded(true);
-    setAllowAutoPlay(true);
-
-    // Trigger scroll to the stop after sheet expands
-    // Use a delay to ensure the MainSheet animation completes and DOM is ready
-    // Spring animation with stiffness 280 typically completes in ~400-600ms
-    setTimeout(() => {
-      setScrollToStopId({ id: urlStopId, timestamp: Date.now() });
-      console.log(`[DEEP_LINK] Scrolling to stop ${urlStopId}`);
-    }, 600); // Delay to allow sheet expansion animation to complete
-
-    // Check if there's a saved position for this stop and queue resume
-    const savedPosition = progressTracking.getStopPosition(urlStopId);
-    if (savedPosition > 0) {
-      resumeStopIdRef.current = urlStopId;
-      resumePositionRef.current = savedPosition;
-      pendingSeekRef.current = savedPosition;
-      console.log(`[DEEP_LINK] Resuming from saved position: ${savedPosition}s`);
-    } else {
-      // No saved position, start from beginning
-      resumeStopIdRef.current = null;
-      resumePositionRef.current = 0;
-      pendingSeekRef.current = null;
-    }
-  }, [urlStopId, tour, currentStopId, progressTracking, setCurrentStopId, setIsPlaying, setScrollToStopId]);
-
-  // AUTO-RESUME: Detect first unfinished track on mount
-  // Skip if we're handling a deep link (urlStopId is present)
-  useEffect(() => {
-    if (!tour || currentStopId !== null || urlStopId) return;
-
-    const audioStops = tour.stops.filter(stop => stop.type === 'audio');
-    const firstUnfinished = audioStops.find(stop =>
-      !progressTracking.isStopCompleted(stop.id)
-    );
-
-    if (firstUnfinished) {
-      resumeStopIdRef.current = firstUnfinished.id;
-      resumePositionRef.current = progressTracking.getStopPosition(firstUnfinished.id);
-      console.log(`[RESUME] Detected unfinished track: ${firstUnfinished.id} at ${resumePositionRef.current}s`);
-    } else {
-      // All complete or no progress - start from beginning
-      resumeStopIdRef.current = null;
-      resumePositionRef.current = 0;
-    }
-  }, [tour, currentStopId, urlStopId, progressTracking]);
+  // Auto-resume hook
+  useAutoResume({
+    tour,
+    currentStopId,
+    urlStopId,
+    progressTracking,
+    resumeStopIdRef,
+    resumePositionRef,
+  });
 
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
@@ -396,280 +244,20 @@ const App: React.FC = () => {
   // Background audio keep-alive for iOS
   useBackgroundAudio({ enabled: isPlaying });
 
-  // Media Session refs for position state management
-  const lastMetadataTrackIdRef = useRef<string | null>(null);
-  const lastPositionUpdateRef = useRef(0);
-  const lastPositionValuesRef = useRef({ duration: 0, position: 0 });
-
-  // EARLY Media Session metadata - set initial metadata on tour load
-  // This ensures Control Center shows controls immediately, even before playback starts
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    if (!tour) return;
-
-    // Find first audio stop
-    const firstAudioStop = tour.stops.find(stop => stop.type === 'audio' && 'audioFile' in stop);
-    if (!firstAudioStop || firstAudioStop.type !== 'audio') return;
-
-    // Set initial metadata with first stop
-    const artworkType = getArtworkType(firstAudioStop.image);
-    const artworkArray = firstAudioStop.image
-      ? [{
-          src: firstAudioStop.image,
-          sizes: '512x512',
-          type: artworkType || 'image/png'
-        }]
-      : [];
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: firstAudioStop.title,
-      artist: tour.title,
-      album: 'Audio Tour',
-      artwork: artworkArray,
-    });
-
-    console.log('[MediaSession] Initial metadata set:', firstAudioStop.title);
-  }, [tour]);
-
-  // Media Session metadata - only update when track actually changes
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    if (!tour || !currentAudioStop) return;
-
-    // Don't update metadata during transitions - transition audio should not show metadata
-    if (isTransitioning) return;
-
-    // Only update metadata if track changed
-    if (lastMetadataTrackIdRef.current === currentAudioStop.id) return;
-    lastMetadataTrackIdRef.current = currentAudioStop.id;
-
-    const artworkType = getArtworkType(currentAudioStop.image);
-
-    // Use single artwork entry with type always present for iOS compatibility
-    const artworkArray = currentAudioStop.image
-      ? [{
-          src: currentAudioStop.image,
-          sizes: '512x512',
-          type: artworkType || 'image/png'  // Always provide type with fallback
-        }]
-      : [];
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: currentAudioStop.title,
-      artist: tour.title,
-      album: 'Audio Tour',
-      artwork: artworkArray,
-    });
-
-    console.log('[MediaSession] Metadata updated:', currentAudioStop.title);
-  }, [tour, currentAudioStop, isTransitioning]);
-
-  // Media Session playback state - keep in sync with isPlaying
-  // IMPORTANT: Never set to 'none' as this can cause iOS to drop the session
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-  }, [isPlaying]);
-
-  // Visibility change handler - refresh metadata when app becomes visible
-  // This ensures Control Center has fresh data when user returns to app
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        if (!('mediaSession' in navigator)) return;
-        if (!tour || !currentAudioStop) return;
-        if (isTransitioning) return;
-
-        const artworkType = getArtworkType(currentAudioStop.image);
-        const artworkArray = currentAudioStop.image
-          ? [{
-              src: currentAudioStop.image,
-              sizes: '512x512',
-              type: artworkType || 'image/png'
-            }]
-          : [];
-
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: currentAudioStop.title,
-          artist: tour.title,
-          album: 'Audio Tour',
-          artwork: artworkArray,
-        });
-
-        console.log('[MediaSession] Metadata refreshed on visibility change:', currentAudioStop.title);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [tour, currentAudioStop, isTransitioning]);
-
-  // Periodic metadata refresh - keep iOS audio session alive
-  // Re-assert metadata every 30s to prevent iOS from thinking session is stale
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    if (!currentAudioStop || !tour) return;
-    if (isTransitioning) return;
-
-    const refreshInterval = setInterval(() => {
-      const artworkType = getArtworkType(currentAudioStop.image);
-      const artworkArray = currentAudioStop.image
-        ? [{
-            src: currentAudioStop.image,
-            sizes: '512x512',
-            type: artworkType || 'image/png'
-          }]
-        : [];
-
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: currentAudioStop.title,
-        artist: tour.title,
-        album: 'Audio Tour',
-        artwork: artworkArray,
-      });
-
-      console.log('[MediaSession] Periodic metadata refresh:', currentAudioStop.title);
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(refreshInterval);
-  }, [currentAudioStop, tour, isTransitioning]);
-
-  // Refs for navigation state - used by Media Session handlers
-  const canGoNextRef = useRef(canGoNext);
-  const canGoPrevRef = useRef(canGoPrev);
-  const handleNextStopRef = useRef(handleNextStop);
-  const handlePrevStopRef = useRef(handlePrevStop);
-
-  // Keep refs updated with latest values
-  useEffect(() => {
-    canGoNextRef.current = canGoNext;
-    canGoPrevRef.current = canGoPrev;
-    handleNextStopRef.current = handleNextStop;
-    handlePrevStopRef.current = handlePrevStop;
-  }, [canGoNext, canGoPrev, handleNextStop, handlePrevStop]);
-
-  // Media Session action handlers - set once and DON'T clean up
-  // Cleaning up handlers (setting to null) can cause iOS to think the session ended
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    const audioEl = audioPlayer.audioElement;
-    if (!audioEl) return;
-    
-    // Only initialize once to avoid iOS quirks with handler changes
-    if (mediaSessionInitialized) return;
-    mediaSessionInitialized = true;
-
-    console.log('[MediaSession] Initializing action handlers');
-
-    navigator.mediaSession.setActionHandler('play', () => {
-      setIsPlaying(true);
-      audioEl.play().catch((err) => console.error('MediaSession play failed', err));
-    });
-    navigator.mediaSession.setActionHandler('pause', () => {
-      setIsPlaying(false);
-      audioEl.pause();
-    });
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
-      if (canGoNextRef.current) {
-        handleNextStopRef.current();
-      }
-    });
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
-      if (canGoPrevRef.current) {
-        handlePrevStopRef.current();
-      }
-    });
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
-      const seekOffset = details.seekOffset ?? 10;
-      const duration = audioEl.duration;
-      const currentTime = audioEl.currentTime;
-      if (isFinite(duration) && isFinite(currentTime)) {
-        audioEl.currentTime = Math.min(currentTime + seekOffset, duration);
-      }
-    });
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-      const seekOffset = details.seekOffset ?? 10;
-      const currentTime = audioEl.currentTime;
-      if (isFinite(currentTime)) {
-        audioEl.currentTime = Math.max(currentTime - seekOffset, 0);
-      }
-    });
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (details.seekTime !== undefined && isFinite(details.seekTime)) {
-        audioEl.currentTime = details.seekTime;
-      }
-    });
-
-    // NO CLEANUP - keeping handlers prevents iOS from dropping the session
-  }, [audioPlayer.audioElement, setIsPlaying]);
-
-  // Media Session position state update - periodic timer reading directly from audio element
-  // CRITICAL: We read from audio element directly, NOT React state, to avoid stale values
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    if (!navigator.mediaSession.setPositionState) return;
-
-    // Don't update position during transitions or track switching
-    if (isTransitioning || isSwitchingTracks) return;
-
-    const audio = audioPlayer.audioElement;
-    if (!audio) return;
-
-    // Function to update position state from audio element
-    const updatePositionState = () => {
-      // Read values DIRECTLY from audio element to avoid stale React state
-      const duration = audio.duration;
-      const currentTime = audio.currentTime;
-      const now = Date.now();
-
-      // Guard against invalid values
-      if (duration < 0.5 || !isFinite(duration)) return;
-      if (!isFinite(currentTime) || currentTime < 0) return;
-
-      // Guard against track loading state
-      // If currentTime is very close to 0 but last position was much higher,
-      // AND duration changed significantly, we're likely loading a new track
-      const likelyTrackLoading =
-        currentTime < 1.0 &&
-        lastPositionValuesRef.current.position > 5.0 &&
-        Math.abs(duration - lastPositionValuesRef.current.duration) > 2.0;
-
-      if (likelyTrackLoading) {
-        console.log('[MediaSession] Skipping position update - track loading detected');
-        return;
-      }
-
-      // Throttle updates
-      const timeSinceLastUpdate = now - lastPositionUpdateRef.current;
-      const durationChanged = Math.abs(duration - lastPositionValuesRef.current.duration) > 0.5;
-      const positionChanged = Math.abs(currentTime - lastPositionValuesRef.current.position) > 2;
-
-      if (lastPositionUpdateRef.current > 0 && timeSinceLastUpdate < 2000 && !durationChanged && !positionChanged) return;
-
-      try {
-        const position = Math.min(Math.max(0, currentTime), duration);
-        navigator.mediaSession.setPositionState({
-          duration: duration,
-          position: position,
-          playbackRate: 1.0,
-        });
-        lastPositionUpdateRef.current = now;
-        lastPositionValuesRef.current = { duration, position };
-      } catch (e) {
-        console.warn('[MediaSession] Position state update failed:', e);
-      }
-    };
-
-    // Update immediately
-    updatePositionState();
-
-    // Update periodically: 2s when playing, 10s when paused
-    // This keeps iOS audio session alive even when paused
-    const updateInterval = isPlaying ? 2000 : 10000;
-    const interval = setInterval(updatePositionState, updateInterval);
-
-    return () => clearInterval(interval);
-  }, [audioPlayer.audioElement, isPlaying, isTransitioning, isSwitchingTracks]);
+  // Media Session hook
+  useMediaSession({
+    tour,
+    currentAudioStop,
+    isPlaying,
+    isTransitioning,
+    isSwitchingTracks,
+    canGoNext,
+    canGoPrev,
+    handleNextStop,
+    handlePrevStop,
+    setIsPlaying,
+    audioPlayer,
+  });
 
   // Global error logging to surface crashes
   useEffect(() => {
@@ -834,20 +422,11 @@ const App: React.FC = () => {
     );
   }, [tour, currentStopId, audioPlayer.progress, progressTracking]);
 
-  // Tour Completion Check
-  useEffect(() => {
-    if (!tour || !currentStopId) return;
-    const progress = progressTracking.getRealtimeProgressPercentage(
-      tour.stops,
-      currentStopId,
-      audioPlayer.progress
-    );
-
-    if (progress >= 100 && !hasShownCompletionSheet) {
-      setActiveSheet('TOUR_COMPLETE');
-      setHasShownCompletionSheet(true);
-    }
-  }, [tour, currentStopId, audioPlayer.progress, progressTracking, hasShownCompletionSheet]);
+  // Tour completion callback
+  const handleTourComplete = useCallback(() => {
+    setActiveSheet('TOUR_COMPLETE');
+    setHasShownCompletionSheet(true);
+  }, [setActiveSheet, setHasShownCompletionSheet]);
 
   // Get theme ID from tour data (fallback to 'default')
   const themeId = tour?.themeId || 'default';
@@ -895,6 +474,15 @@ const App: React.FC = () => {
       <GlobalStyles />
       <TranslationProvider language={selectedLanguage?.code || 'en'}>
         <MobileFrame>
+        {/* Tour Progress Tracker - monitors completion */}
+        <TourProgressTracker
+          tour={tour}
+          currentStopId={currentStopId}
+          audioPlayerProgress={audioPlayer.progress}
+          progressTracking={progressTracking}
+          hasShownCompletionSheet={hasShownCompletionSheet}
+          onTourComplete={handleTourComplete}
+        />
         <div className="relative w-full h-full overflow-hidden flex flex-col font-sans text-base" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
           {/* Main Content Area */}
           <div className="flex-1 relative overflow-hidden">
