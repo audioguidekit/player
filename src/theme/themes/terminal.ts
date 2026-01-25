@@ -98,7 +98,8 @@ export const terminalTheme: ThemeConfig = {
 
   branding: {
     logoUrl: undefined,
-    iconColor: '#00D9FF', // App logo/branding icon color - cyan
+    showLogoBorder: false,
+    logoSize: 'original',
   },
 
   miniPlayer: {

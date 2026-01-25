@@ -98,7 +98,8 @@ export const minimalDarkTheme: ThemeConfig = {
 
   branding: {
     logoUrl: undefined,
-    iconColor: '#FFFFFF', // Branding is pure white
+    showLogoBorder: false,
+    logoSize: 'original',
   },
 
   miniPlayer: {

@@ -95,7 +95,8 @@ export const modernTheme: ThemeConfig = {
 
   branding: {
     logoUrl: undefined,
-    iconColor: '#000000',
+    showLogoBorder: false,
+    logoSize: 'original',
   },
 
   miniPlayer: {

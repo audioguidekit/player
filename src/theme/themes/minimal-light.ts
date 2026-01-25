@@ -98,7 +98,8 @@ export const minimalLightTheme: ThemeConfig = {
 
   branding: {
     logoUrl: undefined,
-    iconColor: '#000000', // Black branding
+    showLogoBorder: false,
+    logoSize: 'original',
   },
 
   miniPlayer: {

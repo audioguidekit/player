@@ -24,20 +24,20 @@ const Container = styled.div`
   padding-bottom: calc(1rem + ${({ theme }) => theme.platform.safeArea.bottom});
 `;
 
-const IconContainer = styled.div`
-  ${tw`w-20 h-20 rounded-2xl flex items-center justify-center mb-6`}
-  background-color: ${({ theme }) => theme.cards.backgroundColor};
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  border: 1px solid ${({ theme }) => theme.colors.border.light};
-  color: ${({ theme }) => theme.branding.iconColor};
+const IconContainer = styled.div<{ $showBorder?: boolean }>`
+  ${tw`flex items-center justify-center mb-2`}
+  ${({ $showBorder }) => $showBorder !== false && tw`w-20 h-20 rounded-2xl`}
+  background-color: ${({ theme, $showBorder }) => $showBorder !== false ? theme.cards.backgroundColor : 'transparent'};
+  box-shadow: ${({ $showBorder }) => $showBorder !== false ? '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)' : 'none'};
+  border: ${({ theme, $showBorder }) => $showBorder !== false ? `1px solid ${theme.colors.border.light}` : 'none'};
 `;
 
-const LogoImage = styled.img`
-  ${tw`w-12 h-12 object-contain`}
+const LogoImage = styled.img<{ $size?: 'fit' | 'original' }>`
+  ${({ $size }) => $size === 'original' ? tw`max-w-full` : tw`w-12 h-12 object-contain`}
 `;
 
 const TitleSection = styled.div`
-  ${tw`mb-0`}
+  ${tw`mb-0 mt-4`}
 `;
 
 const Title = styled.h1`
@@ -149,6 +149,8 @@ export const StartCard = React.memo<StartCardProps>(({
   const { t } = useTranslation();
   const theme = useTheme() as ThemeConfig;
   const logoUrl = theme.branding.logoUrl;
+  const showLogoBorder = theme.branding.showLogoBorder;
+  const logoSize = theme.branding.logoSize;
   const [loadingDots, setLoadingDots] = React.useState('');
 
   React.useEffect(() => {
@@ -179,14 +181,12 @@ export const StartCard = React.memo<StartCardProps>(({
   return (
     // No fixed height. We let the content define the height, and the parent measures it.
     <Container>
-      {/* Icon Container */}
-      <IconContainer>
-        {logoUrl ? (
-          <LogoImage src={logoUrl} alt="Logo" />
-        ) : (
-          <HeadphonesIcon size={32} style={{ color: 'currentColor' }} weight="duotone" />
-        )}
-      </IconContainer>
+      {/* Logo Container - only shown when logoUrl is set */}
+      {logoUrl && (
+        <IconContainer $showBorder={showLogoBorder}>
+          <LogoImage src={logoUrl} alt="Logo" $size={logoSize} />
+        </IconContainer>
+      )}
 
       <TitleSection>
         <Title>{tour.title}</Title>

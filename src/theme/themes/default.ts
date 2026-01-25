@@ -94,8 +94,9 @@ export const defaultTheme: ThemeConfig = {
   },
 
   branding: {
-    logoUrl: undefined, // No custom logo by default
-    iconColor: '#000000',
+    logoUrl: undefined,
+    showLogoBorder: false,
+    logoSize: 'original',
   },
 
   miniPlayer: {

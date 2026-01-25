@@ -96,7 +96,8 @@ export const calmTheme: ThemeConfig = {
 
   branding: {
     logoUrl: undefined,
-    iconColor: '#2B2B2B', // App logo/branding icon color
+    showLogoBorder: false,
+    logoSize: 'original',
   },
 
   miniPlayer: {

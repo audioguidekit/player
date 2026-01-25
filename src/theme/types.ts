@@ -104,8 +104,10 @@ export interface ThemeConfig {
   branding: {
     // Custom logo URL (replaces default headphones icon)
     logoUrl?: string;
-    // Icon color for general UI icons
-    iconColor: string;
+    // Show border/background around logo (default: true)
+    showLogoBorder?: boolean;
+    // Logo size: 'fit' constrains to 48x48px, 'original' uses natural size (default: 'fit')
+    logoSize?: 'fit' | 'original';
   };
 
   // Mini Player

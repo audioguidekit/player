@@ -305,18 +305,20 @@ Fonts must be loaded via `index.html` or CSS:
 
 ### 7. Branding
 
-Controls logos and general icon colors.
+Controls custom logo display on the StartCard.
 
 ```typescript
 branding: {
   logoUrl: undefined,              // Optional: Custom logo image URL
-  iconColor: '#111827',            // Default icon color (headphones, etc.)
+  showLogoBorder: true,            // Show border/background around logo (default: true)
+  logoSize: 'fit',                 // 'fit' (48x48px) or 'original' (natural size)
 }
 ```
 
-**Visual Examples:**
-- `logoUrl` - If provided, replaces headphones icon on StartCard with custom logo
-- `iconColor` - Default color for app branding icons
+**Properties:**
+- `logoUrl` - If provided, displays a logo above the tour title on StartCard. When `undefined`, no logo is shown.
+- `showLogoBorder` - When `true` (default), logo appears in a rounded rectangle with background and shadow. When `false`, logo displays without any container styling.
+- `logoSize` - Controls logo sizing: `'fit'` constrains to 48x48px, `'original'` uses the image's natural dimensions.
 
 ---
 
@@ -678,7 +680,8 @@ export const oceanTheme: ThemeConfig = {
   // Branding
   branding: {
     logoUrl: undefined,
-    iconColor: '#0C4A6E',
+    showLogoBorder: true,
+    logoSize: 'fit',
   },
 
   // Mini Player
