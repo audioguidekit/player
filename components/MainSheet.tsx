@@ -42,6 +42,8 @@ const DetailContentLayer = styled(motion.div)`
   ${tw`absolute inset-0 z-20 h-full flex flex-col`}
 `;
 
+// Remove React.memo to allow children to re-render when their props change
+// The sheet animation is already optimized with framer-motion
 export const MainSheet: React.FC<MainSheetProps> = ({
   isExpanded,
   onExpand,

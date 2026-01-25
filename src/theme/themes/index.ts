@@ -7,6 +7,9 @@ import { ThemeConfig, ThemeId } from '../types';
 import { defaultTheme } from './default';
 import { modernTheme } from './modern';
 import { calmTheme } from './calm';
+import { terminalTheme } from './terminal';
+import { minimalDarkTheme } from './minimal-dark';
+import { minimalLightTheme } from './minimal-light';
 
 /**
  * Registry of all available themes
@@ -16,6 +19,9 @@ export const themes: Record<ThemeId, ThemeConfig> = {
   default: defaultTheme,
   modern: modernTheme,
   calm: calmTheme,
+  terminal: terminalTheme,
+  minimalDark: minimalDarkTheme,
+  minimalLight: minimalLightTheme,
 };
 
 /**

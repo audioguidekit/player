@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Mail } from 'lucide-react';
+import { EnvelopeSimpleIcon } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { EmailStop } from '../../types';
-import { useTranslation } from '../../src/translations';
 
 interface EmailCardProps {
   item: EmailStop;
@@ -95,10 +94,9 @@ const SubmitButton = styled.button<{ $isValid: boolean }>(({ $isValid, theme }) 
   $isValid && tw`active:scale-[0.98]`,
 ]);
 
-export const EmailCard: React.FC<EmailCardProps> = ({ item }) => {
+export const EmailCard = React.memo<EmailCardProps>(({ item }) => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const { t } = useTranslation();
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -116,10 +114,10 @@ export const EmailCard: React.FC<EmailCardProps> = ({ item }) => {
       >
         <CenterContent>
           <SuccessIconCircle>
-            <Mail size={32} strokeWidth={1.5} />
+            <EnvelopeSimpleIcon size={32} weight="light" />
           </SuccessIconCircle>
-          <Title>{t.rating.subscribed}</Title>
-          <Description>{t.rating.checkInbox}</Description>
+          <Title>You're subscribed!</Title>
+          <Description>Check your inbox for updates.</Description>
         </CenterContent>
       </SuccessContainer>
     );
@@ -132,9 +130,9 @@ export const EmailCard: React.FC<EmailCardProps> = ({ item }) => {
           <Mail size={32} strokeWidth={1.5} />
         </IconCircle>
         <TextSection>
-          <Title>{item.title || t.rating.stayInLoop}</Title>
+          <Title>{item.title || 'Stay in the loop?'}</Title>
           <Description>
-            {item.description || t.rating.emailInfo}
+            {item.description || 'Enter your email to receive updates about new tours and exclusive offers.'}
           </Description>
         </TextSection>
         <FormContainer>
@@ -142,17 +140,19 @@ export const EmailCard: React.FC<EmailCardProps> = ({ item }) => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={item.placeholder || t.rating.emailPlaceholder}
+            placeholder={item.placeholder || 'your@email.com'}
           />
           <SubmitButton
             onClick={handleSubmit}
             disabled={!isEmailValid}
             $isValid={isEmailValid}
           >
-            {item.buttonText || t.rating.subscribe}
+            {item.buttonText || 'Subscribe'}
           </SubmitButton>
         </FormContainer>
       </FlexContent>
     </Container>
   );
-};
+}, (prevProps, nextProps) => {
+  return prevProps.item?.id === nextProps.item?.id;
+});

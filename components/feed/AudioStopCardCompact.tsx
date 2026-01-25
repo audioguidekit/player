@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { AudioStop } from '../../types';
@@ -119,7 +119,9 @@ const Title = styled.h3`
   color: ${({ theme }) => theme.cards.textColor};
 `;
 
-export const AudioStopCardCompact = memo<AudioStopCardCompactProps>(({
+// Remove React.memo - let parent (TourDetail) control re-renders
+// This ensures the component always gets fresh isPlaying prop
+export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
   item,
   index = 0,
   isActive = false,
@@ -128,19 +130,22 @@ export const AudioStopCardCompact = memo<AudioStopCardCompactProps>(({
   onClick,
   id
 }) => {
+  // Use conditional rendering to remove animated elements from DOM when not playing
+  // When elements are removed, their CSS animations stop immediately
   return (
     <OuterContainer id={id}>
       <CardContainer onClick={onClick} className="group">
         <ImageContainer>
           <Image src={item.image} alt={item.title} />
           <DurationBadge>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {isPlaying && (
                 <LoaderContainer
+                  key={`loader-${item.id}`}
                   initial={{ width: 0, opacity: 0, marginRight: 0 }}
                   animate={{ width: 24, opacity: 1, marginRight: 8 }}
                   exit={{ width: 0, opacity: 0, marginRight: 0 }}
-                  transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                 >
                   <span className="audio-playing-loader" />
                 </LoaderContainer>
@@ -152,20 +157,31 @@ export const AudioStopCardCompact = memo<AudioStopCardCompactProps>(({
 
         <BottomSection>
           <NumberContainer>
-            {isPlaying && !isCompleted && (
-              <SpinnerRing viewBox="0 0 28 28" className="audio-spinner-ring">
-                <circle
-                  cx="14"
-                  cy="14"
-                  r="12.5"
-                  fill="none"
-                  strokeWidth="3"
-                  strokeDasharray="20 58.5"
-                  strokeLinecap="round"
-                  transform="rotate(-90 14 14)"
-                />
-              </SpinnerRing>
-            )}
+            <AnimatePresence>
+              {isPlaying && !isCompleted && (
+                <SpinnerRing
+                  as={motion.svg}
+                  key={`spinner-${item.id}`}
+                  viewBox="0 0 28 28"
+                  className="audio-spinner-ring"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <circle
+                    cx="14"
+                    cy="14"
+                    r="12.5"
+                    fill="none"
+                    strokeWidth="3"
+                    strokeDasharray="20 58.5"
+                    strokeLinecap="round"
+                    transform="rotate(-90 14 14)"
+                  />
+                </SpinnerRing>
+              )}
+            </AnimatePresence>
             <NumberCircle $isPlaying={isPlaying}>
               <NumberText $isPlaying={isPlaying}>{index + 1}</NumberText>
             </NumberCircle>
@@ -181,4 +197,4 @@ export const AudioStopCardCompact = memo<AudioStopCardCompactProps>(({
       </CardContainer>
     </OuterContainer>
   );
-});
+};

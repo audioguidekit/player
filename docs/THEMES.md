@@ -13,10 +13,11 @@ The theming system allows you to:
 
 ### Available Themes
 
-The app includes three built-in themes:
+The app includes four built-in themes:
 - **Default** - Clean and modern with neutral grays
 - **Modern** - Contemporary design with purple accents
 - **Calm** - Editorial style with warm neutrals and muted teal
+- **Terminal** - Dark hacker aesthetic with cyan accents and monospace typography
 
 ## Theme Structure
 
@@ -213,6 +214,7 @@ buttons: {
     iconColor: '#FFFFFF',             // Icon color (optional)
     fontSize: '18px',                 // Button text size
     fontWeight: '600',                // Button text weight
+    fontFamily: ['Inter', 'sans-serif'], // Font family (optional, defaults to sans)
   },
 
   // Secondary actions (Cancel, Skip)
@@ -223,6 +225,7 @@ buttons: {
     hoverBackground: '#F3F4F6',       // Background on press/hover
     fontSize: '16px',                 // Button text size
     fontWeight: '500',                // Button text weight
+    fontFamily: ['Inter', 'sans-serif'], // Font family (optional, defaults to sans)
   },
 
   // Transcription toggle
@@ -237,8 +240,16 @@ buttons: {
 **Visual Examples:**
 - `primary` - Large "Start Tour" button on StartCard
 - `primary.hoverBackground` - Darker shade when button pressed
+- `primary.fontFamily` - Custom font for buttons (e.g., use monospace for terminal themes)
 - `secondary` - "Cancel" or "Skip" buttons
+- `secondary.fontFamily` - Custom font for secondary buttons
 - `transcription` - Circular button with text icon in MiniPlayer
+
+**Font Customization:**
+The `fontFamily` property is optional for both primary and secondary buttons. If not specified, buttons will use the theme's `typography.fontFamily.sans`. This allows you to:
+- Use the same font as headings for visual consistency
+- Use monospace fonts for technical/terminal themes
+- Match button typography to your brand requirements
 
 **Affects:**
 - `StartCard` - Start/Continue/Replay buttons
@@ -267,9 +278,14 @@ typography: {
 ```
 
 **Visual Examples:**
-- `sans` - Main font for all text (cards, buttons, descriptions)
-- `heading` - Optional different font for headlines (if defined)
+- `sans` - Main font for all text (cards, buttons by default, descriptions)
+- `heading` - Optional different font for headlines and language selector (if defined)
 - `numbers` - Optional font for numerical displays like time, duration, progress
+
+**Important Notes:**
+- Buttons can override the default `sans` font using `buttons.primary.fontFamily` and `buttons.secondary.fontFamily`
+- The language selector button uses `heading` font if defined, otherwise falls back to `sans`
+- This allows for consistent typography when you want buttons and headings to share the same distinctive font
 
 **Font Loading:**
 Fonts must be loaded via `index.html` or CSS:
@@ -951,15 +967,15 @@ typography: {
 
 Font sizes and weights are **component-specific** for clarity and control:
 
-| Component | Size Properties | Weight Properties |
-|-----------|----------------|------------------|
-| **Header** | `timeFontSize` | `timeFontWeight` |
-| **Cards** | `titleFontSize`, `durationBadgeFontSize`, `numberFontSize` | `titleFontWeight`, `numberFontWeight` |
-| **Buttons** | `primary.fontSize`, `secondary.fontSize` | `primary.fontWeight`, `secondary.fontWeight` |
-| **Mini Player** | `titleFontSize`, `timeFontSize`, `transcriptionFontSize` | `titleFontWeight`, `timeFontWeight` |
-| **Sheets** | `titleFontSize` | `titleFontWeight` |
-| **Start Card** | `titleFontSize`, `metaFontSize`, `descriptionFontSize`, `sectionLabelFontSize`, `sectionDescriptionFontSize` | `titleFontWeight`, `metaFontWeight`, `sectionLabelFontWeight` |
-| **Loading** | `messageFontSize` | `messageFontWeight` |
+| Component | Size Properties | Weight Properties | Font Family Properties |
+|-----------|----------------|------------------|----------------------|
+| **Header** | `timeFontSize` | `timeFontWeight` | Uses `typography.fontFamily.numbers` |
+| **Cards** | `titleFontSize`, `durationBadgeFontSize`, `numberFontSize` | `titleFontWeight`, `numberFontWeight` | Uses `typography.fontFamily.sans` |
+| **Buttons** | `primary.fontSize`, `secondary.fontSize` | `primary.fontWeight`, `secondary.fontWeight` | `primary.fontFamily`, `secondary.fontFamily` (optional) |
+| **Mini Player** | `titleFontSize`, `timeFontSize`, `transcriptionFontSize` | `titleFontWeight`, `timeFontWeight` | Uses `typography.fontFamily.sans` and `numbers` |
+| **Sheets** | `titleFontSize` | `titleFontWeight` | Uses `typography.fontFamily.sans` |
+| **Start Card** | `titleFontSize`, `metaFontSize`, `descriptionFontSize`, `sectionLabelFontSize`, `sectionDescriptionFontSize` | `titleFontWeight`, `metaFontWeight`, `sectionLabelFontWeight` | Uses `typography.fontFamily.sans` |
+| **Loading** | `messageFontSize` | `messageFontWeight` | Uses `typography.fontFamily.sans` |
 
 **Why Component-Specific?**
 - ✅ Clear what each property affects
@@ -1171,6 +1187,100 @@ export const darkTheme: ThemeConfig = {
   },
 };
 ```
+
+### Terminal/Hacker Theme
+
+```typescript
+export const terminalTheme: ThemeConfig = {
+  id: 'terminal',
+  name: 'Terminal',
+  description: 'Dark hacker aesthetic with cyan accents and monospace typography',
+
+  header: {
+    backgroundColor: '#0A0E14',  // Very dark
+    iconColor: '#00D9FF',         // Cyan
+    textColor: '#E6EDF3',         // Light
+    // ...
+  },
+
+  mainContent: {
+    backgroundColor: '#0D1117',   // Dark background
+  },
+
+  cards: {
+    backgroundColor: '#161B22',   // Dark gray cards
+    textColor: '#E6EDF3',         // Light text
+    borderColor: '#30363D',       // Medium dark border
+    borderRadius: '8px',          // Sharper corners for terminal look
+    shadow: '0 4px 20px rgba(0, 217, 255, 0.08)', // Subtle cyan glow
+    // ...
+  },
+
+  buttons: {
+    primary: {
+      backgroundColor: '#00D9FF',   // Bright cyan
+      textColor: '#0A0E14',         // Dark text for contrast
+      hoverBackground: '#00C4E8',   // Darker cyan
+      fontSize: '18px',
+      fontWeight: '700',
+      fontFamily: ['JetBrains Mono', 'monospace'], // Monospace for terminal aesthetic!
+    },
+    secondary: {
+      backgroundColor: '#21262D',
+      textColor: '#E6EDF3',
+      borderColor: '#30363D',
+      fontSize: '16px',
+      fontWeight: '600',
+      fontFamily: ['JetBrains Mono', 'monospace'], // Consistent monospace
+    },
+  },
+
+  typography: {
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],     // Body text
+      heading: ['JetBrains Mono', 'monospace'],        // Monospace headings
+      numbers: ['JetBrains Mono', 'monospace'],        // Monospace numbers
+    },
+  },
+
+  sheets: {
+    backgroundColor: '#161B22',  // Dark sheets (not white!)
+    handleColor: '#484F58',
+    textColor: '#E6EDF3',
+    borderColor: '#30363D',
+    // ...
+  },
+
+  status: {
+    success: '#3FB950',  // Terminal green
+    error: '#F85149',    // Bright red
+    warning: '#D29922',  // Amber
+    info: '#00D9FF',     // Cyan
+  },
+
+  colors: {
+    text: {
+      primary: '#E6EDF3',     // Light text
+      secondary: '#8B949E',   // Medium gray
+      tertiary: '#6E7681',    // Darker gray
+      inverse: '#0A0E14',     // Dark (for bright backgrounds)
+    },
+    background: {
+      primary: '#161B22',     // Card dark
+      secondary: '#0D1117',   // Darker background
+      tertiary: '#21262D',    // Hover states
+    },
+    // ...
+  },
+};
+```
+
+**Key Features:**
+- Complete dark mode including bottom sheets
+- Monospace fonts (JetBrains Mono) for headings, numbers, AND buttons
+- Cyan accent color throughout
+- Sharper border radius for technical aesthetic
+- Subtle cyan glows in shadows
 
 ### Minimalist Theme
 

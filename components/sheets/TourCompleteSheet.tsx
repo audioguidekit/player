@@ -1,5 +1,5 @@
 import React from 'react';
-import { CircleCheckBig } from 'lucide-react';
+import { CheckCircleIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';
@@ -8,8 +8,7 @@ import { useTranslation } from '../../src/translations';
 interface TourCompleteSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onRate: () => void;
-  ratingAvailable?: boolean;
+  onRateTour: () => void;
 }
 
 const Container = styled.div`
@@ -49,11 +48,10 @@ const SkipButton = styled.button`
   }
 `;
 
-export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
+export const TourCompleteSheet = React.memo<TourCompleteSheetProps>(({
   isOpen,
   onClose,
-  onRate,
-  ratingAvailable = true
+  onRateTour
 }) => {
   const { t } = useTranslation();
 
@@ -61,7 +59,7 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <Container>
         <IconCircle>
-          <CircleCheckBig size={40} strokeWidth={2} />
+          <CheckCircleIcon size={40} weight="bold" />
         </IconCircle>
 
         <Title>{t.tourComplete.title}</Title>
@@ -69,27 +67,21 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
           {t.tourComplete.message}
         </Description>
 
-        {ratingAvailable ? (
-          <>
-            <RateButton
-              onClick={() => {
-                onClose();
-                onRate();
-              }}
-            >
-              <span>{t.tourComplete.rateTour}</span>
-            </RateButton>
+        <RateButton
+          onClick={() => {
+            onClose();
+            onRateTour();
+          }}
+        >
+          <span>{t.tourComplete.rateTour}</span>
+        </RateButton>
 
-            <SkipButton onClick={onClose}>
-              {t.tourComplete.skipRating}
-            </SkipButton>
-          </>
-        ) : (
-          <RateButton onClick={onClose}>
-            <span>{t.tourComplete.done}</span>
-          </RateButton>
-        )}
+        <SkipButton onClick={onClose}>
+          {t.tourComplete.skipRating}
+        </SkipButton>
       </Container>
     </BottomSheet>
   );
-};
+}, (prevProps, nextProps) => {
+  return prevProps.isOpen === nextProps.isOpen;
+});

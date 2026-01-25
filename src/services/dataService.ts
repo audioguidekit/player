@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import { TourData, Language } from '../types';
 import {
   getAnyTourByLanguage,
@@ -75,92 +74,27 @@ export function getAvailableTours(): string[] {
  * Data service with caching support
  * Note: With the discovery system, caching is less critical since tours are
  * loaded at build time. This class is kept for API compatibility.
-=======
-import { TourData, Language } from '../../types';
-import {
-  getTour,
-  getTourWithFallback,
-  getAvailableLanguages,
-  getTourLanguages,
-  getDefaultTourId,
-  getTourRegistry,
-} from './tourDiscovery';
-
-/**
- * Data service with caching support
- * Now uses tour discovery for automatic tour detection
->>>>>>> Stashed changes
  */
 export class DataService {
   private tourCache: Map<string, TourData> = new Map();
   private languageCache: Language[] | null = null;
-<<<<<<< Updated upstream
-=======
-
-  /**
-   * Get cache key for tour
-   */
-  private getCacheKey(tourId: string, language: string): string {
-    return `${tourId}:${language}`;
-  }
-
-  /**
-   * Loads tour by ID and language with caching
-   */
-  async getTourByIdAndLanguage(tourId: string, language: string): Promise<TourData | null> {
-    const cacheKey = this.getCacheKey(tourId, language);
-
-    if (this.tourCache.has(cacheKey)) {
-      return this.tourCache.get(cacheKey)!;
-    }
-
-    const tour = getTour(tourId, language);
-    if (tour) {
-      this.tourCache.set(cacheKey, tour);
-    }
-    return tour;
-  }
->>>>>>> Stashed changes
 
   /**
    * Loads tour by language code with caching
    * Uses the default/first tour ID for single-tour apps
    */
   async getTourByLanguage(languageCode: string): Promise<TourData> {
-<<<<<<< Updated upstream
     const cacheKey = `lang:${languageCode}`;
     if (this.tourCache.has(cacheKey)) {
       return this.tourCache.get(cacheKey)!;
     }
 
     const tour = await loadTourByLanguage(languageCode);
-=======
-    const tourId = getDefaultTourId();
-
-    if (!tourId) {
-      throw new Error('No tours discovered');
-    }
-
-    const cacheKey = this.getCacheKey(tourId, languageCode);
-
-    if (this.tourCache.has(cacheKey)) {
-      return this.tourCache.get(cacheKey)!;
-    }
-
-    // Try to get tour in requested language, with fallback
-    const tour = getTourWithFallback(tourId, languageCode, 'en');
-
-    if (!tour) {
-      throw new Error(`Tour '${tourId}' not available in language '${languageCode}' or fallback`);
-    }
-
->>>>>>> Stashed changes
     this.tourCache.set(cacheKey, tour);
     return tour;
   }
 
   /**
-<<<<<<< Updated upstream
    * Loads tour by ID with language preference
    */
   async getTourById(tourId: string, languageCode: string = 'en'): Promise<TourData> {
@@ -176,60 +110,22 @@ export class DataService {
 
   /**
    * Loads languages (uses discovery system)
-=======
-   * Loads languages - now derived from discovered tours
->>>>>>> Stashed changes
    */
   async getLanguages(): Promise<Language[]> {
     if (this.languageCache) {
       return this.languageCache;
     }
 
-    this.languageCache = getAvailableLanguages();
+    this.languageCache = getAllAvailableLanguages();
     return this.languageCache;
   }
 
   /**
-<<<<<<< Updated upstream
-=======
-   * Get available languages for a specific tour
-   */
-  getTourLanguageCodes(tourId: string): string[] {
-    return getTourLanguages(tourId);
-  }
-
-  /**
-   * Get the default tour ID
-   */
-  getDefaultTourId(): string | null {
-    return getDefaultTourId();
-  }
-
-  /**
-   * Get all tours registry
-   */
-  getAllTours() {
-    return getTourRegistry();
-  }
-
-  /**
->>>>>>> Stashed changes
    * Clears all caches
    */
   clearCache(): void {
     this.tourCache.clear();
     this.languageCache = null;
-<<<<<<< Updated upstream
-=======
-  }
-
-  /**
-   * Clears specific tour from cache
-   */
-  clearTourCache(tourId: string, language: string): void {
-    const cacheKey = this.getCacheKey(tourId, language);
-    this.tourCache.delete(cacheKey);
->>>>>>> Stashed changes
   }
 }
 

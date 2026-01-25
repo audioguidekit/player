@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { motion, useSpring, useTransform, animate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -36,7 +36,7 @@ interface TourDetailProps {
   onOpenRatingSheet?: () => void;
 }
 
-export const TourDetail: React.FC<TourDetailProps> = ({
+export const TourDetail = React.memo<TourDetailProps>(({
   tour,
   currentStopId,
   isPlaying,
@@ -142,6 +142,12 @@ export const TourDetail: React.FC<TourDetailProps> = ({
 
   const width = useTransform(progressSpring, (value) => `${value}%`);
 
+  // Memoize stop click handler to prevent unnecessary re-renders
+  // Use a single handler that accepts stopId to maintain referential equality
+  const handleStopClick = useCallback((stopId: string) => {
+    onStopClick(stopId);
+  }, [onStopClick]);
+
   return (
     <Container>
 
@@ -164,6 +170,7 @@ export const TourDetail: React.FC<TourDetailProps> = ({
         {tour.stops.map((stop, index) => {
           // Render audio stops with compact card
           if (stop.type === 'audio') {
+            const stopIsPlaying = stop.id === currentStopId && isPlaying;
             return (
               <AudioStopCardCompact
                 key={stop.id}
@@ -171,9 +178,9 @@ export const TourDetail: React.FC<TourDetailProps> = ({
                 item={stop}
                 index={index}
                 isActive={stop.id === currentStopId}
-                isPlaying={stop.id === currentStopId && isPlaying}
+                isPlaying={stopIsPlaying}
                 isCompleted={isStopCompleted(stop.id)}
-                onClick={() => onStopClick(stop.id)}
+                onClick={() => handleStopClick(stop.id)}
               />
             );
           }
@@ -184,4 +191,38 @@ export const TourDetail: React.FC<TourDetailProps> = ({
       </ScrollableList>
     </Container>
   );
-};
+  }, (prevProps, nextProps) => {
+    // CRITICAL: isPlaying changes MUST trigger re-render for animations to stop
+    // Return true = skip re-render, Return false = do re-render
+
+    // Always re-render if these critical props change
+    if (prevProps.isPlaying !== nextProps.isPlaying) {
+      return false;
+    }
+    if (prevProps.currentStopId !== nextProps.currentStopId) {
+      return false;
+    }
+    if (prevProps.tour.id !== nextProps.tour.id) {
+      return false;
+    }
+    if (prevProps.scrollTrigger !== nextProps.scrollTrigger) {
+      return false;
+    }
+
+    // Re-render if completed state changes (affects checkmarks)
+    if (prevProps.completedStopsCount !== nextProps.completedStopsCount) {
+      return false;
+    }
+
+    // Skip re-render if only progress/time updates (these animate smoothly via springs)
+    if (prevProps.tourProgress !== nextProps.tourProgress) return false;
+    if (prevProps.consumedMinutes !== nextProps.consumedMinutes) return false;
+    if (prevProps.totalMinutes !== nextProps.totalMinutes) return false;
+
+    // Skip re-render if only scroll target changes (but not trigger)
+    if (prevProps.scrollToStopId !== nextProps.scrollToStopId) return false;
+
+    // All relevant props are the same, skip re-render
+    // Note: Function props intentionally excluded from comparison
+    return true;
+  });

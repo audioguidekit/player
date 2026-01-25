@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { CheckIcon } from '@phosphor-icons/react';
 import * as flags from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -66,7 +66,7 @@ const LanguageName = styled.span<{ $isSelected: boolean }>(({ $isSelected, theme
   },
 ]);
 
-export const LanguageSheet: React.FC<LanguageSheetProps> = ({
+export const LanguageSheet = React.memo<LanguageSheetProps>(({
   isOpen,
   selectedLanguage,
   languages,
@@ -95,7 +95,7 @@ export const LanguageSheet: React.FC<LanguageSheetProps> = ({
                   </LanguageName>
                 </LanguageContent>
                 {selectedLanguage.code === lang.code && (
-                  <Check size={20} strokeWidth={4} style={{ color: 'inherit', opacity: 0.5 }} />
+                  <CheckIcon size={24} weight="bold" style={{ color: 'inherit', opacity: 0.5 }} />
                 )}
               </LanguageButton>
             );
@@ -104,4 +104,10 @@ export const LanguageSheet: React.FC<LanguageSheetProps> = ({
       </Container>
     </BottomSheet>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.isOpen === nextProps.isOpen &&
+    prevProps.selectedLanguage?.code === nextProps.selectedLanguage?.code &&
+    prevProps.languages?.length === nextProps.languages?.length
+  );
+});

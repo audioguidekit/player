@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useTransform, MotionValue, useMotionTemplate } from 'framer-motion';
-import { MessageCircleMore, ChevronDown } from 'lucide-react';
+import { ChatCircleDotsIcon, CaretDownIcon } from '@phosphor-icons/react';
 import * as flags from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -43,14 +43,14 @@ const TopButtonsContainer = styled.div`
 const ActionButton = styled.button`
   ${tw`w-14 h-14 backdrop-blur-md rounded-full flex items-center justify-center transition-colors`}
   background-color: rgba(0, 0, 0, 0.4);
-  color: ${({ theme }) => theme.colors.text.inverse};
+  color: #FFFFFF;
 `;
 
 const LanguageButton = styled.button`
-  ${tw`backdrop-blur-md rounded-full flex items-center gap-2 px-3 transition-all active:scale-95 ml-auto`}
+  ${tw`backdrop-blur-md rounded-full flex items-center gap-2 px-3 transition-all active:scale-95`}
   height: 48px;
   background-color: rgba(0, 0, 0, 0.4);
-  color: ${({ theme }) => theme.colors.text.inverse};
+  color: #FFFFFF;
 `;
 
 const LanguageFlag = styled.div`
@@ -70,11 +70,14 @@ const LanguageFlag = styled.div`
 
 const LanguageName = styled.span`
   ${tw`font-normal`}
-  font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
+  font-family: ${({ theme }) =>
+    theme?.typography?.fontFamily?.heading?.join(', ') ||
+    theme?.typography?.fontFamily?.sans?.join(', ')
+  };
   font-size: 15px;
 `;
 
-const ChevronIcon = styled(ChevronDown)`
+const ChevronIcon = styled(CaretDownIcon)`
   opacity: 0.8;
 `;
 
@@ -167,17 +170,15 @@ export const TourStart: React.FC<TourStartProps> = ({
 
         {/* Top Buttons */}
         <TopButtonsContainer>
-          {tour.ratingAvailable !== false && (
-            <ActionButton onClick={onOpenRating}>
-              <MessageCircleMore size={24} />
-            </ActionButton>
-          )}
+          <ActionButton onClick={onOpenRating}>
+            <ChatCircleDotsIcon size={24} weight="bold" />
+          </ActionButton>
           <LanguageButton onClick={onOpenLanguage}>
             <LanguageFlag>
               <FlagIcon />
             </LanguageFlag>
             <LanguageName>{selectedLanguage.name}</LanguageName>
-            <ChevronIcon size={18} strokeWidth={2.5} />
+            <ChevronIcon size={18} weight="bold" />
           </LanguageButton>
         </TopButtonsContainer>
       </MediaContainer>

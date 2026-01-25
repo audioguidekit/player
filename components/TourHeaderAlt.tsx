@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home } from 'lucide-react';
+import { HouseIcon } from '@phosphor-icons/react';
 import { motion, MotionValue } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -76,7 +76,7 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
             <FlexContainer>
                 {/* Home Button - Ghost Style */}
                 <HomeButton onClick={onBack}>
-                    <Home size={24} />
+                    <HouseIcon size={24} weight="bold" />
                 </HomeButton>
 
                 {/* Progress Section (Inline) - No Container */}

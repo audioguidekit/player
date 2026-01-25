@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { PlayIcon, PauseIcon } from '@phosphor-icons/react';
 import { AudioStop } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import tw from 'twin.macro';
@@ -131,7 +131,7 @@ export const AudioStopCard = memo<AudioStopCardProps>(({
                   exit="exit"
                   transition={iconTransition}
                 >
-                  <Pause size={20} fill="currentColor" />
+                  <PauseIcon size={20} weight="fill" />
                 </IconContainer>
               ) : (
                 <PlayIconContainer
@@ -142,7 +142,7 @@ export const AudioStopCard = memo<AudioStopCardProps>(({
                   exit="exit"
                   transition={iconTransition}
                 >
-                  <Play size={20} fill="currentColor" />
+                  <PlayIcon size={20} weight="fill" />
                 </PlayIconContainer>
               )}
             </AnimatePresence>
