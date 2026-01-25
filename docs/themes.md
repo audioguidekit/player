@@ -1510,6 +1510,6 @@ const Title = styled.h1`
 ---
 
 **Related Documentation:**
-- [Languages](./LANGUAGES.md) - Multi-language support
-- [Adding Tours](./ADDING_TOURS.md) - Creating tour content
+- [Languages](./languages.md) - Multi-language support
+- [Adding Tours](./adding-tours.md) - Creating tour content
 - [Main Documentation](../README.md) - General information

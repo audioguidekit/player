@@ -3,10 +3,10 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## General
-- maintain `docs/DEVLOG.md` - after each successful large implementation, note what's been done, lessons learned, and what could be improved
-- before starting work, always check `docs/DEVLOG.md` for additional context
+- maintain `_private/DEVLOG.md` - after each successful large implementation, note what's been done, lessons learned, and what could be improved
+- before starting work, always check `_private/DEVLOG.md` for additional context
 - start dev server in the background and keep it running
-- always test the new feature before you say it is done (`docs/TESTING.md`)
+- always test the new feature before you say it is done (`docs/testing.md`)
 - after work is done, make sure it is documented in relevant file in `docs/` and mention it in your response
 
 ## Project Overview
@@ -93,8 +93,9 @@ React Router v6 with URL structure:
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` and configure:
 ```
-VITE_CLOUD_BASE_URL=https://your-supabase-url/storage/v1/object/public/
+VITE_STORAGE_ORIGIN=https://your-supabase-project.supabase.co  # Storage origin for media caching
 VITE_DEBUG_AUDIO=true  # Enable audio debug logs
 ```
 
@@ -112,9 +113,7 @@ VITE_DEBUG_AUDIO=true  # Enable audio debug logs
 
 ## Documentation
 
-- `docs/DEVLOG.md` - Development log (check before starting work)
-- `docs/TESTING.md` - Playwright testing guide
-- `docs/PWA_ARCHITECTURE.md` - Complete PWA implementation guide
-- `docs/ADDING_TOURS.md` - Guide for adding new tours
-- `docs/THEMES.md` - Theming system documentation
-- `docs/LANGUAGES.md` - Multi-language system
+- `docs/testing.md` - Playwright testing guide
+- `docs/adding-tours.md` - Guide for adding new tours
+- `docs/themes.md` - Theming system documentation
+- `docs/languages.md` - Multi-language system

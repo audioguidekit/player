@@ -836,6 +836,6 @@ Potential improvements to the language system:
 ---
 
 **Related Documentation:**
-- [Adding Tours](./ADDING_TOURS.md) - How to create tours
+- [Adding Tours](./adding-tours.md) - How to create tours
 - [Data Structure](../public/data/README.md) - JSON format details
 - [Main Documentation](../README.md) - General information

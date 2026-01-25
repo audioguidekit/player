@@ -35,8 +35,12 @@ _work
 # Build artifacts
 dev-dist/
 
+# Private work files (not public)
+_private/
+
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.playwright-mcp/

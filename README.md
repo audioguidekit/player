@@ -4,10 +4,12 @@ A mobile-first progressive web application for guided audio tours. By [Superguid
 
 ## 📚 Documentation
 
-- **[Complete Documentation Index](docs/README.md)** - All project documentation
-- **[PWA Architecture](docs/PWA_ARCHITECTURE.md)** - Progressive Web App implementation guide
-- **[Adding Tours](docs/ADDING_TOURS.md)** - Guide for adding new tours
-- **[Product Specification](docs/spec.md)** - Full product requirements
+| Guide | Description |
+|-------|-------------|
+| [Adding Tours](docs/adding-tours.md) | Step-by-step guide for creating new tours |
+| [Multi-Language System](docs/languages.md) | Language configuration and translations |
+| [Theming](docs/themes.md) | Custom themes and styling |
+| [Testing](docs/testing.md) | Playwright testing guide |
 
 ## Overview
 

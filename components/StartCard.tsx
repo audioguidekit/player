@@ -1,8 +1,9 @@
 import React from 'react';
 import { ArrowLineUpIcon, ClockIcon, HeadphonesIcon, SparkleIcon, ArrowClockwiseIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
-import styled from 'styled-components';
+import styled, { useTheme } from 'styled-components';
 import { TourData } from '../types';
+import { ThemeConfig } from '../src/theme/types';
 import { useTranslation } from '../src/translations';
 
 interface StartCardProps {
@@ -29,6 +30,10 @@ const IconContainer = styled.div`
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   border: 1px solid ${({ theme }) => theme.colors.border.light};
   color: ${({ theme }) => theme.branding.iconColor};
+`;
+
+const LogoImage = styled.img`
+  ${tw`w-12 h-12 object-contain`}
 `;
 
 const TitleSection = styled.div`
@@ -142,6 +147,8 @@ export const StartCard = React.memo<StartCardProps>(({
   onResetProgress,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme() as ThemeConfig;
+  const logoUrl = theme.branding.logoUrl;
   const [loadingDots, setLoadingDots] = React.useState('');
 
   React.useEffect(() => {
@@ -174,7 +181,11 @@ export const StartCard = React.memo<StartCardProps>(({
     <Container>
       {/* Icon Container */}
       <IconContainer>
-        <HeadphonesIcon size={32} style={{ color: 'currentColor' }} weight="duotone" />
+        {logoUrl ? (
+          <LogoImage src={logoUrl} alt="Logo" />
+        ) : (
+          <HeadphonesIcon size={32} style={{ color: 'currentColor' }} weight="duotone" />
+        )}
       </IconContainer>
 
       <TitleSection>

@@ -371,7 +371,7 @@ Each file should have the same tour `id` but different `language` values:
 }
 ```
 
-For complete language system documentation, see **[LANGUAGES.md](./LANGUAGES.md)**.
+For complete language system documentation, see **[languages.md](./languages.md)**.
 
 ### Dynamic Tour Loading
 
