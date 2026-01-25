@@ -80,6 +80,7 @@ export interface TourData {
   transitionAudio?: string;
   themeId?: string; // Optional theme ID for custom branding
   transcriptionAvailable?: boolean;
+  ratingAvailable?: boolean; // Show rating button on main screen (default: true)
 }
 
 export interface Language {

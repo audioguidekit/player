@@ -1,8 +1,37 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import fs from 'fs';
+import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import macrosPlugin from 'vite-plugin-babel-macros';
+
+// React Grab plugin - injects client scripts when enabled
+function reactGrabPlugin(): Plugin {
+  let enabled = false;
+
+  return {
+    name: 'react-grab-inject',
+    configResolved() {
+      try {
+        const envFile = fs.readFileSync('.env', 'utf8');
+        enabled = envFile.includes('REACT_GRAB=true');
+      } catch {
+        enabled = false;
+      }
+    },
+    transformIndexHtml(html) {
+      if (!enabled) return html;
+
+      const script = `
+    <script type="module">
+      import("react-grab");
+      import("@react-grab/claude-code/client");
+    </script>`;
+
+      return html.replace('<head>', '<head>' + script);
+    }
+  };
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
@@ -21,6 +50,7 @@ export default defineConfig(({ mode }) => {
       logOverride: { 'this-is-undefined-in-esm': 'silent' }
     },
     plugins: [
+      reactGrabPlugin(),
       react({
         babel: {
           plugins: [

@@ -48,6 +48,7 @@ export const fr: Translations = {
     message: 'Vous avez écouté tous les arrêts audio. Nous espérons que vous avez apprécié la visite.',
     rateTour: 'Noter cette visite',
     skipRating: 'Ignorer la note',
+    done: 'Terminé',
   },
   tourHeader: {
     minLeft: 'min restantes',

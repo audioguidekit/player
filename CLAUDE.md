@@ -12,6 +12,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Audio Tour Player is a mobile-first Progressive Web App for guided audio tours. Built with React 19, TypeScript, and Framer Motion. Features offline support via Service Worker, gesture-based navigation, and multi-language tours.
 
+It is open source library other developers can use for building their apps. It should be easy to setup, configure and general enough to accommodate different use-cases. 
+
 ## Commands
 
 ```bash
@@ -85,6 +87,7 @@ React Router v6 with URL structure:
 - `components/MainSheet.tsx` - Core drag interaction handler
 - `src/services/dataService.ts` - Data loading and caching
 - `src/sw.ts` - Service Worker configuration
+- `src/config/languages.ts` - UI language bundle configuration
 
 ## Environment Variables
 
@@ -98,7 +101,8 @@ VITE_DEBUG_AUDIO=true  # Enable audio debug logs
 - 6 languages: en, cs, de, fr, it, es
 - Per-language tour files: `/public/data/tours/{lang}.json`
 - Auto-detects device language, remembers preference in localStorage
-- Language files are TypeScript objects in `src/translations/locales/`
+- UI translations in `src/translations/locales/`
+- Configure which UI languages to bundle in `src/config/languages.ts` (tree-shaking removes unused)
 
 ## Documentation
 

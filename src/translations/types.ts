@@ -45,6 +45,7 @@ export interface Translations {
     message: string;
     rateTour: string;
     skipRating: string;
+    done: string;
   };
   tourHeader: {
     minLeft: string;

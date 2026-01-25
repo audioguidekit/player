@@ -905,7 +905,7 @@ const App: React.FC = () => {
             isOpen={activeSheet === 'TOUR_COMPLETE'}
             onClose={closeSheet}
             onRate={() => setActiveSheet('RATING')}
-            onReplay={handleResetTour}
+            ratingAvailable={tour?.ratingAvailable !== false}
           />
         </div>
       </MobileFrame>

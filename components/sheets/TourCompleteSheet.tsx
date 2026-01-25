@@ -8,7 +8,8 @@ import { useTranslation } from '../../src/translations';
 interface TourCompleteSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onRateTour: () => void;
+  onRate: () => void;
+  ratingAvailable?: boolean;
 }
 
 const Container = styled.div`
@@ -51,7 +52,8 @@ const SkipButton = styled.button`
 export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
   isOpen,
   onClose,
-  onRateTour
+  onRate,
+  ratingAvailable = true
 }) => {
   const { t } = useTranslation();
 
@@ -67,18 +69,26 @@ export const TourCompleteSheet: React.FC<TourCompleteSheetProps> = ({
           {t.tourComplete.message}
         </Description>
 
-        <RateButton
-          onClick={() => {
-            onClose();
-            onRateTour();
-          }}
-        >
-          <span>{t.tourComplete.rateTour}</span>
-        </RateButton>
+        {ratingAvailable ? (
+          <>
+            <RateButton
+              onClick={() => {
+                onClose();
+                onRate();
+              }}
+            >
+              <span>{t.tourComplete.rateTour}</span>
+            </RateButton>
 
-        <SkipButton onClick={onClose}>
-          {t.tourComplete.skipRating}
-        </SkipButton>
+            <SkipButton onClick={onClose}>
+              {t.tourComplete.skipRating}
+            </SkipButton>
+          </>
+        ) : (
+          <RateButton onClick={onClose}>
+            <span>{t.tourComplete.done}</span>
+          </RateButton>
+        )}
       </Container>
     </BottomSheet>
   );

@@ -32,6 +32,52 @@ User refreshes page → App remembers English choice
 User clears localStorage → App detects Czech again
 ```
 
+## Configuring UI Languages
+
+The app separates **tour content languages** (tour data files) from **UI languages** (buttons, labels, messages). You can configure which UI languages to include in your build to reduce bundle size.
+
+### Configuration File
+
+Edit `src/config/languages.ts` to select which UI languages to bundle:
+
+```typescript
+// Language imports - uncomment languages you need
+import { en } from '../translations/locales/en';
+import { cs } from '../translations/locales/cs';
+// import { de } from '../translations/locales/de';  // Not needed
+// import { fr } from '../translations/locales/fr';  // Not needed
+// import { it } from '../translations/locales/it';  // Not needed
+// import { es } from '../translations/locales/es';  // Not needed
+
+export const supportedLanguages = {
+  en,
+  cs,
+  // de,
+  // fr,
+  // it,
+  // es,
+};
+```
+
+### Tree-Shaking
+
+Vite automatically removes unused language files from the bundle:
+- **All 6 languages:** ~1,734 KB
+- **English only:** ~1,726 KB
+- Savings grow as translation files expand
+
+### Graceful Fallback
+
+If a tour is in a language without UI translations, the app falls back to English automatically:
+
+```
+Tour in German (de.json) + UI only supports English
+  → Tour content in German
+  → UI labels in English (no error shown)
+```
+
+This allows you to support tour content in many languages while keeping the bundle small.
+
 ## How It Works
 
 ### File Structure

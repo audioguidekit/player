@@ -48,6 +48,7 @@ export const it: Translations = {
     message: 'Hai ascoltato tutte le fermate audio. Speriamo che tu abbia apprezzato il tour.',
     rateTour: 'Valuta questo tour',
     skipRating: 'Salta valutazione',
+    done: 'Fatto',
   },
   tourHeader: {
     minLeft: 'min rimanenti',

@@ -48,6 +48,7 @@ export const cs: Translations = {
     message: 'Poslechli jste si všechny audio zastávky. Doufáme, že se vám prohlídka líbila.',
     rateTour: 'Ohodnotit prohlídku',
     skipRating: 'Přeskočit hodnocení',
+    done: 'Hotovo',
   },
   tourHeader: {
     minLeft: 'min zbývá',

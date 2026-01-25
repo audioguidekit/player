@@ -47,6 +47,7 @@ export const en: Translations = {
     message: "You've listened to all the audio stops. We hope you enjoyed the tour.",
     rateTour: 'Rate this tour',
     skipRating: 'Skip rating',
+    done: 'Done',
   },
   tourHeader: {
     minLeft: 'min left',

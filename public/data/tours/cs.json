@@ -10,6 +10,7 @@
   "transitionAudio": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/end.m4a",
   "themeId": "calm",
   "transcriptionAvailable": true,
+  "ratingAvailable": false,
   "stops": [
     {
       "id": "1",

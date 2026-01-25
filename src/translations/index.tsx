@@ -3,30 +3,20 @@
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { Translations, LanguageCode } from './types';
+import { Translations } from './types';
+import {
+  supportedLanguages,
+  isLanguageSupported,
+} from '../config/languages';
+import type { SupportedLanguageCode } from '../config/languages';
 
-// Import all translation files
-import { en } from './locales/en';
-import { cs } from './locales/cs';
-import { de } from './locales/de';
-import { fr } from './locales/fr';
-import { it } from './locales/it';
-import { es } from './locales/es';
-
-// Translation registry
-const translations: Record<LanguageCode, Translations> = {
-  en,
-  cs,
-  de,
-  fr,
-  it,
-  es,
-};
+// Use configured languages (tree-shaking removes unused language files)
+const translations = supportedLanguages;
 
 // Context types
 interface TranslationContextValue {
   t: Translations;
-  currentLanguage: LanguageCode;
+  currentLanguage: SupportedLanguageCode;
 }
 
 const TranslationContext = createContext<TranslationContextValue | undefined>(undefined);
@@ -34,7 +24,7 @@ const TranslationContext = createContext<TranslationContextValue | undefined>(un
 // Provider props
 interface TranslationProviderProps {
   children: ReactNode;
-  language: LanguageCode;
+  language: string; // Accepts any language code, falls back to English if unsupported
 }
 
 /**
@@ -42,11 +32,13 @@ interface TranslationProviderProps {
  * Wraps the app to provide translation context
  */
 export const TranslationProvider: React.FC<TranslationProviderProps> = ({ children, language }) => {
-  const t = translations[language] || translations.en; // Fallback to English
+  // Use the requested language if supported, otherwise fall back to English
+  const resolvedLanguage: SupportedLanguageCode = isLanguageSupported(language) ? language : 'en';
+  const t = translations[resolvedLanguage];
 
   const value: TranslationContextValue = {
     t,
-    currentLanguage: language,
+    currentLanguage: resolvedLanguage,
   };
 
   return <TranslationContext.Provider value={value}>{children}</TranslationContext.Provider>;
@@ -65,3 +57,7 @@ export const useTranslation = () => {
 
   return context;
 };
+
+// Re-export types and utilities for external use
+export type { SupportedLanguageCode } from '../config/languages';
+export { isLanguageSupported } from '../config/languages';
