@@ -1,5 +1,41 @@
 # Development Log
 
+## 2026-01-25: Migrate from Lucide to Phosphor Icons
+
+### What was done
+- Replaced all Lucide React icons with @phosphor-icons/react package
+- Added country-flag-icons package for SVG-based language flags
+- Fixed `getAllAvailableLanguages()` in `tourDiscovery.ts` to include `countryCode` property
+- Updated all icon imports across components:
+  - TourStart.tsx: ChatCircleDotsIcon, CaretDownIcon
+  - MiniPlayer.tsx: SkipBackIcon, SkipForwardIcon, XIcon, ClosedCaptioningIcon
+  - BottomSheet.tsx: XIcon
+  - StartCard.tsx: ArrowLineUpIcon, ClockIcon, HeadphonesIcon, SparkleIcon, ArrowClockwiseIcon
+  - TourHeaderAlt.tsx: HouseIcon
+  - PlayPauseButton.tsx: PlayIcon, PauseIcon, CheckIcon
+  - RatingCard.tsx: StarIcon, CheckCircleIcon
+  - EmailCard.tsx: EnvelopeSimpleIcon
+  - Sheet components: CheckIcon, StarIcon, CheckCircleIcon, AtIcon
+
+### Why Phosphor icons
+- Better icon quality and consistency
+- More flexible weight options (thin, light, regular, bold, fill, duotone)
+- Larger icon library with better semantic naming
+- Works well with styled-components
+
+### Bug Fixed: countryCode missing from Language type
+- `getAllAvailableLanguages()` was returning only `code` and `name`
+- The `Language` type requires `countryCode` for flag icon lookup
+- Added `languageMetadata` object with name, flag emoji, and countryCode
+- This fixed the "Element type is invalid" error in TourStart
+
+### Lessons Learned
+- When dynamically building Language objects, must include all required fields
+- The `styled()` wrapper works directly with Phosphor icons
+- Phosphor icons use the "Icon" suffix (e.g., `PlayIcon` not `Play`)
+
+---
+
 ## 2025-01-25: Tour Discovery System & Configurable Default Language
 
 ### What was done
