@@ -20,7 +20,7 @@ interface StartCardProps {
 }
 
 const Container = styled.div`
-  ${tw`px-8 pt-8 flex flex-col items-center text-center w-full`}
+  ${tw`px-8 pt-10 flex flex-col items-center text-center w-full`}
   padding-bottom: calc(1rem + ${({ theme }) => theme.platform.safeArea.bottom});
 `;
 

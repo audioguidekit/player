@@ -2,7 +2,7 @@
  * Translation context and hook for i18n support
  */
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { Translations } from './types';
 import {
   supportedLanguages,
@@ -36,10 +36,11 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
   const resolvedLanguage: SupportedLanguageCode = isLanguageSupported(language) ? language : 'en';
   const t = translations[resolvedLanguage];
 
-  const value: TranslationContextValue = {
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const value = useMemo<TranslationContextValue>(() => ({
     t,
     currentLanguage: resolvedLanguage,
-  };
+  }), [t, resolvedLanguage]);
 
   return <TranslationContext.Provider value={value}>{children}</TranslationContext.Provider>;
 };

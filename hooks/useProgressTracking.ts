@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Stop, AudioStop } from '../types';
 
 interface StopProgress {
@@ -41,6 +41,8 @@ const parseDurationMinutes = (durationString: string): number => {
  */
 export const useProgressTracking = (tourId: string) => {
   const [progress, setProgress] = useState<TourProgress>({ stops: {} });
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialLoadRef = useRef(true);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tourId}`;
 
@@ -51,18 +53,40 @@ export const useProgressTracking = (tourId: string) => {
       if (stored) {
         setProgress(JSON.parse(stored));
       }
+      // Mark initial load as complete after setting state
+      isInitialLoadRef.current = false;
     } catch (error) {
       console.error('Error loading progress:', error);
+      isInitialLoadRef.current = false;
     }
   }, [storageKey]);
 
-  // Save progress to localStorage whenever it changes
+  // Save progress to localStorage with debounce to prevent main thread blocking
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(progress));
-    } catch (error) {
-      console.error('Error saving progress:', error);
+    // Skip saving on initial load to prevent overwriting stored data
+    if (isInitialLoadRef.current) {
+      return;
     }
+
+    // Clear any pending save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce writes by 500ms to batch rapid updates
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(progress));
+      } catch (error) {
+        console.error('Error saving progress:', error);
+      }
+    }, 500);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [progress, storageKey]);
 
   // Mark a stop as completed

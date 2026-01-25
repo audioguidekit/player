@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { storageService } from '../src/services/storageService';
 
 interface RatingContextType {
@@ -40,7 +40,7 @@ export const RatingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     }, [tourId]);
 
-    const submitRating = () => {
+    const submitRating = useCallback(() => {
         if (!tourId) {
             console.warn('Cannot submit rating: tourId is not set');
             return;
@@ -57,31 +57,32 @@ export const RatingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         storageService.saveTourRating(tourId, ratingData);
         setIsSubmitted(true);
         console.log('Rating saved to localStorage:', ratingData);
-    };
+    }, [tourId, rating, feedback, email]);
 
-    const resetRating = () => {
+    const resetRating = useCallback(() => {
         setRating(0);
         setFeedback('');
         setEmail('');
         setIsSubmitted(false);
-    };
+    }, []);
+
+    // Memoize context value to prevent unnecessary re-renders of consumers
+    const value = useMemo(() => ({
+        tourId,
+        setTourId,
+        rating,
+        setRating,
+        feedback,
+        setFeedback,
+        email,
+        setEmail,
+        isSubmitted,
+        submitRating,
+        resetRating,
+    }), [tourId, rating, feedback, email, isSubmitted, submitRating, resetRating]);
 
     return (
-        <RatingContext.Provider
-            value={{
-                tourId,
-                setTourId,
-                rating,
-                setRating,
-                feedback,
-                setFeedback,
-                email,
-                setEmail,
-                isSubmitted,
-                submitRating,
-                resetRating,
-            }}
-        >
+        <RatingContext.Provider value={value}>
             {children}
         </RatingContext.Provider>
     );

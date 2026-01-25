@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { ThreeDObjectStop } from '../../types';
-import '@google/model-viewer';
+
+// Lazy load model-viewer only when needed (saves ~150-200KB from initial bundle)
+const loadModelViewer = () => import('@google/model-viewer');
 
 declare global {
   namespace JSX {
@@ -66,12 +68,25 @@ export const ThreeDObjectCard = React.memo<ThreeDObjectCardProps>(({ item }) => 
   // fallback to avoid the repeated page reload loop the user reported.
   const isSafari = typeof navigator !== 'undefined' && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+  // Lazy load model-viewer only when component mounts and not on Safari
+  const [isModelViewerLoaded, setIsModelViewerLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isSafari && !isModelViewerLoaded) {
+      loadModelViewer().then(() => setIsModelViewerLoaded(true));
+    }
+  }, [isSafari, isModelViewerLoaded]);
+
   return (
     <Container>
       <ViewerContainer>
         {isSafari ? (
           <SafariFallback>
             3D preview is not available on Safari yet. Please open in Chrome or use the offline guide.
+          </SafariFallback>
+        ) : !isModelViewerLoaded ? (
+          <SafariFallback>
+            Loading 3D viewer...
           </SafariFallback>
         ) : (
           <model-viewer

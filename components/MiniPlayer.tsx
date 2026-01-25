@@ -176,6 +176,19 @@ const EmptyStateText = styled.p`
   margin: 0;
 `;
 
+// Animation variants hoisted outside component to prevent recreation on each render
+const contentVariants = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.9 }
+} as const;
+
+// Button variants without scale (so whileTap can control scale)
+const buttonVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 }
+} as const;
 
 export const MiniPlayer = React.memo<MiniPlayerProps>(({
   currentStop,
@@ -219,20 +232,6 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   // Marquee animation for title
   const titleRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Advanced content transition variants (Blur + Scale + Fade)
-  const contentVariants = {
-    initial: { opacity: 0, scale: 0.9 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.9 }
-  };
-
-  // Button variants without scale (so whileTap can control scale)
-  const buttonVariants = {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 }
-  };
 
   const controls = useAnimationControls();
   const [shouldAnimate, setShouldAnimate] = useState(false);

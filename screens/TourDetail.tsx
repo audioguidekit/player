@@ -17,6 +17,25 @@ const ScrollableList = styled(motion.div)`
   ${tw`flex-1 overflow-y-auto overflow-x-hidden px-4 pt-6 pb-32`}
 `;
 
+// Content visibility optimization for long lists - defers rendering of off-screen items
+const StopItemWrapper = styled.div`
+  content-visibility: auto;
+  contain-intrinsic-size: 0 120px; /* Approximate height of a stop card */
+`;
+
+// Animation variants hoisted outside component to prevent recreation on each render
+const scrollableListAnimation = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 20 }
+} as const;
+
+const scrollableListTransition = {
+  delay: 0.2,
+  duration: 0.25,
+  type: "spring"
+} as const;
+
 interface TourDetailProps {
   tour: TourData;
   currentStopId: string | null;
@@ -161,10 +180,8 @@ export const TourDetail = React.memo<TourDetailProps>(({
       {/* Scrollable List */}
       <ScrollableList
         ref={containerRef}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ delay: 0.2, duration: 0.25, type: "spring" }}
+        {...scrollableListAnimation}
+        transition={scrollableListTransition}
         className="no-scrollbar"
       >
         {tour.stops.map((stop, index) => {
@@ -172,21 +189,26 @@ export const TourDetail = React.memo<TourDetailProps>(({
           if (stop.type === 'audio') {
             const stopIsPlaying = stop.id === currentStopId && isPlaying;
             return (
-              <AudioStopCardCompact
-                key={stop.id}
-                id={`stop-${stop.id}`}
-                item={stop}
-                index={index}
-                isActive={stop.id === currentStopId}
-                isPlaying={stopIsPlaying}
-                isCompleted={isStopCompleted(stop.id)}
-                onClick={() => handleStopClick(stop.id)}
-              />
+              <StopItemWrapper key={stop.id}>
+                <AudioStopCardCompact
+                  id={`stop-${stop.id}`}
+                  item={stop}
+                  index={index}
+                  isActive={stop.id === currentStopId}
+                  isPlaying={stopIsPlaying}
+                  isCompleted={isStopCompleted(stop.id)}
+                  onClick={() => handleStopClick(stop.id)}
+                />
+              </StopItemWrapper>
             );
           }
 
           // Render other content types with FeedItemRenderer
-          return <FeedItemRenderer key={stop.id} item={stop} onOpenRatingSheet={onOpenRatingSheet} />;
+          return (
+            <StopItemWrapper key={stop.id}>
+              <FeedItemRenderer item={stop} onOpenRatingSheet={onOpenRatingSheet} />
+            </StopItemWrapper>
+          );
         })}
       </ScrollableList>
     </Container>

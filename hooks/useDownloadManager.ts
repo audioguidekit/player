@@ -173,39 +173,46 @@ export const useDownloadManager = (
       // Open cache
       const cache = await caches.open('tour-assets');
 
-      // Download assets one by one (with progress tracking)
+      // Download assets in parallel batches for better performance
+      const CONCURRENT_DOWNLOADS = 4;
       let downloadedCount = 0;
       const successfullyDownloaded: string[] = [];
 
-      for (const url of assetUrls) {
-        const success = await downloadAsset(url, cache);
+      // Process in batches of CONCURRENT_DOWNLOADS
+      for (let i = 0; i < assetUrls.length; i += CONCURRENT_DOWNLOADS) {
+        const batch = assetUrls.slice(i, i + CONCURRENT_DOWNLOADS);
 
-        if (success) {
-          successfullyDownloaded.push(url);
+        const results = await Promise.all(
+          batch.map(async (url) => {
+            const success = await downloadAsset(url, cache);
+            return { url, success };
+          })
+        );
+
+        // Process batch results
+        for (const { url, success } of results) {
+          if (success) {
+            successfullyDownloaded.push(url);
+          }
+          downloadedCount++;
         }
 
-        downloadedCount++;
-
-        // Update progress
+        // Update progress after each batch
         setDownloadProgress({
           downloaded: downloadedCount,
           total: assetUrls.length,
           percentage: Math.round((downloadedCount / assetUrls.length) * 100),
         });
-
-        // Small delay to prevent overwhelming the network
-        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
-      // Calculate total size (approximate)
-      let totalSize = 0;
-      for (const url of successfullyDownloaded) {
-        const cached = await cache.match(url);
-        if (cached) {
-          const blob = await cached.blob();
-          totalSize += blob.size;
-        }
-      }
+      // Calculate total size in parallel
+      const sizes = await Promise.all(
+        successfullyDownloaded.map(async (url) => {
+          const cached = await cache.match(url);
+          return cached ? (await cached.blob()).size : 0;
+        })
+      );
+      const totalSize = sizes.reduce((a, b) => a + b, 0);
 
       // Mark tour as downloaded in IndexedDB
       await storageService.markTourDownloaded(
