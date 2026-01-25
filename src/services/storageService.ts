@@ -245,8 +245,11 @@ export class StorageService {
   }
 
   async getStoragePercentUsed(): Promise<number> {
-    const usage = await this.getTotalStorageUsed();
-    const quota = await this.getStorageQuota();
+    // Parallelize independent API calls for better performance
+    const [usage, quota] = await Promise.all([
+      this.getTotalStorageUsed(),
+      this.getStorageQuota(),
+    ]);
     if (quota === 0) return 0;
     return (usage / quota) * 100;
   }

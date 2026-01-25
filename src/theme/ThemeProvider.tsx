@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import * as tokens from './tokens';
 import { ThemeConfig, ThemeId } from './types';
@@ -39,17 +39,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   // Use custom theme if provided, otherwise get theme by ID
   const selectedTheme = customTheme || getTheme(themeId);
 
-  // Extend theme with platform tokens for backward compatibility
-  const extendedTheme: ExtendedTheme = {
+  // Memoize extended theme to prevent unnecessary re-renders of styled-components
+  const extendedTheme = useMemo<ExtendedTheme>(() => ({
     ...selectedTheme,
     animations: tokens.animations,
     platform: tokens.platform,
-  };
+  }), [selectedTheme]);
 
-  const contextValue: ThemeContextValue = {
+  // Memoize context value to prevent unnecessary consumer re-renders
+  const contextValue = useMemo<ThemeContextValue>(() => ({
     currentTheme: selectedTheme,
     themeId: customTheme?.id || themeId,
-  };
+  }), [selectedTheme, customTheme?.id, themeId]);
 
   return (
     <ThemeContext.Provider value={contextValue}>

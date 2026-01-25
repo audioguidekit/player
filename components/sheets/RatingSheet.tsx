@@ -69,11 +69,12 @@ const FormArea = styled(motion.div)`
 `;
 
 const Textarea = styled.textarea`
-  ${tw`w-full p-4 text-base focus:outline-none resize-none h-28 transition-colors`}
-  border: 1px solid ${({ theme }) => theme.inputs.borderColor};
+  ${tw`w-full p-4 text-base resize-none h-28 transition-colors`}
+  border: 2px solid ${({ theme }) => theme.inputs.borderColor};
   border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
+  outline: none;
 
   &::placeholder {
     color: ${({ theme }) => theme.inputs.placeholderColor};
@@ -85,11 +86,12 @@ const Textarea = styled.textarea`
 `;
 
 const Input = styled.input`
-  ${tw`w-full p-4 text-base focus:outline-none transition-colors`}
-  border: 1px solid ${({ theme }) => theme.inputs.borderColor};
+  ${tw`w-full p-4 text-base transition-colors`}
+  border: 2px solid ${({ theme }) => theme.inputs.borderColor};
   border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
+  outline: none;
 
   &::placeholder {
     color: ${({ theme }) => theme.inputs.placeholderColor};

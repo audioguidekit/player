@@ -173,7 +173,7 @@ export const terminalTheme: ThemeConfig = {
       primary: '#E6EDF3',   // Primary text (headings, main content, body text) - light
       secondary: '#8B949E', // Secondary text (subtitles, supporting text, labels) - medium gray
       tertiary: '#6E7681',  // Tertiary text (metadata, timestamps, helper text) - darker gray
-      inverse: '#00D9FF',   // Inverse text (on dark backgrounds, audio wave) - cyan for visibility
+      inverse: '#FFFFFF',   // Inverse text (on dark backgrounds, audio wave) - cyan for visibility
     },
     border: {
       light: '#21262D',   // Light borders (subtle dividers, decorative lines)

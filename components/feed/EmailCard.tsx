@@ -65,11 +65,12 @@ const FormContainer = styled.div`
 `;
 
 const EmailInput = styled.input`
-  ${tw`w-full p-4 text-base focus:outline-none transition-colors`}
-  border: 1px solid ${({ theme }) => theme.inputs.borderColor};
+  ${tw`w-full p-4 text-base transition-colors`}
+  border: 2px solid ${({ theme }) => theme.inputs.borderColor};
   border-radius: 16px;
   background-color: ${({ theme }) => theme.inputs.backgroundColor};
   color: ${({ theme }) => theme.inputs.textColor};
+  outline: none;
 
   &::placeholder {
     color: ${({ theme }) => theme.inputs.placeholderColor};

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
 import { SheetType, Language, AudioStop } from './types';
-import { RatingSheet } from './components/sheets/RatingSheet';
-import { LanguageSheet } from './components/sheets/LanguageSheet';
-import { TourCompleteSheet } from './components/sheets/TourCompleteSheet';
+
+// Lazy load sheet components for better initial bundle size
+const RatingSheet = lazy(() => import('./components/sheets/RatingSheet').then(m => ({ default: m.RatingSheet })));
+const LanguageSheet = lazy(() => import('./components/sheets/LanguageSheet').then(m => ({ default: m.LanguageSheet })));
+const TourCompleteSheet = lazy(() => import('./components/sheets/TourCompleteSheet').then(m => ({ default: m.TourCompleteSheet })));
 import { TourStart } from './screens/TourStart';
 import { TourDetail } from './screens/TourDetail';
 import { MainSheet } from './components/MainSheet';
@@ -573,28 +575,28 @@ const App: React.FC = () => {
 
           {/* Floating Controls Removed - TourDetail handles the header */}
 
-          {/* Sheets */}
-          <RatingSheet
-            isOpen={activeSheet === 'RATING'}
-            onClose={closeSheet}
-            onSubmit={handleRatingSubmit}
-          />
+          {/* Sheets - Lazy loaded for better initial bundle size */}
+          <Suspense fallback={null}>
+            <RatingSheet
+              isOpen={activeSheet === 'RATING'}
+              onClose={closeSheet}
+              onSubmit={handleRatingSubmit}
+            />
 
-          <LanguageSheet
-            isOpen={activeSheet === 'LANGUAGE'}
-            onClose={closeSheet}
-            selectedLanguage={selectedLanguage}
-            languages={languages}
-            onSelect={handleLanguageChange}
-          />
+            <LanguageSheet
+              isOpen={activeSheet === 'LANGUAGE'}
+              onClose={closeSheet}
+              selectedLanguage={selectedLanguage}
+              languages={languages}
+              onSelect={handleLanguageChange}
+            />
 
-          <TourCompleteSheet
-            isOpen={activeSheet === 'TOUR_COMPLETE'}
-            onClose={closeSheet}
-            onRate={handleRateTour}
-            onReplay={handleResetTour}
-            ratingAvailable={tour?.ratingAvailable !== false}
-          />
+            <TourCompleteSheet
+              isOpen={activeSheet === 'TOUR_COMPLETE'}
+              onClose={closeSheet}
+              onRateTour={handleRateTour}
+            />
+          </Suspense>
         </div>
       </MobileFrame>
       </TranslationProvider>
