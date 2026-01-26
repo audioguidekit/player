@@ -25,7 +25,6 @@ dist-ssr
 _work
 
 # Environment files (contain sensitive URLs/keys)
-.env
 .env.*
 !.env.example
 
