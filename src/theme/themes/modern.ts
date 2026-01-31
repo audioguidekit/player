@@ -78,6 +78,15 @@ export const modernTheme: ThemeConfig = {
       fontSize: '16px',
       fontWeight: '500',
     },
+    download: {
+      backgroundColor: 'transparent',
+      textColor: '#7C3AED',
+      borderColor: '#7C3AED',
+      hoverBackground: 'rgba(124, 58, 237, 0.1)',
+      iconColor: '#7C3AED',
+      fontSize: '18px',
+      fontWeight: '600',
+    },
     transcription: {
       backgroundColor: '#FFFFFF',
       iconColor: '#A78BFA',
@@ -155,6 +164,11 @@ export const modernTheme: ThemeConfig = {
     sectionLabelFontSize: '14px',
     sectionLabelFontWeight: '500',
     sectionDescriptionFontSize: '12px',
+    offlineMessage: {
+      backgroundColor: 'rgba(124, 58, 237, 0.1)',
+      borderColor: 'rgba(124, 58, 237, 0.3)',
+      textColor: '#a78bfa',
+    },
   },
 
   inputs: {

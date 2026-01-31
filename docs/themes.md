@@ -228,6 +228,18 @@ buttons: {
     fontFamily: ['Inter', 'sans-serif'], // Font family (optional, defaults to sans)
   },
 
+  // Download for offline button (same size as primary, outline style)
+  download: {
+    backgroundColor: 'transparent',   // Button background (usually transparent for outline)
+    textColor: '#6366F1',             // Button text (matches accent color)
+    borderColor: '#6366F1',           // Button border
+    hoverBackground: 'rgba(99, 102, 241, 0.1)', // Background on press/hover
+    iconColor: '#6366F1',             // Icon color
+    fontSize: '18px',                 // Button text size (same as primary)
+    fontWeight: '600',                // Button text weight
+    fontFamily: ['Inter', 'sans-serif'], // Font family (optional, defaults to sans)
+  },
+
   // Transcription toggle
   transcription: {
     backgroundColor: '#FFFFFF',       // Button background
@@ -243,6 +255,7 @@ buttons: {
 - `primary.fontFamily` - Custom font for buttons (e.g., use monospace for terminal themes)
 - `secondary` - "Cancel" or "Skip" buttons
 - `secondary.fontFamily` - Custom font for secondary buttons
+- `download` - Full-width "Download for Offline" button (same size as primary, outline style)
 - `transcription` - Circular button with text icon in MiniPlayer
 
 **Font Customization:**

@@ -1,10 +1,11 @@
 import React from 'react';
-import { ArrowLineUpIcon, ClockIcon, HeadphonesIcon, SparkleIcon, ArrowClockwiseIcon } from '@phosphor-icons/react';
+import { ArrowLineUpIcon, ClockIcon, HeadphonesIcon, SparkleIcon, ArrowClockwiseIcon, CloudArrowDownIcon, CheckCircleIcon } from '@phosphor-icons/react';
 import tw from 'twin.macro';
 import styled, { useTheme } from 'styled-components';
 import { TourData } from '../types';
 import { ThemeConfig } from '../src/theme/types';
 import { useTranslation } from '../src/translations';
+import { getOfflineMode } from '../src/utils/offlineMode';
 
 interface StartCardProps {
   tour: TourData;
@@ -123,15 +124,40 @@ const ButtonContent = styled.span`
 
 const OfflineBox = styled.div`
   ${tw`w-full mt-4 p-4`}
-  background-color: ${({ theme }) => `${theme.status.warning}15`};
-  border: 1px solid ${({ theme }) => `${theme.status.warning}40`};
+  background-color: ${({ theme }) => theme.startCard.offlineMessage.backgroundColor};
+  border: 1px solid ${({ theme }) => theme.startCard.offlineMessage.borderColor};
   border-radius: 16px;
 `;
 
 const OfflineMessage = styled.p`
   ${tw`text-sm leading-relaxed`}
-  color: ${({ theme }) => theme.status.warning};
-  filter: brightness(0.6);
+  color: ${({ theme }) => theme.startCard.offlineMessage.textColor};
+`;
+
+const DownloadButton = styled.button<{ $disabled?: boolean }>(({ $disabled, theme }) => [
+  tw`w-full py-4 mt-4 rounded-full flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden`,
+  {
+    backgroundColor: theme.buttons.download.backgroundColor,
+    color: theme.buttons.download.textColor,
+    border: theme.buttons.download.borderColor ? `2px solid ${theme.buttons.download.borderColor}` : 'none',
+    fontFamily: theme.buttons.download.fontFamily?.join(', ') || theme?.typography?.fontFamily?.sans?.join(', '),
+    fontSize: theme.buttons.download.fontSize,
+    fontWeight: theme.buttons.download.fontWeight,
+    '& svg': {
+      color: theme.buttons.download.iconColor || theme.buttons.download.textColor,
+    },
+    '&:hover': {
+      backgroundColor: theme.buttons.download.hoverBackground || theme.buttons.download.backgroundColor,
+    },
+  },
+  $disabled && tw`opacity-50 cursor-not-allowed active:scale-100`,
+]);
+
+const OfflineStatus = styled.div`
+  ${tw`flex items-center justify-center gap-2 mt-4 py-2`}
+  font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
+  font-size: 0.875rem;
+  color: ${({ theme }) => theme.status.success};
 `;
 
 export const StartCard = React.memo<StartCardProps>(({
@@ -178,6 +204,9 @@ export const StartCard = React.memo<StartCardProps>(({
   // Check if tour is completed
   const isTourCompleted = tourProgress >= 100;
 
+  // Get offline mode for the tour (defaults to 'optional')
+  const offlineMode = getOfflineMode(tour);
+
   return (
     // No fixed height. We let the content define the height, and the parent measures it.
     <Container>
@@ -222,10 +251,10 @@ export const StartCard = React.memo<StartCardProps>(({
             return;
           }
 
-          // If tour requires offline download and isn't downloaded yet, start download automatically
-          if (tour.offlineAvailable === true && !isDownloaded && !isDownloading && onDownload) {
+          // If tour requires offline download (offline-only mode) and isn't downloaded yet, start download automatically
+          if (offlineMode === 'offline-only' && !isDownloaded && !isDownloading && onDownload) {
             onDownload();
-          } else if (!isDownloading && (tour.offlineAvailable !== true || isDownloaded)) {
+          } else if (!isDownloading && (offlineMode !== 'offline-only' || isDownloaded)) {
             // Start tour if not downloading AND (offline not required OR already downloaded)
             onAction();
           }
@@ -262,7 +291,7 @@ export const StartCard = React.memo<StartCardProps>(({
               <ArrowLineUpIcon size={20} weight="bold" />
               {t.startCard.resumeTour}
             </>
-          ) : tour.offlineAvailable === true && !isDownloaded ? (
+          ) : offlineMode === 'offline-only' && !isDownloaded ? (
             <>
               <SparkleIcon size={20} weight="bold" />
               {t.startCard.downloadTour}
@@ -275,19 +304,51 @@ export const StartCard = React.memo<StartCardProps>(({
           )}
         </ButtonContent>
       </ActionButton>
-      {/* Offline Download Message - Only shown when offlineAvailable=true and not downloaded */}
-      {tour.offlineAvailable === true && !isDownloaded && !isDownloading && (
+      {/* Offline Download Message - Only shown for offline-only mode when not downloaded */}
+      {offlineMode === 'offline-only' && !isDownloaded && !isDownloading && (
         <OfflineBox>
           <OfflineMessage>
             {t.startCard.offlineInfo}
           </OfflineMessage>
         </OfflineBox>
       )}
+
+      {/* Download Option - For tours where offline is optional */}
+      {offlineMode === 'optional' && !isTourCompleted && (
+        <>
+          {isDownloaded ? (
+            <OfflineStatus>
+              <CheckCircleIcon size={18} weight="fill" />
+              {t.startCard.availableOffline}
+            </OfflineStatus>
+          ) : isDownloading ? (
+            <DownloadButton disabled $disabled>
+              <CloudArrowDownIcon size={20} weight="bold" className="animate-pulse" />
+              {downloadProgress === 0 ? t.startCard.downloading : `${t.startCard.loadingTour} ${downloadProgress}%`}
+            </DownloadButton>
+          ) : onDownload && (
+            <DownloadButton onClick={(e) => { e.stopPropagation(); onDownload(); }}>
+              <CloudArrowDownIcon size={20} weight="bold" />
+              {t.startCard.downloadForOffline}
+            </DownloadButton>
+          )}
+        </>
+      )}
+
+      {/* Offline status for offline-only mode when downloaded */}
+      {offlineMode === 'offline-only' && isDownloaded && !isTourCompleted && (
+        <OfflineStatus>
+          <CheckCircleIcon size={18} weight="fill" />
+          {t.startCard.availableOffline}
+        </OfflineStatus>
+      )}
     </Container>
   );
 }, (prevProps, nextProps) => {
   return (
     prevProps.tour?.id === nextProps.tour?.id &&
+    prevProps.tour?.language === nextProps.tour?.language &&
+    prevProps.tour?.offlineMode === nextProps.tour?.offlineMode &&
     prevProps.hasStarted === nextProps.hasStarted &&
     prevProps.isDownloading === nextProps.isDownloading &&
     prevProps.isDownloaded === nextProps.isDownloaded &&

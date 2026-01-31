@@ -26,6 +26,9 @@ export const cs: Translations = {
     downloadTour: 'Stáhnout prohlídku',
     startTour: 'Spustit prohlídku',
     offlineInfo: 'Stáhněte si tuto prohlídku a užijte si ji offline v oblastech s omezeným připojením.',
+    downloadForOffline: 'Stáhnout pro offline',
+    availableOffline: 'Dostupné offline',
+    downloading: 'Stahování...',
   },
   rating: {
     title: 'Jak se vám prohlídka líbila?',
@@ -54,5 +57,6 @@ export const cs: Translations = {
   },
   tourHeader: {
     minLeft: 'min zbývá',
+    offline: 'Offline',
   },
 } as const;

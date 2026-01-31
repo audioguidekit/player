@@ -38,13 +38,13 @@ export const useDownloadManager = (
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Check if tour is already downloaded
+  // Check if tour is already downloaded (per language)
   useEffect(() => {
     const checkDownloadStatus = async () => {
       if (!tour) return;
 
       try {
-        const downloaded = await storageService.isTourDownloaded(tour.id);
+        const downloaded = await storageService.isTourDownloaded(tour.id, tour.language);
         setIsDownloaded(downloaded);
       } catch (err) {
         console.error('Failed to check download status:', err);
@@ -214,11 +214,12 @@ export const useDownloadManager = (
       );
       const totalSize = sizes.reduce((a, b) => a + b, 0);
 
-      // Mark tour as downloaded in IndexedDB
+      // Mark tour as downloaded in IndexedDB (per language)
       await storageService.markTourDownloaded(
         tour.id,
         successfullyDownloaded,
-        totalSize
+        totalSize,
+        tour.language
       );
 
       setIsDownloaded(true);

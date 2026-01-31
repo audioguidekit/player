@@ -23,6 +23,9 @@ export interface Translations {
     downloadTour: string;
     startTour: string;
     offlineInfo: string;
+    downloadForOffline: string;
+    availableOffline: string;
+    downloading: string;
   };
   rating: {
     title: string;
@@ -51,6 +54,7 @@ export interface Translations {
   };
   tourHeader: {
     minLeft: string;
+    offline: string;
   };
 }
 

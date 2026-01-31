@@ -25,6 +25,9 @@ export const en: Translations = {
     downloadTour: 'Download tour',
     startTour: 'Start tour',
     offlineInfo: 'Download this tour now to enjoy it offline in areas with limited connectivity.',
+    downloadForOffline: 'Download for offline',
+    availableOffline: 'Available offline',
+    downloading: 'Downloading...',
   },
   rating: {
     title: 'How did you like this tour?',
@@ -53,5 +56,6 @@ export const en: Translations = {
   },
   tourHeader: {
     minLeft: 'min left',
+    offline: 'Offline',
   },
 } as const;

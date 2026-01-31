@@ -31,7 +31,7 @@ Uses Bun as package manager (`bun.lock`).
 
 Run `bun run test` after each feature implementation. **An implementation is not complete until tests pass with zero console errors.**
 
-See [docs/TESTING.md](docs/TESTING.md) for full guide on writing and debugging tests.
+See [docs/testing.md](docs/testing.md) for full guide on writing and debugging tests.
 
 ## Architecture
 

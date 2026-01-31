@@ -177,7 +177,7 @@ export const TourStart: React.FC<TourStartProps> = ({
 
         {/* Top Buttons */}
         <TopButtonsContainer>
-          {tour.ratingAvailable !== false && (
+          {tour.collectFeedback !== false && (
             <ActionButton onClick={onOpenRating}>
               <ChatCircleDotsIcon size={24} weight="bold" />
             </ActionButton>

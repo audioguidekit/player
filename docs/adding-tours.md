@@ -57,6 +57,7 @@ Create a new file in `/public/data/tours/` with your tour data.
 | `totalStops` | number | ✓ | Number of stops in tour | `5` |
 | `image` | string | ✓ | Main tour cover image URL | Full HTTPS URL |
 | `stops` | array | ✓ | Array of stop objects | See below |
+| `offlineMode` | string | | Offline behavior mode | `"optional"` (default) |
 
 **Stop Object Fields:**
 
@@ -165,7 +166,7 @@ function TourSelector() {
   "totalDuration": "45 mins",
   "totalStops": 5,
   "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1000&auto=format&fit=crop",
-  "offlineAvailable": false,
+  "offlineMode": "optional",
   "stops": [
     {
       "id": "1",
@@ -332,6 +333,36 @@ Before deploying your tour:
 4. Restart development server
 
 ## Advanced Usage
+
+### Offline Modes
+
+Audio Tour Player supports three offline modes that control how users interact with tour downloads:
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `optional` | User can choose to download. Default behavior. | Most tours - let users decide based on their connectivity |
+| `online-only` | No download option shown. Requires internet. | Tours with frequently updated content, streaming-only audio |
+| `offline-only` | Download required before playback starts. | Premium tours, guaranteed offline experience |
+
+**Configuration:**
+
+```json
+{
+  "id": "barcelona",
+  "title": "Barcelona Tour",
+  "offlineMode": "optional"
+}
+```
+
+**Behavior Details:**
+
+- **`optional`** (default): Shows "Download for Offline" button below the main action. When downloaded, shows "Available offline" status. User can start tour without downloading.
+
+- **`online-only`**: Hides all download UI. No download button, no offline status. Tour plays directly from the network.
+
+- **`offline-only`**: Main button shows "Download Tour" until downloaded. Shows info box explaining download is required. After download completes, button changes to "Start Tour".
+
+**Note:** If `offlineMode` is not specified, tours default to `optional` for backward compatibility.
 
 ### Multiple Languages
 

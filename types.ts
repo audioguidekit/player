@@ -1,5 +1,7 @@
 export type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email' | 'quote';
 
+export type OfflineMode = 'online-only' | 'optional' | 'offline-only';
+
 export interface BaseStop {
   id: string;
   type: StopType;
@@ -76,11 +78,11 @@ export interface TourData {
   totalStops: number;
   stops: Stop[];
   image: string;
-  offlineAvailable?: boolean;
+  offlineMode?: OfflineMode;
   transitionAudio?: string;
   themeId?: string; // Optional theme ID for custom branding
   transcriptionAvailable?: boolean;
-  ratingAvailable?: boolean; // Show rating button on main screen (default: true)
+  collectFeedback?: boolean; // Show rating button on main screen (default: true)
 }
 
 export interface Language {

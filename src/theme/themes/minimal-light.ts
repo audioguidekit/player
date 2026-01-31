@@ -81,6 +81,16 @@ export const minimalLightTheme: ThemeConfig = {
       fontWeight: '500',
       fontFamily: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
     },
+    download: {
+      backgroundColor: 'transparent',
+      textColor: '#000000',
+      borderColor: '#999999',
+      hoverBackground: '#F0F0F0',
+      iconColor: '#000000',
+      fontSize: '16px',
+      fontWeight: '600',
+      fontFamily: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+    },
     transcription: {
       backgroundColor: 'transparent',
       iconColor: '#666666',
@@ -158,6 +168,11 @@ export const minimalLightTheme: ThemeConfig = {
     sectionLabelFontSize: '13px',
     sectionLabelFontWeight: '600',
     sectionDescriptionFontSize: '13px',
+    offlineMessage: {
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+      borderColor: 'rgba(0, 0, 0, 0.1)',
+      textColor: '#525252',
+    },
   },
 
   inputs: {

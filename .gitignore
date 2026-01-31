@@ -28,8 +28,9 @@ _work
 .env.*
 !.env.example
 
-# Claude Code local settings
+# Claude Code local settings and files
 .claude/
+CLAUDE.md
 
 # Build artifacts
 dev-dist/

@@ -84,6 +84,17 @@ export interface ThemeConfig {
       fontWeight: string;
       fontFamily?: string[]; // Optional: defaults to sans if not specified
     };
+    // Download for offline button (same size as primary, different style)
+    download: {
+      backgroundColor: string;
+      textColor: string;
+      borderColor?: string;
+      hoverBackground?: string;
+      iconColor?: string;
+      fontSize: string;
+      fontWeight: string;
+      fontFamily?: string[]; // Optional: defaults to sans if not specified
+    };
     transcription: {
       backgroundColor: string;
       iconColor: string;
@@ -171,6 +182,12 @@ export interface ThemeConfig {
     sectionLabelFontSize: string; // "What's included", "What to expect"
     sectionLabelFontWeight: string;
     sectionDescriptionFontSize: string; // Section content text
+    // Offline message box (shown for offline-only tours)
+    offlineMessage: {
+      backgroundColor: string;
+      borderColor: string;
+      textColor: string;
+    };
   };
 
   // Form Inputs

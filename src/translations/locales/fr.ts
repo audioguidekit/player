@@ -26,6 +26,9 @@ export const fr: Translations = {
     downloadTour: 'Télécharger la visite',
     startTour: 'Démarrer la visite',
     offlineInfo: 'Téléchargez cette visite maintenant pour en profiter hors ligne dans les zones à connectivité limitée.',
+    downloadForOffline: 'Télécharger hors ligne',
+    availableOffline: 'Disponible hors ligne',
+    downloading: 'Téléchargement...',
   },
   rating: {
     title: 'Comment avez-vous aimé cette visite ?',
@@ -54,5 +57,6 @@ export const fr: Translations = {
   },
   tourHeader: {
     minLeft: 'min restantes',
+    offline: 'Hors ligne',
   },
 } as const;

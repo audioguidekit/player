@@ -6,18 +6,17 @@
   "totalDuration": "20 minutes",
   "totalStops": 10,
   "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/01.jpeg",
-  "offlineAvailable": false,
+  "offlineMode": "offline-only",
   "transitionAudio": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/end.m4a",
   "themeId": "minimalDark",
   "transcriptionAvailable": true,
-  "ratingAvailable": true,
+  "collectFeedback": true,
   "stops": [
     {
       "id": "1",
       "type": "audio",
       "title": "Welcome and Instructions",
       "duration": "1:30 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/01.jpeg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/01.mp3"
     },
@@ -26,7 +25,6 @@
       "type": "audio",
       "title": "The Urquinaona Tower",
       "duration": "2:03 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/02.jpeg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/02.mp3"
     },
@@ -35,7 +33,6 @@
       "type": "audio",
       "title": "A City with a Thousand-Year History",
       "duration": "2:22 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/03.webp",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/03.mp3"
     },
@@ -44,7 +41,6 @@
       "type": "audio",
       "title": "Ciutat Vella",
       "duration": "1:34 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/04.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/04.mp3"
     },
@@ -53,7 +49,6 @@
       "type": "audio",
       "title": "Plaza Urquinaona",
       "duration": "2:04 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/05.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/05.mp3"
     },
@@ -62,7 +57,6 @@
       "type": "audio",
       "title": "Industrialisation",
       "duration": "0:57 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/06.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/06.mp3"
     },
@@ -71,7 +65,6 @@
       "type": "audio",
       "title": "Expo 1888 and the 1992 Olympic Games",
       "duration": "2:33 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/07.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/07.mp3"
     },
@@ -80,7 +73,6 @@
       "type": "audio",
       "title": "The Sagrada Família and Gaudí",
       "duration": "1:57 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/08.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/08.mp3"
     },
@@ -89,7 +81,6 @@
       "type": "audio",
       "title": "Eixample",
       "duration": "1:55 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/09.png",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/09.mp3"
     },
@@ -98,7 +89,6 @@
       "type": "audio",
       "title": "Roof Terraces, Tibidabo and Goodbye",
       "duration": "3:20 mins",
-      "isCompleted": false,
       "image": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/10.jpg",
       "audioFile": "https://ewrhpiibxstiipkqafwf.supabase.co/storage/v1/object/public/_test/10.mp3"
     },

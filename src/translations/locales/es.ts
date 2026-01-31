@@ -26,6 +26,9 @@ export const es: Translations = {
     downloadTour: 'Descargar tour',
     startTour: 'Iniciar tour',
     offlineInfo: 'Descarga este tour ahora para disfrutarlo sin conexión en áreas con conectividad limitada.',
+    downloadForOffline: 'Descargar sin conexión',
+    availableOffline: 'Disponible sin conexión',
+    downloading: 'Descargando...',
   },
   rating: {
     title: '¿Cómo te gustó este tour?',
@@ -54,5 +57,6 @@ export const es: Translations = {
   },
   tourHeader: {
     minLeft: 'min restantes',
+    offline: 'Sin conexión',
   },
 } as const;

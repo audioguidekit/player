@@ -81,6 +81,16 @@ export const terminalTheme: ThemeConfig = {
       fontWeight: '600',
       fontFamily: ['JetBrains Mono', 'monospace'], // Monospace for terminal aesthetic
     },
+    download: {
+      backgroundColor: 'transparent', // Download button background (outline style)
+      textColor: '#00D9FF', // Download button text - cyan
+      borderColor: '#00D9FF', // Download button border - cyan
+      hoverBackground: 'rgba(0, 217, 255, 0.1)', // Download button background on hover/press
+      iconColor: '#00D9FF', // Download button icon - cyan
+      fontSize: '18px',
+      fontWeight: '700',
+      fontFamily: ['JetBrains Mono', 'monospace'], // Monospace for terminal aesthetic
+    },
     transcription: {
       backgroundColor: '#161B22', // Transcription toggle button background - card color
       iconColor: '#00D9FF', // Transcription button icon - cyan
@@ -158,6 +168,11 @@ export const terminalTheme: ThemeConfig = {
     sectionLabelFontSize: '14px', // "What's included", "What to expect"
     sectionLabelFontWeight: '600',
     sectionDescriptionFontSize: '12px', // Section content text
+    offlineMessage: {
+      backgroundColor: 'rgba(0, 255, 255, 0.08)',
+      borderColor: 'rgba(0, 255, 255, 0.3)',
+      textColor: '#00cccc',
+    },
   },
 
   inputs: {

@@ -79,6 +79,15 @@ export const calmTheme: ThemeConfig = {
       fontSize: '16px',
       fontWeight: '500',
     },
+    download: {
+      backgroundColor: 'transparent', // Download button background (outline style)
+      textColor: '#5C9F8F', // Download button text (matches primary accent)
+      borderColor: '#5C9F8F', // Download button border
+      hoverBackground: 'rgba(92, 159, 143, 0.1)', // Download button background on hover/press
+      iconColor: '#5C9F8F', // Download button icon
+      fontSize: '18px',
+      fontWeight: '600',
+    },
     transcription: {
       backgroundColor: '#FFFFFF', // Transcription toggle button background
       iconColor: '#5C9F8F', // Transcription button icon
@@ -156,6 +165,11 @@ export const calmTheme: ThemeConfig = {
     sectionLabelFontSize: '14px', // "What's included", "What to expect"
     sectionLabelFontWeight: '500',
     sectionDescriptionFontSize: '12px', // Section content text
+    offlineMessage: {
+      backgroundColor: 'rgba(92, 159, 143, 0.1)',
+      borderColor: 'rgba(92, 159, 143, 0.3)',
+      textColor: '#5c9f8f',
+    },
   },
 
   inputs: {

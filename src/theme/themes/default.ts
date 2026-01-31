@@ -78,6 +78,15 @@ export const defaultTheme: ThemeConfig = {
       fontSize: '16px',
       fontWeight: '500',
     },
+    download: {
+      backgroundColor: 'transparent',
+      textColor: '#FF0000',
+      borderColor: '#FF0000',
+      hoverBackground: 'rgba(255, 0, 0, 0.1)',
+      iconColor: '#FF0000',
+      fontSize: '18px',
+      fontWeight: '600',
+    },
     transcription: {
       backgroundColor: '#FFFFFF',
       iconColor: '#5B96C2',
@@ -155,6 +164,11 @@ export const defaultTheme: ThemeConfig = {
     sectionLabelFontSize: '14px',
     sectionLabelFontWeight: '500',
     sectionDescriptionFontSize: '12px',
+    offlineMessage: {
+      backgroundColor: 'rgba(59, 130, 246, 0.08)',
+      borderColor: 'rgba(59, 130, 246, 0.25)',
+      textColor: '#3b82f6',
+    },
   },
 
   inputs: {

@@ -128,30 +128,40 @@ export class StorageService {
   // Downloaded Tours (IndexedDB)
   // ============================================
 
+  /**
+   * Generate download key for a tour+language combination
+   */
+  private getDownloadKey(tourId: string, language?: string): string {
+    return language ? `${tourId}:${language}` : tourId;
+  }
+
   async getDownloadedTours(): Promise<DownloadedTour[]> {
     const db = await getDB();
     return db.getAll('downloaded-tours');
   }
 
-  async getDownloadedTour(tourId: string): Promise<DownloadedTour | null> {
+  async getDownloadedTour(tourId: string, language?: string): Promise<DownloadedTour | null> {
     const db = await getDB();
-    const tour = await db.get('downloaded-tours', tourId);
+    const key = this.getDownloadKey(tourId, language);
+    const tour = await db.get('downloaded-tours', key);
     return tour || null;
   }
 
-  async isTourDownloaded(tourId: string): Promise<boolean> {
-    const tour = await this.getDownloadedTour(tourId);
+  async isTourDownloaded(tourId: string, language?: string): Promise<boolean> {
+    const tour = await this.getDownloadedTour(tourId, language);
     return tour !== null;
   }
 
   async markTourDownloaded(
     tourId: string,
     assets: string[],
-    sizeBytes: number = 0
+    sizeBytes: number = 0,
+    language?: string
   ): Promise<void> {
     const db = await getDB();
+    const key = this.getDownloadKey(tourId, language);
     const download: DownloadedTour = {
-      tourId,
+      tourId: key,
       downloadedAt: new Date(),
       version: '1.0',
       cachedAssets: assets,
@@ -160,14 +170,15 @@ export class StorageService {
     await db.put('downloaded-tours', download);
   }
 
-  async removeTourDownload(tourId: string): Promise<void> {
+  async removeTourDownload(tourId: string, language?: string): Promise<void> {
     const db = await getDB();
+    const key = this.getDownloadKey(tourId, language);
 
     // Get cached assets before deleting
-    const downloaded = await db.get('downloaded-tours', tourId);
+    const downloaded = await db.get('downloaded-tours', key);
 
     // Delete from IndexedDB
-    await db.delete('downloaded-tours', tourId);
+    await db.delete('downloaded-tours', key);
 
     // Clear cached assets from service worker cache
     if (downloaded && 'caches' in window) {

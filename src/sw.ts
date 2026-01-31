@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute, NavigationRoute } from 'workbox-routing';
-import { CacheFirst, NetworkFirst, StaleWhileRevalidate, NetworkOnly } from 'workbox-strategies';
+import { CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { clientsClaim } from 'workbox-core';
@@ -10,7 +10,7 @@ declare const self: ServiceWorkerGlobalScope;
 
 // Development mode detection - Vite will tree-shake this in production
 const DEV_MODE = import.meta.env.DEV;
-const SW_VERSION = '1.0.3-NAVIGATION-FIX';
+const SW_VERSION = '1.1.0-HYBRID-AUDIO';
 
 // Storage origin for caching external media assets (configured via .env)
 const STORAGE_ORIGIN = import.meta.env.VITE_STORAGE_ORIGIN || '';
@@ -184,7 +184,9 @@ registerRoute(
   })
 );
 
-// Supabase Audio Files - Network Only (Safari Range Request Fix)
+// Supabase Audio Files - Hybrid Strategy
+// Online: Network request (preserves Safari Range Request support for seeking)
+// Offline: Serve from cache (audio plays, seeking within cached content)
 registerRoute(
   ({ url }) => {
     return (
@@ -195,9 +197,53 @@ registerRoute(
         url.pathname.endsWith('.m4a'))
     );
   },
-  new NetworkOnly({
-    cacheName: 'audio-assets-bypass',
-  })
+  async ({ request, url }) => {
+    const cacheName = 'tour-assets';
+
+    if (DEV_MODE) {
+      console.log(`[SW ${SW_VERSION}] 🎵 Audio request: ${url.pathname}, online: ${navigator.onLine}`);
+    }
+
+    // OFFLINE: Serve from cache
+    if (!navigator.onLine) {
+      const cache = await caches.open(cacheName);
+      const cachedResponse = await cache.match(request, { ignoreVary: true });
+
+      if (cachedResponse) {
+        if (DEV_MODE) {
+          console.log(`[SW ${SW_VERSION}] ✅ Serving audio from cache (offline)`);
+        }
+        return cachedResponse;
+      }
+
+      // Not cached - return error
+      console.warn(`[SW ${SW_VERSION}] ⚠️ Audio not cached for offline: ${url.pathname}`);
+      return new Response('Audio not available offline. Please download the tour first.', {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'text/plain' }
+      });
+    }
+
+    // ONLINE: Use network directly (preserves Range request support for Safari)
+    try {
+      return await fetch(request);
+    } catch (error) {
+      // Network failed unexpectedly - try cache as fallback
+      if (DEV_MODE) {
+        console.log(`[SW ${SW_VERSION}] ⚠️ Network failed, trying cache fallback`);
+      }
+      const cache = await caches.open(cacheName);
+      const cachedResponse = await cache.match(request, { ignoreVary: true });
+      if (cachedResponse) {
+        if (DEV_MODE) {
+          console.log(`[SW ${SW_VERSION}] ✅ Serving audio from cache (network fallback)`);
+        }
+        return cachedResponse;
+      }
+      throw error;
+    }
+  }
 );
 
 // Supabase Images - Cache First
