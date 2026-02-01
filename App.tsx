@@ -37,8 +37,12 @@ import { useDeepLink } from './hooks/useDeepLink';
 import { useAutoResume } from './hooks/useAutoResume';
 import { useMediaSession } from './hooks/useMediaSession';
 import { TourProgressTracker } from './components/TourProgressTracker';
+import { useThemeColor } from './hooks/useThemeColor';
 
 const App: React.FC = () => {
+  // Update theme-color meta tag for iOS notch area
+  useThemeColor();
+
   // Get route params
   const { tourId, stopId: urlStopId } = useParams<{ tourId: string; stopId?: string }>();
   const navigate = useNavigate();
