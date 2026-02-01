@@ -346,7 +346,7 @@ const App: React.FC = () => {
               artwork: artworkArray,
             });
 
-            console.log('[iOS DEBUG] 1. Metadata set:', stopData.title);
+            console.log('[iOS DEBUG] 1. Metadata set:', stopData.title, '| metadata.title:', navigator.mediaSession.metadata?.title);
           }
 
           // 2. Set audio source and play DIRECTLY in click handler
@@ -356,7 +356,7 @@ const App: React.FC = () => {
 
             // CRITICAL: Set playbackState BEFORE calling play() - iOS may need this
             navigator.mediaSession.playbackState = 'playing';
-            console.log('[iOS DEBUG] 3. playbackState set to playing BEFORE play()');
+            console.log('[iOS DEBUG] 3. playbackState set to playing BEFORE play(), actual value:', navigator.mediaSession.playbackState);
 
             console.log('[iOS DEBUG] 4. Calling play() directly in click handler');
             audioPlayer.audioElement.play().then(() => {

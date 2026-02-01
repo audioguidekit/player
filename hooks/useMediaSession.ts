@@ -96,13 +96,13 @@ export const useMediaSession = ({
     if (!audio) return;
 
     const handlePlaying = () => {
-      console.log('[MediaSession] Audio now playing - setting playbackState');
       navigator.mediaSession.playbackState = 'playing';
+      console.log('[MediaSession] Audio now playing - playbackState is now:', navigator.mediaSession.playbackState);
     };
 
     const handlePause = () => {
-      console.log('[MediaSession] Audio paused - setting playbackState');
       navigator.mediaSession.playbackState = 'paused';
+      console.log('[MediaSession] Audio paused - playbackState is now:', navigator.mediaSession.playbackState);
     };
 
     audio.addEventListener('playing', handlePlaying);
