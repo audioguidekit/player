@@ -88,41 +88,9 @@ export const useMediaSession = ({
   }, [tour, currentAudioStop, isTransitioning]);
 
   // --- 2. PLAYBACK STATE SYNC ---
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    const audio = audioPlayer.audioElement;
-    if (!audio) return;
-
-    const setPlaying = () => {
-      navigator.mediaSession.playbackState = 'playing';
-    };
-
-    const setPaused = () => {
-      navigator.mediaSession.playbackState = 'paused';
-    };
-
-    // Listen to 'playing' (happens when media is actually running)
-    // AND 'play' (happens when request is made) for robustness.
-    audio.addEventListener('play', setPlaying);
-    audio.addEventListener('playing', setPlaying);
-    audio.addEventListener('pause', setPaused);
-    audio.addEventListener('ended', setPaused);
-    // NOTE: Removed 'waiting' listener - buffering shouldn't show as paused in Media Session
-
-    // Immediate check on mount/update
-    if (!audio.paused) {
-      navigator.mediaSession.playbackState = 'playing';
-    } else {
-      navigator.mediaSession.playbackState = 'paused';
-    }
-
-    return () => {
-      audio.removeEventListener('play', setPlaying);
-      audio.removeEventListener('playing', setPlaying);
-      audio.removeEventListener('pause', setPaused);
-      audio.removeEventListener('ended', setPaused);
-    };
-  }, [audioPlayer.audioElement]); // Re-bind only if the actual DOM node changes
+  // NOTE: Removed all explicit playbackState settings.
+  // iOS Safari should automatically sync playbackState based on audio element events.
+  // Explicitly setting playbackState may interfere with iOS's automatic handling.
 
   // --- 3. ACTION HANDLERS ---
   // We initialize this ONCE on mount. Because we use Refs inside,
@@ -137,8 +105,7 @@ export const useMediaSession = ({
         if (audio) {
           try {
             await audio.play();
-            // CRITICAL: Explicitly set playbackState after play() - iOS requirement
-            navigator.mediaSession.playbackState = 'playing';
+            // Let browser handle playbackState automatically
           } catch (err) {
             console.error('[MediaSession] Play failed:', err);
           }
@@ -149,8 +116,7 @@ export const useMediaSession = ({
         const audio = audioElRef.current;
         if (audio) {
           audio.pause();
-          // CRITICAL: Explicitly set playbackState after pause() - iOS requirement
-          navigator.mediaSession.playbackState = 'paused';
+          // Let browser handle playbackState automatically
         }
       }],
       ['nexttrack', () => {
@@ -209,14 +175,7 @@ export const useMediaSession = ({
             playbackRate: audio.playbackRate,
             position: currentTime,
           });
-
-          // SELF-HEALING: If audio is playing but MediaSession says "paused", force it to "playing"
-          // This fixes the issue where the button gets stuck as "Play" while audio is heard.
-          if (!audio.paused && navigator.mediaSession.playbackState !== 'playing') {
-             console.log('[MediaSession] Healing playbackState mismatch');
-             navigator.mediaSession.playbackState = 'playing';
-          }
-
+          // Let browser handle playbackState automatically - removed self-healing
         } catch (e) {
           // Ignore errors (often happens if duration is not yet available)
         }

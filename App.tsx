@@ -356,12 +356,7 @@ const App: React.FC = () => {
 
             console.log('[iOS DEBUG] 3. Calling play() directly in click handler');
             audioPlayer.audioElement.play().then(() => {
-              console.log('[iOS DEBUG] 4. play() succeeded');
-              if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = 'playing';
-                console.log('[iOS DEBUG] 5. playbackState set to playing');
-                console.log('[iOS DEBUG] 6. Current playbackState:', navigator.mediaSession.playbackState);
-              }
+              console.log('[iOS DEBUG] 4. play() succeeded - letting browser handle playbackState');
             }).catch(err => {
               console.error('[iOS DEBUG] play() failed:', err);
             });

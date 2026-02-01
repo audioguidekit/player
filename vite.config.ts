@@ -69,9 +69,9 @@ export default defineConfig(({ mode }) => {
         filename: 'sw.ts',
         injectRegister: null, // We register manually in index.html
         manifest: {
-          name: 'AudioGuideKit by Superguided',
+          name: 'AudioGuideKit',
           short_name: 'AudioGuideKit',
-          description: 'Explore rich history with immersive guided audio tours',
+          description: 'Open source audio guide player',
           theme_color: '#ffffff',
           background_color: '#f3f4f6',
           display: 'standalone',
