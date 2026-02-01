@@ -317,6 +317,35 @@ const App: React.FC = () => {
                          tour.stops.find(s => s.type === 'audio')?.id;
 
       if (stopToStart) {
+        const stopData = tour.stops.find(s => s.id === stopToStart);
+
+        // CRITICAL FOR iOS: Set Media Session metadata SYNCHRONOUSLY before first play
+        // iOS needs metadata to be set in the same event loop as the user gesture
+        if ('mediaSession' in navigator && stopData?.type === 'audio') {
+          const getArtworkType = (src: string | undefined): string | undefined => {
+            if (!src) return undefined;
+            const lower = src.toLowerCase();
+            if (lower.endsWith('.png')) return 'image/png';
+            if (lower.endsWith('.webp')) return 'image/webp';
+            if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+            return undefined;
+          };
+
+          const artworkType = getArtworkType(stopData.image);
+          const artworkArray = stopData.image
+            ? [{ src: stopData.image, sizes: '512x512', type: artworkType || 'image/png' }]
+            : [];
+
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: stopData.title,
+            artist: tour.title,
+            album: 'AudioGuideKit',
+            artwork: artworkArray,
+          });
+
+          console.log('[START] Media Session metadata set synchronously:', stopData.title);
+        }
+
         setCurrentStopId(stopToStart);
         setIsPlaying(true);
         setIsMiniPlayerExpanded(true);
@@ -350,6 +379,32 @@ const App: React.FC = () => {
 
     const firstAudioStop = tour.stops.find(s => s.type === 'audio');
     if (firstAudioStop) {
+      // CRITICAL FOR iOS: Set Media Session metadata SYNCHRONOUSLY before play
+      if ('mediaSession' in navigator) {
+        const getArtworkType = (src: string | undefined): string | undefined => {
+          if (!src) return undefined;
+          const lower = src.toLowerCase();
+          if (lower.endsWith('.png')) return 'image/png';
+          if (lower.endsWith('.webp')) return 'image/webp';
+          if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+          return undefined;
+        };
+
+        const artworkType = getArtworkType(firstAudioStop.image);
+        const artworkArray = firstAudioStop.image
+          ? [{ src: firstAudioStop.image, sizes: '512x512', type: artworkType || 'image/png' }]
+          : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: firstAudioStop.title,
+          artist: tour.title,
+          album: 'AudioGuideKit',
+          artwork: artworkArray,
+        });
+
+        console.log('[RESET] Media Session metadata set synchronously:', firstAudioStop.title);
+      }
+
       setCurrentStopId(firstAudioStop.id);
       setIsPlaying(true);
       setHasStarted(true);
@@ -411,6 +466,72 @@ const App: React.FC = () => {
   const handleForward = useCallback(() => {
     audioPlayer.skipForward(15);
   }, [audioPlayer]);
+
+  // CRITICAL FOR iOS: Wrap stop click handlers to set metadata synchronously
+  // This ensures Media Session is initialized before the first play on stop clicks
+  const handleStopClickWithMetadata = useCallback((stopId: string) => {
+    // Only set metadata if switching to a different stop
+    if (stopId !== currentStopId) {
+      const stopData = tour?.stops.find(s => s.id === stopId);
+      if ('mediaSession' in navigator && stopData?.type === 'audio') {
+        const getArtworkType = (src: string | undefined): string | undefined => {
+          if (!src) return undefined;
+          const lower = src.toLowerCase();
+          if (lower.endsWith('.png')) return 'image/png';
+          if (lower.endsWith('.webp')) return 'image/webp';
+          if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+          return undefined;
+        };
+
+        const artworkType = getArtworkType(stopData.image);
+        const artworkArray = stopData.image
+          ? [{ src: stopData.image, sizes: '512x512', type: artworkType || 'image/png' }]
+          : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: stopData.title,
+          artist: tour.title,
+          album: 'AudioGuideKit',
+          artwork: artworkArray,
+        });
+
+        console.log('[STOP_CLICK] Media Session metadata set synchronously:', stopData.title);
+      }
+    }
+    handleStopClick(stopId);
+  }, [tour, currentStopId, handleStopClick]);
+
+  const handleStopPlayPauseWithMetadata = useCallback((stopId: string) => {
+    // Only set metadata if switching to a different stop
+    if (stopId !== currentStopId) {
+      const stopData = tour?.stops.find(s => s.id === stopId);
+      if ('mediaSession' in navigator && stopData?.type === 'audio') {
+        const getArtworkType = (src: string | undefined): string | undefined => {
+          if (!src) return undefined;
+          const lower = src.toLowerCase();
+          if (lower.endsWith('.png')) return 'image/png';
+          if (lower.endsWith('.webp')) return 'image/webp';
+          if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+          return undefined;
+        };
+
+        const artworkType = getArtworkType(stopData.image);
+        const artworkArray = stopData.image
+          ? [{ src: stopData.image, sizes: '512x512', type: artworkType || 'image/png' }]
+          : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: stopData.title,
+          artist: tour.title,
+          album: 'AudioGuideKit',
+          artwork: artworkArray,
+        });
+
+        console.log('[STOP_PLAY_PAUSE] Media Session metadata set synchronously:', stopData.title);
+      }
+    }
+    handleStopPlayPause(stopId);
+  }, [tour, currentStopId, handleStopPlayPause]);
 
   const handleRateTour = useCallback(() => {
     setActiveSheet('RATING');
@@ -552,9 +673,9 @@ const App: React.FC = () => {
                   tour={tour}
                   currentStopId={currentStopId}
                   isPlaying={isPlaying}
-                  onStopClick={handleStopClick}
+                  onStopClick={handleStopClickWithMetadata}
                   onTogglePlay={handlePlayPause}
-                  onStopPlayPause={handleStopPlayPause}
+                  onStopPlayPause={handleStopPlayPauseWithMetadata}
                   onBack={handleBackToStart}
                   tourProgress={tourProgress}
                   consumedMinutes={consumedMinutes}
