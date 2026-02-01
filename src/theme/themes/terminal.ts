@@ -161,6 +161,7 @@ export const terminalTheme: ThemeConfig = {
   startCard: {
     titleFontSize: '30px', // Main tour title
     titleFontWeight: '700',
+    titleLineHeight: '1.2',
     metaFontSize: '14px', // Duration, stops count
     metaFontWeight: '500',
     metaColor: '#8B949E', // Meta items color (duration, stops) - medium gray

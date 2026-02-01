@@ -157,6 +157,7 @@ export const modernTheme: ThemeConfig = {
   startCard: {
     titleFontSize: '30px',
     titleFontWeight: '700',
+    titleLineHeight: '1.2',
     metaFontSize: '14px',
     metaFontWeight: '400',
     metaColor: '#6B7280', // Meta items color (duration, stops)

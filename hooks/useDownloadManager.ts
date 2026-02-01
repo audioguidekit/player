@@ -65,6 +65,11 @@ export const useDownloadManager = (
       urls.add(tourData.image);
     }
 
+    // Add transition audio if present
+    if (tourData.transitionAudio) {
+      urls.add(tourData.transitionAudio);
+    }
+
     // Extract assets from each stop
     tourData.stops.forEach((stop) => {
       switch (stop.type) {

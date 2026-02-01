@@ -95,9 +95,14 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
                         <ProgressBar style={{ width: progressWidth }} />
                     </ProgressBarContainer>
 
-                    {/* Time Remaining Text or Offline Badge */}
-                    <AnimatePresence mode="wait">
-                        {!isOnline ? (
+                    {/* Time Remaining Text - always shown */}
+                    <TimeText>
+                        <AnimatedCounter value={totalMinutes - consumedMinutes} /> {t.tourHeader.minLeft}
+                    </TimeText>
+
+                    {/* Offline Badge - shown when offline */}
+                    <AnimatePresence>
+                        {!isOnline && (
                             <OfflineBadge
                                 key="offline"
                                 initial={{ opacity: 0, scale: 0.9 }}
@@ -106,19 +111,7 @@ export const TourHeaderAlt: React.FC<TourHeaderAltProps> = ({
                                 transition={{ duration: 0.2 }}
                             >
                                 <CloudSlashIcon size={14} weight="bold" />
-                                {t.tourHeader.offline}
                             </OfflineBadge>
-                        ) : (
-                            <TimeText
-                                as={motion.div}
-                                key="time"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <AnimatedCounter value={totalMinutes - consumedMinutes} /> {t.tourHeader.minLeft}
-                            </TimeText>
                         )}
                     </AnimatePresence>
                 </ProgressSection>

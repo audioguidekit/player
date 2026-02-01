@@ -554,7 +554,7 @@ colors: {
     primary: '#111827',      // Main headings, important text
     secondary: '#6B7280',    // Subtitles, supporting text
     tertiary: '#9CA3AF',     // Metadata, timestamps, helper text
-    inverse: '#FFFFFF',      // Text on dark backgrounds
+    inverse: '#CCCCCC',      // Text on dark backgrounds
   },
 
   // Border colors

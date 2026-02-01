@@ -46,6 +46,7 @@ const Title = styled.h1`
   font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
   font-size: ${({ theme }) => theme.startCard.titleFontSize};
   font-weight: ${({ theme }) => theme.startCard.titleFontWeight};
+  line-height: ${({ theme }) => theme.startCard.titleLineHeight};
   color: ${({ theme }) => theme.colors.text.primary};
 `;
 
@@ -313,19 +314,14 @@ export const StartCard = React.memo<StartCardProps>(({
         </OfflineBox>
       )}
 
-      {/* Download Option - For tours where offline is optional */}
-      {offlineMode === 'optional' && !isTourCompleted && (
+      {/* Download Option - For tours where offline is optional (hidden during download since primary button shows progress) */}
+      {offlineMode === 'optional' && !isTourCompleted && !isDownloading && (
         <>
           {isDownloaded ? (
             <OfflineStatus>
               <CheckCircleIcon size={18} weight="fill" />
               {t.startCard.availableOffline}
             </OfflineStatus>
-          ) : isDownloading ? (
-            <DownloadButton disabled $disabled>
-              <CloudArrowDownIcon size={20} weight="bold" className="animate-pulse" />
-              {downloadProgress === 0 ? t.startCard.downloading : `${t.startCard.loadingTour} ${downloadProgress}%`}
-            </DownloadButton>
           ) : onDownload && (
             <DownloadButton onClick={(e) => { e.stopPropagation(); onDownload(); }}>
               <CloudArrowDownIcon size={20} weight="bold" />

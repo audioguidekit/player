@@ -175,6 +175,7 @@ export interface ThemeConfig {
   startCard: {
     titleFontSize: string; // Main tour title
     titleFontWeight: string;
+    titleLineHeight: string; // Line height for multi-line titles
     metaFontSize: string; // Duration, stops count
     metaFontWeight: string;
     metaColor: string; // Meta items color (duration, stops)

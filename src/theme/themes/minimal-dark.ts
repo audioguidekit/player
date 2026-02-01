@@ -161,6 +161,7 @@ export const minimalDarkTheme: ThemeConfig = {
   startCard: {
     titleFontSize: '28px',
     titleFontWeight: '600',
+    titleLineHeight: '1.2',
     metaFontSize: '14px',
     metaFontWeight: '400',
     metaColor: '#888888',

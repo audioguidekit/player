@@ -69,10 +69,17 @@ export const useTourNavigation = ({
         if (transitionTimeoutRef.current) {
             clearTimeout(transitionTimeoutRef.current);
         }
-        setCurrentStopId(clickedStopId);
-        setIsPlaying(true);
-        onTrackChange?.(clickedStopId);
-    }, [onTrackChange]);
+
+        // Toggle play/pause if clicking the currently playing stop
+        if (currentStopId === clickedStopId) {
+            setIsPlaying(prev => !prev);
+        } else {
+            // Start playing the new stop
+            setCurrentStopId(clickedStopId);
+            setIsPlaying(true);
+            onTrackChange?.(clickedStopId);
+        }
+    }, [currentStopId, onTrackChange]);
 
     const handleStopPlayPause = useCallback((stopId: string) => {
         if (currentStopId === stopId) {

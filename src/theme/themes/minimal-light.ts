@@ -161,6 +161,7 @@ export const minimalLightTheme: ThemeConfig = {
   startCard: {
     titleFontSize: '28px',
     titleFontWeight: '600',
+    titleLineHeight: '1.2',
     metaFontSize: '14px',
     metaFontWeight: '400',
     metaColor: '#666666',
@@ -188,7 +189,7 @@ export const minimalLightTheme: ThemeConfig = {
       primary: '#1A1A1A',   // Near black
       secondary: '#666666', // Medium gray
       tertiary: '#999999',  // Light gray
-      inverse: '#FFFFFF',   // White (for use on black buttons)
+      inverse: '#AAAAAA',   // White (for use on black buttons)
     },
     border: {
       light: '#F0F0F0',
