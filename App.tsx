@@ -354,9 +354,13 @@ const App: React.FC = () => {
             console.log('[iOS DEBUG] 2. Setting audio src:', audioUrl);
             audioPlayer.audioElement.src = audioUrl;
 
-            console.log('[iOS DEBUG] 3. Calling play() directly in click handler');
+            // CRITICAL: Set playbackState BEFORE calling play() - iOS may need this
+            navigator.mediaSession.playbackState = 'playing';
+            console.log('[iOS DEBUG] 3. playbackState set to playing BEFORE play()');
+
+            console.log('[iOS DEBUG] 4. Calling play() directly in click handler');
             audioPlayer.audioElement.play().then(() => {
-              console.log('[iOS DEBUG] 4. play() succeeded - letting browser handle playbackState');
+              console.log('[iOS DEBUG] 5. play() succeeded');
             }).catch(err => {
               console.error('[iOS DEBUG] play() failed:', err);
             });
