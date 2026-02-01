@@ -319,33 +319,56 @@ const App: React.FC = () => {
       if (stopToStart) {
         const stopData = tour.stops.find(s => s.id === stopToStart);
 
-        // CRITICAL FOR iOS: Set Media Session metadata SYNCHRONOUSLY before first play
-        // iOS needs metadata to be set in the same event loop as the user gesture
-        if ('mediaSession' in navigator && stopData?.type === 'audio') {
-          const getArtworkType = (src: string | undefined): string | undefined => {
-            if (!src) return undefined;
-            const lower = src.toLowerCase();
-            if (lower.endsWith('.png')) return 'image/png';
-            if (lower.endsWith('.webp')) return 'image/webp';
-            if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-            return undefined;
-          };
+        // CRITICAL FOR iOS: Everything must happen SYNCHRONOUSLY in the click handler
+        if (stopData?.type === 'audio') {
+          const audioUrl = stopData.audioFile;
 
-          const artworkType = getArtworkType(stopData.image);
-          const artworkArray = stopData.image
-            ? [{ src: stopData.image, sizes: '512x512', type: artworkType || 'image/png' }]
-            : [];
+          // 1. Set metadata FIRST
+          if ('mediaSession' in navigator) {
+            const getArtworkType = (src: string | undefined): string | undefined => {
+              if (!src) return undefined;
+              const lower = src.toLowerCase();
+              if (lower.endsWith('.png')) return 'image/png';
+              if (lower.endsWith('.webp')) return 'image/webp';
+              if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+              return undefined;
+            };
 
-          navigator.mediaSession.metadata = new MediaMetadata({
-            title: stopData.title,
-            artist: tour.title,
-            album: 'AudioGuideKit',
-            artwork: artworkArray,
-          });
+            const artworkType = getArtworkType(stopData.image);
+            const artworkArray = stopData.image
+              ? [{ src: stopData.image, sizes: '512x512', type: artworkType || 'image/png' }]
+              : [];
 
-          console.log('[START] Media Session metadata set synchronously:', stopData.title);
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: stopData.title,
+              artist: tour.title,
+              album: 'AudioGuideKit',
+              artwork: artworkArray,
+            });
+
+            console.log('[iOS DEBUG] 1. Metadata set:', stopData.title);
+          }
+
+          // 2. Set audio source and play DIRECTLY in click handler
+          if (audioPlayer.audioElement && audioUrl) {
+            console.log('[iOS DEBUG] 2. Setting audio src:', audioUrl);
+            audioPlayer.audioElement.src = audioUrl;
+
+            console.log('[iOS DEBUG] 3. Calling play() directly in click handler');
+            audioPlayer.audioElement.play().then(() => {
+              console.log('[iOS DEBUG] 4. play() succeeded');
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'playing';
+                console.log('[iOS DEBUG] 5. playbackState set to playing');
+                console.log('[iOS DEBUG] 6. Current playbackState:', navigator.mediaSession.playbackState);
+              }
+            }).catch(err => {
+              console.error('[iOS DEBUG] play() failed:', err);
+            });
+          }
         }
 
+        // 3. Update React state (for UI sync)
         setCurrentStopId(stopToStart);
         setIsPlaying(true);
         setIsMiniPlayerExpanded(true);
@@ -357,7 +380,7 @@ const App: React.FC = () => {
         }
       }
     }
-  }, [tour, currentStopId, setCurrentStopId, setIsPlaying, setIsMiniPlayerExpanded, setHasStarted, setAllowAutoPlay]);
+  }, [tour, currentStopId, setCurrentStopId, setIsPlaying, setIsMiniPlayerExpanded, setHasStarted, setAllowAutoPlay, audioPlayer.audioElement]);
 
   const handleBackToStart = useCallback(() => {
     setHasStarted(false);

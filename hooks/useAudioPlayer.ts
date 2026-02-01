@@ -262,6 +262,20 @@ export const useAudioPlayer = ({
       return;
     }
 
+    // Check if audio.src was already set directly (e.g., in click handler for iOS)
+    // This prevents double-loading and interrupting playback
+    try {
+      const normalizedNewSrc = new URL(audioUrl, window.location.href).href;
+      if (audio.src === normalizedNewSrc) {
+        debugLog('[AUDIO] Source already set directly, syncing ref only');
+        currentAudioUrlRef.current = audioUrl;
+        currentSourceIdRef.current = ++audioSourceId;
+        return;
+      }
+    } catch {
+      // URL parsing failed, continue with normal flow
+    }
+
     debugLog('[AUDIO] Changing source to:', audioUrl);
     currentAudioUrlRef.current = audioUrl;
     // Increment source ID BEFORE loading - this invalidates any pending ended events from previous source
