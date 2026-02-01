@@ -37,12 +37,9 @@ import { useDeepLink } from './hooks/useDeepLink';
 import { useAutoResume } from './hooks/useAutoResume';
 import { useMediaSession } from './hooks/useMediaSession';
 import { TourProgressTracker } from './components/TourProgressTracker';
-import { useThemeColor } from './hooks/useThemeColor';
+import { ThemeColorSync } from './components/ThemeColorSync';
 
 const App: React.FC = () => {
-  // Update theme-color meta tag for iOS notch area
-  useThemeColor();
-
   // Get route params
   const { tourId, stopId: urlStopId } = useParams<{ tourId: string; stopId?: string }>();
   const navigate = useNavigate();
@@ -446,6 +443,7 @@ const App: React.FC = () => {
   if (tourLoading || languagesLoading) {
     return (
       <ThemeProvider themeId="default">
+        <ThemeColorSync />
         <GlobalStyles />
         <TranslationProvider language={selectedLanguage?.code || defaultLanguage}>
           <LoadingScreen />
@@ -458,6 +456,7 @@ const App: React.FC = () => {
   if (tourError || languagesError) {
     return (
       <ThemeProvider themeId="default">
+        <ThemeColorSync />
         <GlobalStyles />
         <TranslationProvider language={selectedLanguage?.code || defaultLanguage}>
           <ErrorScreen error={tourError || languagesError} />
@@ -472,6 +471,7 @@ const App: React.FC = () => {
   if (!assetsReady) {
     return (
       <ThemeProvider themeId={themeId}>
+        <ThemeColorSync />
         <GlobalStyles />
         <TranslationProvider language={uiLanguage}>
           <AssetsLoadingScreen />
@@ -482,6 +482,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider themeId={themeId}>
+      <ThemeColorSync />
       <GlobalStyles />
       <TranslationProvider language={uiLanguage}>
         <MobileFrame>
