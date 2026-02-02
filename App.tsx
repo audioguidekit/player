@@ -37,6 +37,24 @@ import { useDeepLink } from './hooks/useDeepLink';
 import { useAutoResume } from './hooks/useAutoResume';
 import { TourProgressTracker } from './components/TourProgressTracker';
 import { ThemeColorSync } from './components/ThemeColorSync';
+import { useMediaSession, useMediaMeta } from 'use-media-session';
+
+// Helper to get artwork MIME type
+const getArtworkType = (url: string | undefined): string | null => {
+  if (!url) return null;
+  const ext = url.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return 'image/jpeg';
+  }
+};
 
 const App: React.FC = () => {
   // Get route params
@@ -149,12 +167,15 @@ const App: React.FC = () => {
     [tour]
   );
 
+  /* 
+  // Disable preloading to prevent iOS Media Session interference
   useAudioPreloader({
     audioPlaylist,
     currentStopId,
     isPlaying,
     preloadCount: 1,
   });
+  */
 
   // Eager asset preloading hook
   const { assetsReady } = useEagerAssetPreloader({ tour });
@@ -283,12 +304,8 @@ const App: React.FC = () => {
     const handleNativePause = () => {
       console.log('[NATIVE EVENT] pause fired - wasPlayingBeforePause:', wasPlayingBeforePauseRef.current);
       // Only sync pause if audio was actually playing before
-      // This filters out pause events from load() which happen when audio wasn't playing
       if (wasPlayingBeforePauseRef.current) {
-        console.log('[NATIVE EVENT] pause - was playing, setting isPlaying=false');
         setIsPlaying(false);
-      } else {
-        console.log('[NATIVE EVENT] pause - was NOT playing, ignoring (likely from load())');
       }
       wasPlayingBeforePauseRef.current = false;
     };
@@ -301,6 +318,108 @@ const App: React.FC = () => {
       audio.removeEventListener('pause', handleNativePause);
     };
   }, [audioPlayer.audioElement, setIsPlaying]);
+
+  // ============================================================================
+
+  // Watchdog Removed as requested
+  // ============================================================================
+
+  // MEDIASESSION API - Critical for iOS Control Center integration
+  // ============================================================================
+
+  // Build artwork array for MediaSession metadata
+  const artworkType = getArtworkType(currentAudioStop?.image);
+  const mediaSessionArtwork = currentAudioStop?.image
+    ? [{ src: currentAudioStop.image, sizes: '512x512', type: artworkType || 'image/jpeg' }]
+    : [];
+
+  // MediaSession metadata - matching working demo EXACTLY
+  useMediaMeta({
+    title: currentAudioStop?.title || '',
+    artist: tour?.title || '',
+    album: 'AudioGuideKit',
+    artwork: mediaSessionArtwork,
+  });
+
+  // Play callback for MediaSession - MUST set state AFTER play succeeds
+  const mediaSessionPlayTrack = useCallback(() => {
+    console.log('[mediaSessionPlayTrack] Called - will call play()');
+    audioPlayer.play()
+      .then(() => {
+        console.log('[mediaSessionPlayTrack] play() succeeded - setting isPlaying=true');
+        setIsPlaying(true);
+        setIsPlaying(true);
+      })
+      .catch((e) => {
+        console.error('[mediaSessionPlayTrack] play() failed:', e);
+      });
+  }, [audioPlayer, setIsPlaying]);
+
+  // Pause callback for MediaSession
+  const mediaSessionPauseTrack = useCallback(() => {
+    const audio = audioPlayer.audioElement;
+    console.log('[mediaSessionPauseTrack] Called - audio.paused:', audio?.paused);
+    if (audio && !audio.paused) {
+      console.log('[mediaSessionPauseTrack] Pausing and setting isPlaying=false');
+      audioPlayer.pause();
+      setIsPlaying(false);
+      setIsPlaying(false);
+    }
+  }, [audioPlayer, setIsPlaying]);
+
+  // Seek callbacks for MediaSession
+  const mediaSessionSeekBackward = useCallback(() => {
+    audioPlayer.skipBackward(10);
+  }, [audioPlayer]);
+
+  const mediaSessionSeekForward = useCallback(() => {
+    audioPlayer.skipForward(10);
+  }, [audioPlayer]);
+
+  // MediaSession hook - provides Control Center integration
+  useMediaSession({
+    playbackState: isPlaying ? 'playing' : 'paused',
+    onPlay: mediaSessionPlayTrack,
+    onPause: mediaSessionPauseTrack,
+    onSeekBackward: mediaSessionSeekBackward,
+    onSeekForward: mediaSessionSeekForward,
+    onPreviousTrack: handlePrevStop,
+    onNextTrack: handleNextStop,
+  });
+
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log('[STATE CHANGE] isPlaying changed to:', isPlaying);
+    console.log('[MEDIASESSION] playbackState will be:', isPlaying ? 'playing' : 'paused');
+  }, [isPlaying]);
+
+  // Update MediaSession position state (throttled to once per second)
+  const lastPositionUpdateRef = useRef(0);
+  useEffect(() => {
+    if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+      const duration = audioPlayer.duration;
+      const currentTime = audioPlayer.currentTime;
+      const now = Date.now();
+
+      // Throttle to once per second
+      if (now - lastPositionUpdateRef.current < 1000) return;
+
+      if (duration > 0 && isFinite(duration) && isFinite(currentTime)) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: duration,
+            playbackRate: 1,
+            position: currentTime,
+          });
+          lastPositionUpdateRef.current = now;
+        } catch {
+          // Ignore errors
+        }
+      }
+    }
+  }, [audioPlayer.currentTime, audioPlayer.duration]);
+
+  // ============================================================================
 
   // CRITICAL FOR iOS: Pre-load first audio into the singleton element
   // This ensures audio is ALREADY LOADED when user clicks "Start tour"
@@ -394,6 +513,7 @@ const App: React.FC = () => {
         .then(() => {
           console.log('[AUTOPLAY] play() succeeded - NOW setting isPlaying=true');
           // CRITICAL: Set state AFTER play succeeds (matching working demo pattern)
+          setIsPlaying(true);
           setIsPlaying(true);
         })
         .catch((error) => {
