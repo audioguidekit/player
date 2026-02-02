@@ -296,15 +296,15 @@ const App: React.FC = () => {
     if (!audio) return;
 
     const handleNativePlay = () => {
-      console.log('[NATIVE EVENT] play fired - setting isPlaying=true, wasPlayingBeforePause=true');
       wasPlayingBeforePauseRef.current = true;
       setIsPlaying(true);
     };
 
     const handleNativePause = () => {
-      console.log('[NATIVE EVENT] pause fired - wasPlayingBeforePause:', wasPlayingBeforePauseRef.current);
+      const audio = audioPlayer.audioElement;
       // Only sync pause if audio was actually playing before
-      if (wasPlayingBeforePauseRef.current) {
+      // Don't set isPlaying(false) if audio ended - let the ended handler manage the transition
+      if (wasPlayingBeforePauseRef.current && !audio?.ended) {
         setIsPlaying(false);
       }
       wasPlayingBeforePauseRef.current = false;
