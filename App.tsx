@@ -35,7 +35,6 @@ import { useLanguageSelection } from './hooks/useLanguageSelection';
 import { useEagerAssetPreloader } from './hooks/useEagerAssetPreloader';
 import { useDeepLink } from './hooks/useDeepLink';
 import { useAutoResume } from './hooks/useAutoResume';
-import { useMediaSession } from './hooks/useMediaSession';
 import { TourProgressTracker } from './components/TourProgressTracker';
 import { ThemeColorSync } from './components/ThemeColorSync';
 
@@ -109,7 +108,7 @@ const App: React.FC = () => {
     isTransitioning,
     isSwitchingTracks,
     setCurrentStopId,
-    setIsPlaying,
+    setIsPlaying: rawSetIsPlaying,
     handlePlayPause,
     handleStopClick,
     handleStopPlayPause,
@@ -124,6 +123,17 @@ const App: React.FC = () => {
     allowAutoPlay,
     onTrackChange: handleTrackChange
   });
+
+  // DEBUG: Wrap setIsPlaying to log all calls with stack trace
+  const setIsPlaying = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
+    const stack = new Error().stack?.split('\n').slice(1, 4).join('\n');
+    if (typeof value === 'function') {
+      console.log('[DEBUG setIsPlaying] Called with function updater\n', stack);
+    } else {
+      console.log(`[DEBUG setIsPlaying] Setting to ${value}\n`, stack);
+    }
+    rawSetIsPlaying(value);
+  }, [rawSetIsPlaying]);
 
   // Keep ref in sync with state (avoids stale closure in handleAudioEnded)
   useEffect(() => {
@@ -237,8 +247,9 @@ const App: React.FC = () => {
   }, [tour, handleTrackTransition, handleAdvanceToNextTrack]);
 
   // Memoize onPlayBlocked to prevent effect re-runs
-  const handlePlayBlocked = useCallback(() => {
-    console.warn('[Audio] Play was blocked by the browser. Requiring user interaction to resume.');
+  const handlePlayBlocked = useCallback((error: unknown) => {
+    console.warn('[handlePlayBlocked] Play was blocked by the browser:', error);
+    console.warn('[handlePlayBlocked] Setting isPlaying to FALSE');
     setIsPlaying(false);
   }, [setIsPlaying]);
 
@@ -253,6 +264,43 @@ const App: React.FC = () => {
     onProgress: handleAudioProgress,
     onPlayBlocked: handlePlayBlocked,
   });
+
+  // CRITICAL: Sync native audio events to React state AND MediaSession
+  // This matches the working demo's JSX: <audio onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
+  // Track if audio was playing before pause to distinguish real pauses from load() pauses
+  const wasPlayingBeforePauseRef = useRef(false);
+
+  useEffect(() => {
+    const audio = audioPlayer.audioElement;
+    if (!audio) return;
+
+    const handleNativePlay = () => {
+      console.log('[NATIVE EVENT] play fired - setting isPlaying=true, wasPlayingBeforePause=true');
+      wasPlayingBeforePauseRef.current = true;
+      setIsPlaying(true);
+    };
+
+    const handleNativePause = () => {
+      console.log('[NATIVE EVENT] pause fired - wasPlayingBeforePause:', wasPlayingBeforePauseRef.current);
+      // Only sync pause if audio was actually playing before
+      // This filters out pause events from load() which happen when audio wasn't playing
+      if (wasPlayingBeforePauseRef.current) {
+        console.log('[NATIVE EVENT] pause - was playing, setting isPlaying=false');
+        setIsPlaying(false);
+      } else {
+        console.log('[NATIVE EVENT] pause - was NOT playing, ignoring (likely from load())');
+      }
+      wasPlayingBeforePauseRef.current = false;
+    };
+
+    audio.addEventListener('play', handleNativePlay);
+    audio.addEventListener('pause', handleNativePause);
+
+    return () => {
+      audio.removeEventListener('play', handleNativePlay);
+      audio.removeEventListener('pause', handleNativePause);
+    };
+  }, [audioPlayer.audioElement, setIsPlaying]);
 
   // CRITICAL FOR iOS: Pre-load first audio into the singleton element
   // This ensures audio is ALREADY LOADED when user clicks "Start tour"
@@ -307,21 +355,6 @@ const App: React.FC = () => {
   // Background audio keep-alive for iOS
   useBackgroundAudio({ enabled: isPlaying });
 
-  // Media Session hook
-  useMediaSession({
-    tour,
-    currentAudioStop,
-    isPlaying,
-    isTransitioning,
-    isSwitchingTracks,
-    canGoNext,
-    canGoPrev,
-    handleNextStop,
-    handlePrevStop,
-    setIsPlaying,
-    audioPlayer,
-  });
-
   // Global error logging to surface crashes
   useEffect(() => {
     const onError = (event: ErrorEvent) => {
@@ -338,6 +371,50 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Flag to indicate we want to start playing when audio is ready
+  const [pendingAutoPlay, setPendingAutoPlay] = useState(false);
+
+  // Effect to handle autoplay when audio becomes available
+  // MATCHING WORKING DEMO: Set isPlaying(true) SYNCHRONOUSLY when calling play()
+  useEffect(() => {
+    if (!pendingAutoPlay || !audioPlayer.audioElement) return;
+
+    const audio = audioPlayer.audioElement;
+    console.log('[AUTOPLAY] pendingAutoPlay effect triggered, readyState:', audio.readyState);
+
+    // Wait for audio to be ready
+    const attemptPlay = () => {
+      console.log('[AUTOPLAY] Attempting play() - will set isPlaying=true AFTER promise resolves');
+      // CRITICAL FIX: Do NOT set state before play()!
+      // iOS sees playbackState='playing' but audio.paused=true → shows play button
+      // Must wait for play() to succeed, THEN set state (like working demo autoplay pattern)
+      setPendingAutoPlay(false);
+
+      audio.play()
+        .then(() => {
+          console.log('[AUTOPLAY] play() succeeded - NOW setting isPlaying=true');
+          // CRITICAL: Set state AFTER play succeeds (matching working demo pattern)
+          setIsPlaying(true);
+        })
+        .catch((error) => {
+          console.error('[AUTOPLAY] play() promise rejected:', error);
+          // No need to revert - we never set isPlaying=true
+        });
+    };
+
+    if (audio.readyState >= 2) {
+      attemptPlay();
+    } else {
+      console.log('[AUTOPLAY] Waiting for canplay event...');
+      const handleCanPlay = () => {
+        console.log('[AUTOPLAY] canplay event fired');
+        attemptPlay();
+        audio.removeEventListener('canplay', handleCanPlay);
+      };
+      audio.addEventListener('canplay', handleCanPlay, { once: true });
+    }
+  }, [pendingAutoPlay, audioPlayer.audioElement, setIsPlaying]);
+
   // Handlers - wrapped with useCallback for referential stability
   const handleStartTour = useCallback(() => {
     if (!tour || tour.stops.length === 0) return;
@@ -348,13 +425,17 @@ const App: React.FC = () => {
     if (!currentStopId) {
       // Use resume point if available, otherwise first audio stop
       const stopToStart = resumeStopIdRef.current ||
-                         tour.stops.find(s => s.type === 'audio')?.id;
+        tour.stops.find(s => s.type === 'audio')?.id;
 
       if (stopToStart) {
-        // Update React state - useMediaSession hook will handle Media Session metadata/actions
+        // Set stop ID and expand mini player
         setCurrentStopId(stopToStart);
-        setIsPlaying(true);
         setIsMiniPlayerExpanded(true);
+
+        // CRITICAL FOR iOS: Don't set isPlaying(true) here!
+        // Instead, set flag to trigger autoplay effect when audio is ready
+        // The effect will call play() and set isPlaying AFTER play succeeds
+        setPendingAutoPlay(true);
 
         // Queue position restoration if resuming
         if (resumeStopIdRef.current && resumePositionRef.current > 0) {
@@ -363,7 +444,7 @@ const App: React.FC = () => {
         }
       }
     }
-  }, [tour, currentStopId, setCurrentStopId, setIsPlaying, setIsMiniPlayerExpanded, setHasStarted, setAllowAutoPlay]);
+  }, [tour, currentStopId, setCurrentStopId, setIsMiniPlayerExpanded, setHasStarted, setAllowAutoPlay]);
 
   const handleBackToStart = useCallback(() => {
     setHasStarted(false);
@@ -385,14 +466,15 @@ const App: React.FC = () => {
 
     const firstAudioStop = tour.stops.find(s => s.type === 'audio');
     if (firstAudioStop) {
-      // Update React state - useMediaSession hook will handle Media Session metadata/actions
+      // Set stop ID and state
       setCurrentStopId(firstAudioStop.id);
-      setIsPlaying(true);
       setHasStarted(true);
       setAllowAutoPlay(true);
+      // Use pendingAutoPlay to start playing after audio is ready
+      setPendingAutoPlay(true);
     }
     setActiveSheet('NONE');
-  }, [tour, progressTracking, setCurrentStopId, setIsPlaying, setHasStarted, setAllowAutoPlay, setHasShownCompletionSheet, setActiveSheet]);
+  }, [tour, progressTracking, setCurrentStopId, setHasStarted, setAllowAutoPlay, setHasShownCompletionSheet, setActiveSheet]);
 
   const handleLanguageChange = useCallback((language: Language) => {
     // Stop playback if audio is currently playing
@@ -447,15 +529,6 @@ const App: React.FC = () => {
   const handleForward = useCallback(() => {
     audioPlayer.skipForward(15);
   }, [audioPlayer]);
-
-  // Stop click handlers - useMediaSession hook handles Media Session metadata/actions
-  const handleStopClickWrapper = useCallback((stopId: string) => {
-    handleStopClick(stopId);
-  }, [handleStopClick]);
-
-  const handleStopPlayPauseWrapper = useCallback((stopId: string) => {
-    handleStopPlayPause(stopId);
-  }, [handleStopPlayPause]);
 
   const handleRateTour = useCallback(() => {
     setActiveSheet('RATING');
@@ -549,125 +622,125 @@ const App: React.FC = () => {
       <GlobalStyles />
       <TranslationProvider language={uiLanguage}>
         <MobileFrame>
-        {/* Tour Progress Tracker - monitors completion */}
-        <TourProgressTracker
-          tour={tour}
-          currentStopId={currentStopId}
-          audioPlayerProgress={audioPlayer.progress}
-          progressTracking={progressTracking}
-          hasShownCompletionSheet={hasShownCompletionSheet}
-          onTourComplete={handleTourComplete}
-        />
-        <div className="relative w-full h-full overflow-hidden flex flex-col font-sans text-base" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
-          {/* Main Content Area */}
-          <div className="flex-1 relative overflow-hidden">
-            <TourStart
-              tour={tour}
-              selectedLanguage={selectedLanguage!}
-              languages={languages}
-              onOpenRating={handleOpenRating}
-              onOpenLanguage={handleOpenLanguage}
-              sheetY={sheetY}
-              collapsedY={collapsedY}
-              isVisible={true}
-            />
+          {/* Tour Progress Tracker - monitors completion */}
+          <TourProgressTracker
+            tour={tour}
+            currentStopId={currentStopId}
+            audioPlayerProgress={audioPlayer.progress}
+            progressTracking={progressTracking}
+            hasShownCompletionSheet={hasShownCompletionSheet}
+            onTourComplete={handleTourComplete}
+          />
+          <div className="relative w-full h-full overflow-hidden flex flex-col font-sans text-base" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
+            {/* Main Content Area */}
+            <div className="flex-1 relative overflow-hidden">
+              <TourStart
+                tour={tour}
+                selectedLanguage={selectedLanguage!}
+                languages={languages}
+                onOpenRating={handleOpenRating}
+                onOpenLanguage={handleOpenLanguage}
+                sheetY={sheetY}
+                collapsedY={collapsedY}
+                isVisible={true}
+              />
 
-            <MainSheet
-              isExpanded={hasStarted}
-              onExpand={handleStartTour}
-              onCollapse={handleBackToStart}
-              sheetY={sheetY}
-              onLayoutChange={setCollapsedY}
-              startContent={
-                <StartCard
-                  tour={tour}
-                  hasStarted={!!currentStopId || progressTracking.hasAnyProgress()}
-                  onAction={handleStartTour}
-                  isDownloading={downloadManager.isDownloading}
-                  isDownloaded={downloadManager.isDownloaded}
-                  downloadProgress={downloadManager.downloadProgress.percentage}
-                  onDownload={downloadManager.startDownload}
-                  downloadError={downloadManager.error}
-                  tourProgress={tourProgress}
-                  onResetProgress={handleResetTour}
-                />
-              }
-              detailContent={
-                <TourDetail
-                  tour={tour}
-                  currentStopId={currentStopId}
-                  isPlaying={isPlaying}
-                  onStopClick={handleStopClickWrapper}
-                  onTogglePlay={handlePlayPause}
-                  onStopPlayPause={handleStopPlayPauseWrapper}
-                  onBack={handleBackToStart}
-                  tourProgress={tourProgress}
-                  consumedMinutes={consumedMinutes}
-                  totalMinutes={totalMinutes}
-                  completedStopsCount={progressTracking.getCompletedStopsCount()}
-                  isStopCompleted={progressTracking.isStopCompleted}
-                  scrollToStopId={scrollToStopId?.id ?? null}
-                  scrollTrigger={scrollToStopId?.timestamp ?? null}
-                  onScrollComplete={handleScrollComplete}
-                  onOpenRatingSheet={() => setActiveSheet('RATING')}
-                />
-              }
-            />
+              <MainSheet
+                isExpanded={hasStarted}
+                onExpand={handleStartTour}
+                onCollapse={handleBackToStart}
+                sheetY={sheetY}
+                onLayoutChange={setCollapsedY}
+                startContent={
+                  <StartCard
+                    tour={tour}
+                    hasStarted={!!currentStopId || progressTracking.hasAnyProgress()}
+                    onAction={handleStartTour}
+                    isDownloading={downloadManager.isDownloading}
+                    isDownloaded={downloadManager.isDownloaded}
+                    downloadProgress={downloadManager.downloadProgress.percentage}
+                    onDownload={downloadManager.startDownload}
+                    downloadError={downloadManager.error}
+                    tourProgress={tourProgress}
+                    onResetProgress={handleResetTour}
+                  />
+                }
+                detailContent={
+                  <TourDetail
+                    tour={tour}
+                    currentStopId={currentStopId}
+                    isPlaying={isPlaying}
+                    onStopClick={handleStopClick}
+                    onTogglePlay={handlePlayPause}
+                    onStopPlayPause={handleStopPlayPause}
+                    onBack={handleBackToStart}
+                    tourProgress={tourProgress}
+                    consumedMinutes={consumedMinutes}
+                    totalMinutes={totalMinutes}
+                    completedStopsCount={progressTracking.getCompletedStopsCount()}
+                    isStopCompleted={progressTracking.isStopCompleted}
+                    scrollToStopId={scrollToStopId?.id ?? null}
+                    scrollTrigger={scrollToStopId?.timestamp ?? null}
+                    onScrollComplete={handleScrollComplete}
+                    onOpenRatingSheet={() => setActiveSheet('RATING')}
+                  />
+                }
+              />
 
-            {/* Mini Player */}
-            <AnimatePresence>
-              {shouldShowMiniPlayer && currentAudioStop && (
-                <MiniPlayer
-                  currentStop={currentAudioStop}
-                  isPlaying={isPlaying}
-                  onTogglePlay={handlePlayPause}
-                  onRewind={handleRewind}
-                  onForward={handleForward}
-                  onClick={handleMiniPlayerClick}
-                  progress={audioPlayer.progress}
-                  isExpanded={isMiniPlayerExpanded}
-                  onToggleExpanded={setIsMiniPlayerExpanded}
-                  isCompleting={isAudioCompleting}
-                  isTransitioning={isTransitioning || isSwitchingTracks}
-                  onNextTrack={handleNextStop}
-                  onPrevTrack={handlePrevStop}
-                  canGoNext={canGoNext}
-                  canGoPrev={canGoPrev}
-                  transcription={currentAudioStop.transcription}
-                  transcriptAvailable={tour?.transcriptAvailable}
-                  isTranscriptionExpanded={isTranscriptionExpanded}
-                  onToggleTranscription={setIsTranscriptionExpanded}
-                />
-              )}
-            </AnimatePresence>
+              {/* Mini Player */}
+              <AnimatePresence>
+                {shouldShowMiniPlayer && currentAudioStop && (
+                  <MiniPlayer
+                    currentStop={currentAudioStop}
+                    isPlaying={isPlaying}
+                    onTogglePlay={handlePlayPause}
+                    onRewind={handleRewind}
+                    onForward={handleForward}
+                    onClick={handleMiniPlayerClick}
+                    progress={audioPlayer.progress}
+                    isExpanded={isMiniPlayerExpanded}
+                    onToggleExpanded={setIsMiniPlayerExpanded}
+                    isCompleting={isAudioCompleting}
+                    isTransitioning={isTransitioning || isSwitchingTracks}
+                    onNextTrack={handleNextStop}
+                    onPrevTrack={handlePrevStop}
+                    canGoNext={canGoNext}
+                    canGoPrev={canGoPrev}
+                    transcription={currentAudioStop.transcription}
+                    transcriptAvailable={tour?.transcriptAvailable}
+                    isTranscriptionExpanded={isTranscriptionExpanded}
+                    onToggleTranscription={setIsTranscriptionExpanded}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Floating Controls Removed - TourDetail handles the header */}
+
+            {/* Sheets - Lazy loaded for better initial bundle size */}
+            <Suspense fallback={null}>
+              <RatingSheet
+                isOpen={activeSheet === 'RATING'}
+                onClose={closeSheet}
+                onSubmit={handleRatingSubmit}
+              />
+
+              <LanguageSheet
+                isOpen={activeSheet === 'LANGUAGE'}
+                onClose={closeSheet}
+                selectedLanguage={selectedLanguage}
+                languages={languages}
+                onSelect={handleLanguageChange}
+              />
+
+              <TourCompleteSheet
+                isOpen={activeSheet === 'TOUR_COMPLETE'}
+                onClose={closeSheet}
+                onRateTour={handleRateTour}
+              />
+            </Suspense>
           </div>
-
-          {/* Floating Controls Removed - TourDetail handles the header */}
-
-          {/* Sheets - Lazy loaded for better initial bundle size */}
-          <Suspense fallback={null}>
-            <RatingSheet
-              isOpen={activeSheet === 'RATING'}
-              onClose={closeSheet}
-              onSubmit={handleRatingSubmit}
-            />
-
-            <LanguageSheet
-              isOpen={activeSheet === 'LANGUAGE'}
-              onClose={closeSheet}
-              selectedLanguage={selectedLanguage}
-              languages={languages}
-              onSelect={handleLanguageChange}
-            />
-
-            <TourCompleteSheet
-              isOpen={activeSheet === 'TOUR_COMPLETE'}
-              onClose={closeSheet}
-              onRateTour={handleRateTour}
-            />
-          </Suspense>
-        </div>
-      </MobileFrame>
+        </MobileFrame>
       </TranslationProvider>
     </ThemeProvider>
   );

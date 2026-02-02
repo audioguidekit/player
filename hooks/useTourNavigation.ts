@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Stop, TourData } from '../types';
 
 interface UseTourNavigationOptions {
@@ -16,7 +16,7 @@ interface UseTourNavigationReturn {
 
     // Actions
     setCurrentStopId: (id: string | null) => void;
-    setIsPlaying: (playing: boolean) => void;
+    setIsPlaying: (value: boolean | ((prev: boolean) => boolean)) => void;
     handlePlayPause: () => void;
     handleStopClick: (stopId: string) => void;
     handleStopPlayPause: (stopId: string) => void;
@@ -41,7 +41,20 @@ export const useTourNavigation = ({
     allowAutoPlay = true,
 }: UseTourNavigationOptions): UseTourNavigationReturn => {
     const [currentStopId, setCurrentStopId] = useState<string | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlayingInternal, setIsPlayingInternal] = useState(false);
+
+    // DEBUG: Wrap setIsPlaying to log all internal calls
+    const setIsPlaying = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
+        const stack = new Error().stack?.split('\n').slice(1, 4).join('\n');
+        if (typeof value === 'function') {
+            console.log('[DEBUG useTourNavigation setIsPlaying] Called with function updater\n', stack);
+        } else {
+            console.log(`[DEBUG useTourNavigation setIsPlaying] Setting to ${value}\n`, stack);
+        }
+        setIsPlayingInternal(value);
+    }, []);
+
+    const isPlaying = isPlayingInternal;
     const [isAudioCompleting, setIsAudioCompleting] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isSwitchingTracks, setIsSwitchingTracks] = useState(false);

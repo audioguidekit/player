@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 // Debug flag: enable via VITE_DEBUG_AUDIO=true or automatically in dev mode
-const DEBUG_AUDIO = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEBUG_AUDIO === 'true') || 
+const DEBUG_AUDIO = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DEBUG_AUDIO === 'true') ||
   (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
 
 const debugLog = (...args: unknown[]) => {
@@ -33,6 +33,8 @@ export interface UseAudioPlayerReturn {
   skipForward: (seconds?: number) => void;
   skipBackward: (seconds?: number) => void;
   audioElement: HTMLAudioElement | null;
+  play: () => Promise<void>;
+  pause: () => void;
 }
 
 // Create a singleton audio element to persist across component re-mounts
@@ -51,7 +53,12 @@ const getOrCreateAudioElement = (): HTMLAudioElement => {
 
     // CRITICAL FOR iOS: Append audio element to DOM
     // iOS Safari may need the audio element in the DOM for Media Session to work properly
-    globalAudioElement.style.display = 'none';
+    // NOTE: NOT using display:none - iOS may treat hidden audio elements differently for background audio
+    globalAudioElement.style.position = 'absolute';
+    globalAudioElement.style.width = '1px';
+    globalAudioElement.style.height = '1px';
+    globalAudioElement.style.overflow = 'hidden';
+    globalAudioElement.style.opacity = '0.01';
     document.body.appendChild(globalAudioElement);
     debugLog('[AUDIO] Audio element appended to DOM for iOS compatibility');
   }
@@ -139,14 +146,14 @@ export const useAudioPlayer = ({
     const handleTimeUpdate = () => {
       const audio = audioRef.current;
       if (!audio) return;
-      
+
       const ct = audio.currentTime;
       const dur = audio.duration;
-      
+
       if (!isFinite(ct)) return;
-      
+
       setCurrentTime(ct);
-      
+
       if (dur && isFinite(dur) && dur > 0) {
         const percentComplete = (ct / dur) * 100;
         setProgress(percentComplete);
@@ -160,7 +167,7 @@ export const useAudioPlayer = ({
     const handleEnded = () => {
       // Capture the source ID at the moment the event fires
       const eventSourceId = currentSourceIdRef.current;
-      
+
       // Use setTimeout to let any pending URL changes process first
       setTimeout(() => {
         // Check if the source ID is still the same - if not, this is a stale event
@@ -168,7 +175,7 @@ export const useAudioPlayer = ({
           debugLog('🏁 Audio ended - IGNORING (stale event from previous source)', { eventSourceId, current: currentSourceIdRef.current });
           return;
         }
-        
+
         debugLog('🏁 Audio ended - firing onEnded callback', { sourceId: eventSourceId, url: currentAudioUrlRef.current });
         setProgress(0);
         setCurrentTime(0);
@@ -191,7 +198,9 @@ export const useAudioPlayer = ({
       // Reset stall recovery attempts when audio plays successfully
       stallRecoveryAttempts = 0;
     };
-    const handlePause = () => debugLog('⏸️ Audio paused');
+    const handlePause = () => {
+      debugLog('⏸️ Audio paused');
+    };
 
     const handleStalled = () => {
       debugWarn('⚠️ Audio stalled');
@@ -267,27 +276,32 @@ export const useAudioPlayer = ({
     // This prevents double-loading and interrupting playback
     try {
       const normalizedNewSrc = new URL(audioUrl, window.location.href).href;
+      console.log('[AUDIO URL CHECK] audio.src:', audio.src);
+      console.log('[AUDIO URL CHECK] normalizedNewSrc:', normalizedNewSrc);
+      console.log('[AUDIO URL CHECK] match:', audio.src === normalizedNewSrc);
       if (audio.src === normalizedNewSrc) {
-        debugLog('[AUDIO] Source already set directly, syncing ref only');
+        console.log('[AUDIO] Source already set directly, syncing ref only - NO LOAD()');
         currentAudioUrlRef.current = audioUrl;
         currentSourceIdRef.current = ++audioSourceId;
         return;
       }
-    } catch {
+    } catch (e) {
+      console.log('[AUDIO URL CHECK] URL parsing failed:', e);
       // URL parsing failed, continue with normal flow
     }
 
-    debugLog('[AUDIO] Changing source to:', audioUrl);
+    console.log('[AUDIO] Changing source to:', audioUrl, '- WILL CALL LOAD()');
     currentAudioUrlRef.current = audioUrl;
     // Increment source ID BEFORE loading - this invalidates any pending ended events from previous source
     currentSourceIdRef.current = ++audioSourceId;
-    debugLog('[AUDIO] New source ID:', currentSourceIdRef.current);
-    
+    console.log('[AUDIO] New source ID:', currentSourceIdRef.current);
+
     setProgress(0);
     setCurrentTime(0);
     setDuration(0);
 
     audio.src = audioUrl;
+    console.log('[AUDIO] Calling load() - this will fire pause event');
     audio.load();
 
     if (isPlayingRef.current) {
@@ -314,40 +328,50 @@ export const useAudioPlayer = ({
 
   // Play/pause control
   useEffect(() => {
-    debugLog('🎮 Play/pause effect - isPlaying:', isPlaying, 'url:', audioUrl);
+    console.log('[useAudioPlayer] Play/pause effect - isPlaying:', isPlaying, 'audioUrl:', audioUrl?.slice(-30));
     const audio = audioRef.current;
     if (!audio || !audioUrl) {
-      debugLog('⚠️ No audio ref or URL');
+      console.log('[useAudioPlayer] No audio ref or URL - returning');
       return;
     }
 
     if (currentAudioUrlRef.current !== audioUrl) {
+      console.log('[useAudioPlayer] URL mismatch - waiting for URL sync');
       return;
     }
 
     if (isPlaying) {
+      console.log('[useAudioPlayer] isPlaying=true, audio.paused:', audio.paused, 'audio.ended:', audio.ended);
       if (!audio.paused && !audio.ended) {
+        console.log('[useAudioPlayer] Audio already playing - no action needed');
         return;
       }
-      debugLog('▶️ Attempting to play...');
+      console.log('[useAudioPlayer] Will attempt to play, readyState:', audio.readyState);
       if (audio.readyState >= 2) {
         audio.play().catch((error) => {
-          console.error('❌ Play failed:', error);
+          console.error('[useAudioPlayer] Play failed:', error);
           onPlayBlocked?.(error);
         });
       } else {
+        console.log('[useAudioPlayer] readyState < 2, calling load() first');
         audio.load();
         const handleCanPlay = () => {
           audio.play().catch((error) => {
-            console.error('❌ Play failed after canplay:', error);
+            console.error('[useAudioPlayer] Play failed after canplay:', error);
             onPlayBlocked?.(error);
           });
         };
         audio.addEventListener('canplay', handleCanPlay, { once: true });
       }
     } else {
-      debugLog('⏸️ Pausing audio');
-      audio.pause();
+      // Only pause if actually playing - avoid interfering with pendingAutoPlay flow
+      console.log('[useAudioPlayer] isPlaying=false, audio.paused:', audio.paused);
+      if (!audio.paused) {
+        console.log('[useAudioPlayer] Pausing audio');
+        audio.pause();
+      } else {
+        console.log('[useAudioPlayer] Audio already paused - no action needed');
+      }
     }
   }, [isPlaying, audioUrl, onPlayBlocked]);
 
@@ -382,6 +406,34 @@ export const useAudioPlayer = ({
     }
   }, []);
 
+  // Direct play method that returns a promise
+  // This allows setting isPlaying AFTER play succeeds (like working demo)
+  const play = useCallback((): Promise<void> => {
+    const audio = audioRef.current;
+    if (!audio) return Promise.reject(new Error('No audio element'));
+
+    if (audio.readyState >= 2) {
+      return audio.play();
+    } else {
+      // Wait for canplay event
+      return new Promise((resolve, reject) => {
+        const handleCanPlay = () => {
+          audio.play().then(resolve).catch(reject);
+          audio.removeEventListener('canplay', handleCanPlay);
+        };
+        audio.addEventListener('canplay', handleCanPlay, { once: true });
+        audio.load();
+      });
+    }
+  }, []);
+
+  // Direct pause method
+  const pause = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  }, []);
+
   return {
     progress,
     duration,
@@ -390,5 +442,7 @@ export const useAudioPlayer = ({
     skipForward,
     skipBackward,
     audioElement: audioRef.current,
+    play,
+    pause,
   };
 };
