@@ -149,40 +149,6 @@ const App: React.FC = () => {
   // Eager asset preloading hook
   const { assetsReady } = useEagerAssetPreloader({ tour });
 
-  // CRITICAL FOR iOS: Pre-load first audio into the singleton element
-  // This ensures audio is ALREADY LOADED when user clicks "Start tour"
-  // iOS requires actual audio playback (not just buffering) for Media Session to activate
-  const hasPreloadedSingletonRef = useRef(false);
-  useEffect(() => {
-    if (!tour || !assetsReady || hasPreloadedSingletonRef.current) return;
-    if (!audioPlayer.audioElement) return;
-
-    const firstAudioStop = tour.stops.find(s => s.type === 'audio');
-    if (!firstAudioStop || firstAudioStop.type !== 'audio') return;
-
-    const audioUrl = firstAudioStop.audioFile;
-    const audio = audioPlayer.audioElement;
-
-    // Only preload if not already playing something
-    if (audio.src && !audio.paused) return;
-
-    console.log('[iOS PRELOAD] Pre-loading first audio into singleton:', audioUrl);
-    audio.src = audioUrl;
-    audio.load();
-
-    const handleCanPlay = () => {
-      console.log('[iOS PRELOAD] ✅ First audio ready in singleton (canplay)');
-      hasPreloadedSingletonRef.current = true;
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-
-    audio.addEventListener('canplay', handleCanPlay);
-
-    return () => {
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-  }, [tour, assetsReady, audioPlayer.audioElement]);
-
   // Deep link hook - handles initial deep link on page load only
   useDeepLink({
     urlStopId,
@@ -287,6 +253,40 @@ const App: React.FC = () => {
     onProgress: handleAudioProgress,
     onPlayBlocked: handlePlayBlocked,
   });
+
+  // CRITICAL FOR iOS: Pre-load first audio into the singleton element
+  // This ensures audio is ALREADY LOADED when user clicks "Start tour"
+  // iOS requires actual audio playback (not just buffering) for Media Session to activate
+  const hasPreloadedSingletonRef = useRef(false);
+  useEffect(() => {
+    if (!tour || !assetsReady || hasPreloadedSingletonRef.current) return;
+    if (!audioPlayer.audioElement) return;
+
+    const firstAudioStop = tour.stops.find(s => s.type === 'audio');
+    if (!firstAudioStop || firstAudioStop.type !== 'audio') return;
+
+    const audioUrl = firstAudioStop.audioFile;
+    const audio = audioPlayer.audioElement;
+
+    // Only preload if not already playing something
+    if (audio.src && !audio.paused) return;
+
+    console.log('[iOS PRELOAD] Pre-loading first audio into singleton:', audioUrl);
+    audio.src = audioUrl;
+    audio.load();
+
+    const handleCanPlay = () => {
+      console.log('[iOS PRELOAD] ✅ First audio ready in singleton (canplay)');
+      hasPreloadedSingletonRef.current = true;
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+
+    audio.addEventListener('canplay', handleCanPlay);
+
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [tour, assetsReady, audioPlayer.audioElement]);
 
   // AUTO-RESUME: Restore playback position when resuming
   useEffect(() => {
