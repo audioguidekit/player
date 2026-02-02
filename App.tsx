@@ -149,6 +149,40 @@ const App: React.FC = () => {
   // Eager asset preloading hook
   const { assetsReady } = useEagerAssetPreloader({ tour });
 
+  // CRITICAL FOR iOS: Pre-load first audio into the singleton element
+  // This ensures audio is ALREADY LOADED when user clicks "Start tour"
+  // iOS requires actual audio playback (not just buffering) for Media Session to activate
+  const hasPreloadedSingletonRef = useRef(false);
+  useEffect(() => {
+    if (!tour || !assetsReady || hasPreloadedSingletonRef.current) return;
+    if (!audioPlayer.audioElement) return;
+
+    const firstAudioStop = tour.stops.find(s => s.type === 'audio');
+    if (!firstAudioStop || firstAudioStop.type !== 'audio') return;
+
+    const audioUrl = firstAudioStop.audioFile;
+    const audio = audioPlayer.audioElement;
+
+    // Only preload if not already playing something
+    if (audio.src && !audio.paused) return;
+
+    console.log('[iOS PRELOAD] Pre-loading first audio into singleton:', audioUrl);
+    audio.src = audioUrl;
+    audio.load();
+
+    const handleCanPlay = () => {
+      console.log('[iOS PRELOAD] ✅ First audio ready in singleton (canplay)');
+      hasPreloadedSingletonRef.current = true;
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+
+    audio.addEventListener('canplay', handleCanPlay);
+
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [tour, assetsReady, audioPlayer.audioElement]);
+
   // Deep link hook - handles initial deep link on page load only
   useDeepLink({
     urlStopId,
@@ -349,17 +383,32 @@ const App: React.FC = () => {
             console.log('[iOS DEBUG] 1. Metadata set:', stopData.title, '| metadata.title:', navigator.mediaSession.metadata?.title);
           }
 
-          // 2. Set audio source and play DIRECTLY in click handler
+          // 2. Set audio source (only if not already set) and play DIRECTLY in click handler
           if (audioPlayer.audioElement && audioUrl) {
-            console.log('[iOS DEBUG] 2. Setting audio src:', audioUrl);
-            audioPlayer.audioElement.src = audioUrl;
+            const audio = audioPlayer.audioElement;
+
+            // Check if audio is already loaded at this URL (from preload)
+            try {
+              const normalizedUrl = new URL(audioUrl, window.location.href).href;
+              const isAlreadyLoaded = audio.src === normalizedUrl && audio.readyState >= 2;
+
+              if (isAlreadyLoaded) {
+                console.log('[iOS DEBUG] 2. Audio already preloaded, readyState:', audio.readyState);
+              } else {
+                console.log('[iOS DEBUG] 2. Setting audio src:', audioUrl);
+                audio.src = audioUrl;
+              }
+            } catch {
+              console.log('[iOS DEBUG] 2. Setting audio src:', audioUrl);
+              audio.src = audioUrl;
+            }
 
             // CRITICAL: Set playbackState BEFORE calling play() - iOS may need this
             navigator.mediaSession.playbackState = 'playing';
             console.log('[iOS DEBUG] 3. playbackState set to playing BEFORE play(), actual value:', navigator.mediaSession.playbackState);
 
-            console.log('[iOS DEBUG] 4. Calling play() directly in click handler');
-            audioPlayer.audioElement.play().then(() => {
+            console.log('[iOS DEBUG] 4. Calling play() directly in click handler, readyState:', audio.readyState);
+            audio.play().then(() => {
               console.log('[iOS DEBUG] 5. play() succeeded');
             }).catch(err => {
               console.error('[iOS DEBUG] play() failed:', err);
