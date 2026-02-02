@@ -403,21 +403,10 @@ const App: React.FC = () => {
               audio.src = audioUrl;
             }
 
-            // iOS WORKAROUND: The difference between Start tour and manual pause/play is:
-            // - Start tour: audio.play() called directly in click handler
-            // - Manual play: audio.play() called from React effect
-            //
-            // Strategy: Unlock audio with direct play(), then let React effect take over
-            console.log('[iOS DEBUG] 3. Unlocking audio with direct play(), readyState:', audio.readyState);
-            audio.play().then(() => {
-              console.log('[iOS DEBUG] 4. Audio unlocked, now pausing to let React effect take over');
-              // Immediately pause - React state is about to be set to isPlaying=true
-              // which will trigger the effect to call play() - this is the flow that works
-              audio.pause();
-              console.log('[iOS DEBUG] 5. Paused, React effect should now call play()');
-            }).catch(err => {
-              console.error('[iOS DEBUG] play() failed:', err);
-            });
+            // iOS TEST: Don't call play() directly - let React effect handle it
+            // The audio is already preloaded (readyState >= 2), so iOS might not need user gesture
+            // This matches the flow when user manually clicks pause/play (which works)
+            console.log('[iOS DEBUG] 3. NOT calling play() directly - letting React effect handle it, readyState:', audio.readyState);
           }
         }
 
