@@ -47,3 +47,6 @@ _private/
 
 # Vercel
 .vercel/
+
+# Create package (separate repo)
+create-audioguidekit-player/
