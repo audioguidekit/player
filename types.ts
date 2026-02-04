@@ -16,6 +16,9 @@ export interface TourMetadata {
   collectFeedback?: boolean;
   image?: string;
   showLanguageLabel?: boolean; // Show language name next to flag in selector (default: true)
+  showStopImage?: boolean;     // Show stop image in cards (default: true)
+  showStopDuration?: boolean;  // Show duration on cards (default: true)
+  showStopNumber?: boolean;    // Show number indicator (default: true)
 }
 
 export interface BaseStop {
@@ -100,6 +103,9 @@ export interface TourData {
   transcriptAvailable?: boolean;
   collectFeedback?: boolean; // Show rating button on main screen (default: true)
   showLanguageLabel?: boolean; // Show language name next to flag in selector (default: true)
+  showStopImage?: boolean;     // Show stop image in cards (default: true)
+  showStopDuration?: boolean;  // Show duration on cards (default: true)
+  showStopNumber?: boolean;    // Show number indicator (default: true)
 }
 
 export interface Language {

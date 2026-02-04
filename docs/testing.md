@@ -48,12 +48,13 @@ Tests are located in `/tests/` directory:
 
 ```
 tests/
-├── helpers.ts           # Test utilities (tour/language discovery)
-├── app.spec.ts          # Core app functionality
-├── tour-flow.spec.ts    # Tour navigation and flow
-├── audio-player.spec.ts # Audio playback features
-├── language.spec.ts     # Multi-language system
-└── pwa.spec.ts          # PWA and offline features
+├── helpers.ts              # Test utilities (tour/language discovery)
+├── app.spec.ts             # Core app functionality
+├── tour-flow.spec.ts       # Tour navigation and flow
+├── audio-player.spec.ts    # Audio playback features
+├── language.spec.ts        # Multi-language system
+├── pwa.spec.ts             # PWA and offline features
+└── stop-card-display.spec.ts # Stop card display options
 ```
 
 > **Note:** Tests are generic and don't hardcode tour names or languages. They dynamically discover available tours and languages at runtime, making them work with any tour content.
@@ -119,6 +120,23 @@ Tests Progressive Web App features.
 | `should register service worker` | `navigator.serviceWorker` API available |
 | `should have IndexedDB available` | `indexedDB` API available for offline storage |
 | `should cache tour data for offline use` | `caches` API available |
+
+### `stop-card-display.spec.ts` - Stop Card Display Tests
+
+Tests the configurable stop card display options. Modifies `metadata.json` to test all 8 combinations of `showStopImage`, `showStopDuration`, and `showStopNumber` settings.
+
+| Test | What it verifies |
+|------|------------------|
+| `1-full-card` | Default card layout with image, duration, and number |
+| `2-card-no-number` | Card without number indicator |
+| `3-card-no-duration` | Card without duration badge |
+| `4-card-minimal` | Card with image only |
+| `5-list-full` | List layout with number and duration |
+| `6-list-no-number` | List layout with duration only |
+| `7-list-no-duration` | List layout with number only |
+| `8-list-minimal` | List layout with title only |
+
+> **Note:** These tests modify `src/data/tour/metadata.json` to trigger Vite HMR rebuilds. The original file is restored after tests complete.
 
 ## Configuration
 

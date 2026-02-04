@@ -216,6 +216,9 @@ export const TourDetail = React.memo<TourDetailProps>(({
                   isPlaying={stopIsPlaying}
                   isCompleted={isStopCompleted(stop.id)}
                   onClick={() => handleStopClick(stop.id)}
+                  showImage={tour.showStopImage}
+                  showDuration={tour.showStopDuration}
+                  showNumber={tour.showStopNumber}
                 />
               </StopItemWrapper>
             );

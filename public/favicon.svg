@@ -1,6 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <!-- Soundwave: three vertical bars with rounded edges -->
-  <rect x="6" y="11" width="5" height="10" rx="2.5" fill="#FD8686"/>
-  <rect x="13.5" y="6" width="5" height="20" rx="2.5" fill="#FD8686"/>
-  <rect x="21" y="9" width="5" height="14" rx="2.5" fill="#FD8686"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <rect width="256" height="256" rx="48" fill="#1a1a1a"/>
+  <path d="M128 52c-41.4 0-75 33.6-75 75v25c0 8.3 6.7 15 15 15h15c8.3 0 15-6.7 15-15v-30c0-8.3-6.7-15-15-15h-15c0-33.1 26.9-60 60-60s60 26.9 60 60h-15c-8.3 0-15 6.7-15 15v30c0 8.3 6.7 15 15 15h15c8.3 0 15-6.7 15-15v-25c0-41.4-33.6-75-75-75z" fill="#ffffff"/>
 </svg>

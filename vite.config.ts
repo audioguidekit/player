@@ -5,6 +5,35 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import macrosPlugin from 'vite-plugin-babel-macros';
 
+// Sync tour data from src to public for test HTTP access
+function syncTourDataPlugin(): Plugin {
+  const srcDir = 'src/data/tour';
+  const destDir = 'public/data/tour';
+
+  function syncFiles() {
+    if (!fs.existsSync(srcDir)) return;
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.json'));
+    for (const file of files) {
+      fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+    }
+  }
+
+  return {
+    name: 'sync-tour-data',
+    buildStart() {
+      syncFiles();
+    },
+    handleHotUpdate({ file }) {
+      if (file.includes('src/data/tour') && file.endsWith('.json')) {
+        syncFiles();
+      }
+    }
+  };
+}
+
 // React Grab plugin - injects client scripts when enabled
 function reactGrabPlugin(): Plugin {
   let enabled = false;
@@ -50,6 +79,7 @@ export default defineConfig(({ mode }) => {
       logOverride: { 'this-is-undefined-in-esm': 'silent' }
     },
     plugins: [
+      syncTourDataPlugin(),
       reactGrabPlugin(),
       react({
         babel: {

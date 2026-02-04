@@ -12,27 +12,17 @@ Tours are automatically discovered - no manifest needed.
 
 ## Tour File Structure
 
-Tours must exist in **two locations** for different purposes:
+Place tour files in `src/data/tour/`:
 
 ```
-/src/data/tour/          # For build-time discovery (import.meta.glob)
-├── metadata.json
-├── en.json
-├── cs.json
-└── de.json
-
-/src/data/tour/       # For runtime HTTP access (tests, service worker)
-├── metadata.json
-├── en.json
-├── cs.json
-└── de.json
+/src/data/tour/
+├── metadata.json    # Shared properties (id, theme, offline mode, etc.)
+├── en.json          # English tour content
+├── cs.json          # Czech tour content
+└── de.json          # German tour content
 ```
 
-**Why two locations?**
-- `src/data/tour/` - Vite's `import.meta.glob` requires files in the src directory for build-time bundling
-- `src/data/tour/` - Files served at `/data/tour/*.json` for runtime access (tests, offline caching)
-
-**Keep both directories in sync** when adding or modifying tours.
+> **Note:** Files are automatically synced to `public/data/tour/` by Vite for test HTTP access. You only need to maintain the `src/` version.
 
 ### metadata.json - Shared Properties
 
@@ -61,7 +51,56 @@ The `metadata.json` file contains properties shared across all language versions
 | `transcriptAvailable` | boolean | | Show transcription toggle | `true` |
 | `collectFeedback` | boolean | | Show rating button | `true` |
 | `showLanguageLabel` | boolean | | Show language name next to flag | `true` (default) |
+| `showStopImage` | boolean | | Show stop images in cards | `true` (default) |
+| `showStopDuration` | boolean | | Show duration on stop cards | `true` (default) |
+| `showStopNumber` | boolean | | Show number indicator on stops | `true` (default) |
 | `image` | string | | Default tour cover image | Full HTTPS URL |
+
+### Stop Card Display Options
+
+You can customize how stop cards appear in the tour detail view using three settings:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `showStopImage` | `true` | Show stop image in cards |
+| `showStopDuration` | `true` | Show duration badge/text |
+| `showStopNumber` | `true` | Show number indicator (1, 2, 3...) |
+
+**Layout Behavior:**
+
+When `showStopImage` is `true`, stops display as **cards** with images:
+- Duration badge appears on the image (top-right)
+- Number circle appears below the image (left of title)
+
+When `showStopImage` is `false`, stops display as **list items**:
+- Compact rows with dividers between items
+- Duration appears right-aligned
+- Number circle appears left of title
+
+**Example Combinations:**
+
+| Image | Duration | Number | Result |
+|-------|----------|--------|--------|
+| `true` | `true` | `true` | Full card (default) |
+| `true` | `true` | `false` | Card without number circle |
+| `true` | `false` | `true` | Card without duration badge |
+| `false` | `true` | `true` | List: `[1] Title ......... 5:30` |
+| `false` | `true` | `false` | List: `Title ......... 5:30` |
+| `false` | `false` | `true` | List: `[1] Title` |
+| `false` | `false` | `false` | List: `Title` (minimal) |
+
+**Configuration Example:**
+
+```json
+{
+  "id": "museum-tour",
+  "showStopImage": false,
+  "showStopDuration": true,
+  "showStopNumber": true
+}
+```
+
+This creates a compact list view, ideal for tours with many stops or when images aren't available.
 
 ### Language Files - Translatable Content
 

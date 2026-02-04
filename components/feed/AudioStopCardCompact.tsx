@@ -13,6 +13,9 @@ interface AudioStopCardCompactProps {
   isCompleted?: boolean;
   onClick?: () => void;
   id?: string;
+  showImage?: boolean;
+  showDuration?: boolean;
+  showNumber?: boolean;
 }
 
 const OuterContainer = styled.div`
@@ -119,6 +122,23 @@ const Title = styled.h3`
   color: ${({ theme }) => theme.cards.textColor};
 `;
 
+// List item layout components (when showImage is false)
+const ListItemContainer = styled.div`
+  ${tw`flex items-center gap-3 py-3 cursor-pointer`}
+  border-bottom: 1px solid ${({ theme }) => theme.cards.borderColor};
+`;
+
+const ListItemDuration = styled.span`
+  ${tw`shrink-0`}
+  font-family: ${({ theme }) =>
+    theme?.typography?.fontFamily?.numbers
+      ? theme.typography.fontFamily.numbers.join(', ')
+      : theme?.typography?.fontFamily?.sans?.join(', ') || 'Inter, sans-serif'
+  };
+  font-size: ${({ theme }) => theme.cards.durationBadgeFontSize};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
 // Remove React.memo - let parent (TourDetail) control re-renders
 // This ensures the component always gets fresh isPlaying prop
 export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
@@ -128,70 +148,131 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
   isPlaying = false,
   isCompleted = false,
   onClick,
-  id
+  id,
+  showImage,
+  showDuration,
+  showNumber
 }) => {
-  // Use conditional rendering to remove animated elements from DOM when not playing
-  // When elements are removed, their CSS animations stop immediately
+  // Use !== false pattern for defaults (same as showLanguageLabel in TourStart.tsx)
+  const shouldShowImage = showImage !== false;
+  const shouldShowDuration = showDuration !== false;
+  const shouldShowNumber = showNumber !== false;
+
+  // List item layout when image is hidden
+  if (!shouldShowImage) {
+    return (
+      <OuterContainer id={id}>
+        <ListItemContainer onClick={onClick}>
+          {shouldShowNumber && (
+            <NumberContainer>
+              <AnimatePresence>
+                {isPlaying && !isCompleted && (
+                  <SpinnerRing
+                    as={motion.svg}
+                    key={`spinner-${item.id}`}
+                    viewBox="0 0 28 28"
+                    className="audio-spinner-ring"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <circle
+                      cx="14"
+                      cy="14"
+                      r="12.5"
+                      fill="none"
+                      strokeWidth="3"
+                      strokeDasharray="20 58.5"
+                      strokeLinecap="round"
+                      transform="rotate(-90 14 14)"
+                    />
+                  </SpinnerRing>
+                )}
+              </AnimatePresence>
+              <NumberCircle $isPlaying={isPlaying}>
+                <NumberText $isPlaying={isPlaying}>{index + 1}</NumberText>
+              </NumberCircle>
+              <AnimatedCheckmark
+                isVisible={isCompleted}
+                size={8}
+                uniqueKey={item.id}
+                className="absolute inset-0"
+              />
+            </NumberContainer>
+          )}
+          <Title style={{ flex: 1 }}>{item.title}</Title>
+          {shouldShowDuration && <ListItemDuration>{item.duration}</ListItemDuration>}
+        </ListItemContainer>
+      </OuterContainer>
+    );
+  }
+
+  // Full card layout (existing code with conditional elements)
   return (
     <OuterContainer id={id}>
       <CardContainer onClick={onClick} className="group">
         <ImageContainer>
           <Image src={item.image} alt={item.title} />
-          <DurationBadge>
-            <AnimatePresence mode="wait">
-              {isPlaying && (
-                <LoaderContainer
-                  key={`loader-${item.id}`}
-                  initial={{ width: 0, opacity: 0, marginRight: 0 }}
-                  animate={{ width: 24, opacity: 1, marginRight: 8 }}
-                  exit={{ width: 0, opacity: 0, marginRight: 0 }}
-                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <span className="audio-playing-loader" />
-                </LoaderContainer>
-              )}
-            </AnimatePresence>
-            <DurationText>{item.duration}</DurationText>
-          </DurationBadge>
+          {shouldShowDuration && (
+            <DurationBadge>
+              <AnimatePresence mode="wait">
+                {isPlaying && (
+                  <LoaderContainer
+                    key={`loader-${item.id}`}
+                    initial={{ width: 0, opacity: 0, marginRight: 0 }}
+                    animate={{ width: 24, opacity: 1, marginRight: 8 }}
+                    exit={{ width: 0, opacity: 0, marginRight: 0 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <span className="audio-playing-loader" />
+                  </LoaderContainer>
+                )}
+              </AnimatePresence>
+              <DurationText>{item.duration}</DurationText>
+            </DurationBadge>
+          )}
         </ImageContainer>
 
         <BottomSection>
-          <NumberContainer>
-            <AnimatePresence>
-              {isPlaying && !isCompleted && (
-                <SpinnerRing
-                  as={motion.svg}
-                  key={`spinner-${item.id}`}
-                  viewBox="0 0 28 28"
-                  className="audio-spinner-ring"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <circle
-                    cx="14"
-                    cy="14"
-                    r="12.5"
-                    fill="none"
-                    strokeWidth="3"
-                    strokeDasharray="20 58.5"
-                    strokeLinecap="round"
-                    transform="rotate(-90 14 14)"
-                  />
-                </SpinnerRing>
-              )}
-            </AnimatePresence>
-            <NumberCircle $isPlaying={isPlaying}>
-              <NumberText $isPlaying={isPlaying}>{index + 1}</NumberText>
-            </NumberCircle>
-            <AnimatedCheckmark
-              isVisible={isCompleted}
-              size={8}
-              uniqueKey={item.id}
-              className="absolute inset-0"
-            />
-          </NumberContainer>
+          {shouldShowNumber && (
+            <NumberContainer>
+              <AnimatePresence>
+                {isPlaying && !isCompleted && (
+                  <SpinnerRing
+                    as={motion.svg}
+                    key={`spinner-${item.id}`}
+                    viewBox="0 0 28 28"
+                    className="audio-spinner-ring"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <circle
+                      cx="14"
+                      cy="14"
+                      r="12.5"
+                      fill="none"
+                      strokeWidth="3"
+                      strokeDasharray="20 58.5"
+                      strokeLinecap="round"
+                      transform="rotate(-90 14 14)"
+                    />
+                  </SpinnerRing>
+                )}
+              </AnimatePresence>
+              <NumberCircle $isPlaying={isPlaying}>
+                <NumberText $isPlaying={isPlaying}>{index + 1}</NumberText>
+              </NumberCircle>
+              <AnimatedCheckmark
+                isVisible={isCompleted}
+                size={8}
+                uniqueKey={item.id}
+                className="absolute inset-0"
+              />
+            </NumberContainer>
+          )}
           <Title>{item.title}</Title>
         </BottomSection>
       </CardContainer>
