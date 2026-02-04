@@ -15,11 +15,11 @@ interface TourHeaderProps {
 }
 
 const Container = styled(motion.div)`
-  ${tw`sticky top-0 z-30 px-6 py-2 backdrop-blur-md`}
-  /* iOS PWA safe area: header extends behind status bar, content is padded down */
+  ${tw`sticky z-30 px-6 py-2 backdrop-blur-md`}
+  /* iOS PWA safe area: position header BELOW the notch/status bar */
   /* iOS 11.0-11.2 used constant(), iOS 11.2+ uses env() */
-  padding-top: calc(constant(safe-area-inset-top, 0px) + 0.5rem);
-  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  top: constant(safe-area-inset-top, 0px);
+  top: env(safe-area-inset-top, 0px);
   background-color: ${({ theme }) => theme.header.backgroundColor};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border.light};
 `;
