@@ -202,7 +202,9 @@ export const TourDetail = React.memo<TourDetailProps>(({
         transition={scrollableListTransition}
         className="no-scrollbar"
       >
-        {tour.stops.map((stop, index) => {
+        {tour.stops
+          .filter(stop => !(stop.type === 'rating' && tour.collectFeedback === false))
+          .map((stop, index) => {
           // Render audio stops with compact card
           if (stop.type === 'audio') {
             const stopIsPlaying = stop.id === currentStopId && isPlaying;
