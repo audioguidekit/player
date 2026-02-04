@@ -24,6 +24,29 @@ export const GlobalStyles = createGlobalStyle<{ theme?: ExtendedTheme }>`
     }
   }
 
+  /* iOS PWA: Status bar backdrop for notch/Dynamic Island area
+     Creates a fixed element that covers the safe area at the top
+     This ensures scrolling content is obscured behind the status bar */
+  @supports (-webkit-touch-callout: none) and (padding: env(safe-area-inset-top)) {
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      /* Height matches the safe area (notch/Dynamic Island + status bar) */
+      /* iOS 11.0-11.2 used constant() */
+      height: constant(safe-area-inset-top, 0px);
+      height: env(safe-area-inset-top, 0px);
+      /* Blurred backdrop matching iOS status bar style */
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      background-color: rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+    }
+  }
+
   body {
     margin: 0;
     padding: 0;
