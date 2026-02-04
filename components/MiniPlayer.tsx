@@ -80,7 +80,7 @@ const ExpandedContent = styled(motion.div)`
 `;
 
 const ExpandedInner = styled(motion.div)`
-  ${tw`pt-10 pb-6`}
+  ${tw`pt-10 pb-2`}
 `;
 
 const ControlsRow = styled.div`
@@ -110,8 +110,8 @@ const TitleText = styled(motion.span)`
 `;
 
 const MinimizedContent = styled(motion.div)`
-  ${tw`flex items-center flex-1 min-w-0 px-8 py-2 pt-4 gap-3 w-full`}
-  height: 80px;
+  ${tw`flex items-center flex-1 min-w-0 px-8 pt-4 pb-1 gap-3 w-full`}
+  height: 72px;
 `;
 
 const MinimizedInner = styled(motion.div)`
