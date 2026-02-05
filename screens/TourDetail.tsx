@@ -228,7 +228,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
           // Render other content types with FeedItemRenderer
           return (
             <StopItemWrapper key={stop.id}>
-              <FeedItemRenderer item={stop} onOpenRatingSheet={onOpenRatingSheet} />
+              <FeedItemRenderer item={stop} onOpenRatingSheet={onOpenRatingSheet} compactLayout={tour.showStopImage !== true} />
             </StopItemWrapper>
           );
         })}

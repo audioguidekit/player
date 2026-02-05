@@ -10,18 +10,21 @@ import { useTranslation } from '../../src/translations';
 interface RatingCardProps {
   item: RatingStop;
   onOpenRatingSheet?: () => void;
+  compactLayout?: boolean;
 }
 
-const Container = styled.div`
+const Container = styled.div<{ $compactLayout?: boolean }>`
   ${tw`relative p-6 mb-4 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
+  ${({ $compactLayout }) => $compactLayout && tw`mt-6`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
   border-radius: ${({ theme }) => theme.cards.borderRadius};
   box-shadow: ${({ theme }) => theme.cards.shadow};
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
-const SuccessContainer = styled(motion.div)`
+const SuccessContainer = styled(motion.div)<{ $compactLayout?: boolean }>`
   ${tw`relative p-10 mb-4 cursor-pointer transition-transform active:scale-[0.99] overflow-hidden`}
+  ${({ $compactLayout }) => $compactLayout && tw`mt-6`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
   border-radius: ${({ theme }) => theme.cards.borderRadius};
   box-shadow: ${({ theme }) => theme.cards.shadow};
@@ -74,7 +77,7 @@ const HintText = styled(motion.span)`
   color: ${({ theme }) => theme.colors.text.tertiary};
 `;
 
-export const RatingCard: React.FC<RatingCardProps> = ({ item, onOpenRatingSheet }) => {
+export const RatingCard: React.FC<RatingCardProps> = ({ item, onOpenRatingSheet, compactLayout }) => {
   const { rating, setRating, isSubmitted } = useRating();
   const { t } = useTranslation();
 
@@ -89,6 +92,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ item, onOpenRatingSheet 
   if (isSubmitted) {
     return (
       <SuccessContainer
+        $compactLayout={compactLayout}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
       >
@@ -104,7 +108,7 @@ export const RatingCard: React.FC<RatingCardProps> = ({ item, onOpenRatingSheet 
   }
 
   return (
-    <Container>
+    <Container $compactLayout={compactLayout}>
       <HeaderSection>
         <Title>
           {item.question || t.rating.title}

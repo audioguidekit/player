@@ -34,7 +34,7 @@ export const defaultLightTheme: ThemeConfig = {
     borderRadius: '6px',
     shadow: 'none', // Flat design
     titleFontSize: '18px',
-    titleFontWeight: '600',
+    titleFontWeight: '400',
     durationBadgeFontSize: '13px',
     numberFontSize: '14px',
     numberFontWeight: '500',
@@ -42,6 +42,10 @@ export const defaultLightTheme: ThemeConfig = {
       placeholderColor: '#F0F0F0',
       durationBadgeBackground: 'rgba(255, 255, 255, 0.8)',
       durationBadgeText: '#1A1A1A',
+    },
+    thumbnail: {
+      borderRadius: '8px',
+      size: '56px',
     },
   },
 

@@ -13,7 +13,7 @@ interface AudioStopCardCompactProps {
   isCompleted?: boolean;
   onClick?: () => void;
   id?: string;
-  showImage?: boolean;
+  showImage?: boolean | 'thumbnail';
   showDuration?: boolean;
   showNumber?: boolean;
 }
@@ -139,6 +139,24 @@ const ListItemDuration = styled.span`
   color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
+// Thumbnail list layout components (when showImage is 'thumbnail')
+const ThumbnailOuterContainer = styled.div`
+  ${tw`w-full`}
+`;
+
+const ThumbnailListContainer = styled.div`
+  ${tw`flex items-center gap-3 py-3 cursor-pointer`}
+  border-bottom: 1px solid ${({ theme }) => theme.cards.borderColor};
+`;
+
+const ThumbnailImage = styled.img`
+  ${tw`shrink-0 object-cover`}
+  width: ${({ theme }) => theme.cards.thumbnail.size};
+  height: ${({ theme }) => theme.cards.thumbnail.size};
+  border-radius: ${({ theme }) => theme.cards.thumbnail.borderRadius};
+  background-color: ${({ theme }) => theme.cards.image.placeholderColor};
+`;
+
 // Remove React.memo - let parent (TourDetail) control re-renders
 // This ensures the component always gets fresh isPlaying prop
 export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
@@ -155,8 +173,60 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
 }) => {
   // Use !== false pattern for defaults (same as showLanguageLabel in TourStart.tsx)
   const shouldShowImage = showImage !== false;
+  const isThumbnail = showImage === 'thumbnail';
   const shouldShowDuration = showDuration !== false;
   const shouldShowNumber = showNumber !== false;
+
+  // Thumbnail list layout
+  if (isThumbnail) {
+    return (
+      <ThumbnailOuterContainer id={id}>
+        <ThumbnailListContainer onClick={onClick}>
+          {shouldShowNumber && (
+            <NumberContainer>
+              <AnimatePresence>
+                {isPlaying && !isCompleted && (
+                  <SpinnerRing
+                    as={motion.svg}
+                    key={`spinner-${item.id}`}
+                    viewBox="0 0 28 28"
+                    className="audio-spinner-ring"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <circle
+                      cx="14"
+                      cy="14"
+                      r="12.5"
+                      fill="none"
+                      strokeWidth="3"
+                      strokeDasharray="20 58.5"
+                      strokeLinecap="round"
+                      transform="rotate(-90 14 14)"
+                    />
+                  </SpinnerRing>
+                )}
+              </AnimatePresence>
+              <NumberCircle $isPlaying={isPlaying}>
+                <NumberText $isPlaying={isPlaying}>{index + 1}</NumberText>
+              </NumberCircle>
+              <AnimatedCheckmark
+                isVisible={isCompleted}
+                size={8}
+                uniqueKey={item.id}
+                className="absolute inset-0"
+              />
+            </NumberContainer>
+          )}
+          <ThumbnailImage src={item.image} alt={item.title} />
+          <Title style={{ flex: 1 }}>{item.title}</Title>
+          {shouldShowDuration && <ListItemDuration>{item.duration}</ListItemDuration>}
+        </ThumbnailListContainer>
+      </ThumbnailOuterContainer>
+    );
+  }
 
   // List item layout when image is hidden
   if (!shouldShowImage) {

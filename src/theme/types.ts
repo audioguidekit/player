@@ -44,6 +44,10 @@ export interface ThemeConfig {
       durationBadgeBackground: string;
       durationBadgeText: string;
     };
+    thumbnail: {
+      borderRadius: string; // e.g., "8px"
+      size: string;         // e.g., "56px" — width & height of the square thumbnail
+    };
   };
 
   // Step Indicators (for active/current stop)

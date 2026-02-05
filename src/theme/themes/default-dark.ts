@@ -43,6 +43,10 @@ export const defaultDarkTheme: ThemeConfig = {
       durationBadgeBackground: 'rgba(0, 0, 0, 0.6)',
       durationBadgeText: '#FFFFFF',
     },
+    thumbnail: {
+      borderRadius: '8px',
+      size: '56px',
+    },
   },
 
   stepIndicators: {
