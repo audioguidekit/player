@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { SkipBackIcon, SkipForwardIcon, XIcon, ClosedCaptioningIcon } from '@phosphor-icons/react';
 import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
 import tw from 'twin.macro';
@@ -10,6 +10,8 @@ import { SkipButton } from './player/SkipButton';
 import { PlayPauseButton } from './player/PlayPauseButton';
 import { ProgressRing } from './player/ProgressRing';
 import { iconVariants, iconTransition } from '../src/animations/variants';
+
+const FullscreenPlayerContent = lazy(() => import('../screens/FullscreenPlayer').then(m => ({ default: m.FullscreenPlayerContent })));
 
 interface MiniPlayerProps {
   currentStop: AudioStop | undefined;
@@ -33,10 +35,25 @@ interface MiniPlayerProps {
   transcriptAvailable?: boolean;
   isTranscriptionExpanded?: boolean;
   onToggleTranscription?: (expanded: boolean) => void;
+  // Fullscreen player
+  isFullscreenOpen?: boolean;
+  onFullscreenChange?: (open: boolean) => void;
+  // Extra props needed for fullscreen content
+  tourTitle?: string;
+  stopNumber?: number;
+  currentTime?: number;
+  duration?: number;
+  onSeek?: (time: number) => void;
 }
 
+// Root wrapper — display:contents so children position against the MobileFrame parent
+const PlayerRoot = styled.div`
+  display: contents;
+`;
+
+// Container — always the bottom bar, never morphs to fullscreen
 const Container = styled(motion.div)`
-  ${tw`absolute bottom-0 left-0 right-0 z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-[2.5rem] overflow-hidden`}
+  ${tw`absolute bottom-0 left-0 right-0 z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] overflow-hidden rounded-t-[2.5rem]`}
   background-color: ${({ theme }) => theme.miniPlayer.backgroundColor};
   padding-bottom: calc(200px + ${({ theme }) => theme.platform.safeArea.bottom});
   margin-bottom: -200px;
@@ -58,15 +75,18 @@ const SwipeIcon = styled(motion.div)<{ $canNavigate: boolean }>(({ $canNavigate,
   },
 ]);
 
+// ForegroundCard — no layout prop, no fullscreen state
 const ForegroundCard = styled(motion.div)<{ $isExpanded: boolean }>(({ $isExpanded, theme }) => [
-  tw`relative rounded-t-[2.5rem] overflow-hidden`,
+  tw`relative overflow-hidden rounded-t-[2.5rem]`,
   {
     backgroundColor: theme.miniPlayer.backgroundColor,
   },
-  $isExpanded ? tw`w-full h-full` : tw`flex items-center justify-between gap-3`,
+  $isExpanded
+    ? tw`w-full h-full`
+    : tw`flex items-center justify-between gap-3`,
 ]);
 
-const HandleContainer = styled(motion.div)<{ $isExpanded: boolean }>`
+const HandleContainer = styled(motion.div)`
   ${tw`absolute top-0 left-0 right-0 flex justify-center pt-3 cursor-grab active:cursor-grabbing touch-none z-30`}
 `;
 
@@ -181,6 +201,13 @@ const EmptyStateText = styled.p`
   margin: 0;
 `;
 
+// Fullscreen overlay — separate layer, slides up from bottom (like Spotify/Apple Music)
+const FullscreenOverlay = styled(motion.div)`
+  ${tw`absolute inset-0 z-[80] overflow-hidden`}
+  background-color: ${({ theme }) => theme.miniPlayer.backgroundColor};
+  touch-action: none;
+`;
+
 // Animation variants hoisted outside component to prevent recreation on each render
 const contentVariants = {
   initial: { opacity: 0, scale: 0.9 },
@@ -194,6 +221,14 @@ const buttonVariants = {
   animate: { opacity: 1 },
   exit: { opacity: 0 }
 } as const;
+
+// Spring config for fullscreen slide transition
+const fullscreenSpring = {
+  type: 'spring' as const,
+  damping: 32,
+  stiffness: 300,
+  mass: 0.8,
+};
 
 export const MiniPlayer = React.memo<MiniPlayerProps>(({
   currentStop,
@@ -214,7 +249,14 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   transcription,
   transcriptAvailable,
   isTranscriptionExpanded: externalIsTranscriptionExpanded,
-  onToggleTranscription
+  onToggleTranscription,
+  isFullscreenOpen = false,
+  onFullscreenChange,
+  tourTitle,
+  stopNumber,
+  currentTime = 0,
+  duration = 0,
+  onSeek,
 }) => {
   // Use external state if provided, otherwise fall back to local state
   const [localIsExpanded, setLocalIsExpanded] = useState(true);
@@ -227,6 +269,10 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
     ? externalIsTranscriptionExpanded
     : localIsTranscriptionExpanded;
   const setIsTranscriptionExpanded = onToggleTranscription || setLocalIsTranscriptionExpanded;
+
+  // Fullscreen state
+  const isFullscreen = isFullscreenOpen;
+  const setIsFullscreen = (open: boolean) => onFullscreenChange?.(open);
 
   // Only show transcription if both flag and text exist
   const hasTranscription = transcriptAvailable && transcription && transcription.trim().length > 0;
@@ -301,15 +347,17 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
     }
   };
 
-  // Vertical Drag Logic
+  // Vertical Drag Logic (Container — minimized ↔ expanded, drag-up → fullscreen)
   const yDrag = useMotionValue(0);
-  // Expanded: Drag Down -> Hint Minimize
-
 
   const handleVerticalDragEnd = (_: any, info: PanInfo) => {
     if (isExpanded) {
       if (info.offset.y > 50 || info.velocity.y > 300) {
+        // Drag down → minimize
         setIsExpanded(false);
+      } else if (onFullscreenChange && (info.offset.y < -60 || info.velocity.y < -300)) {
+        // Drag up → open fullscreen overlay
+        setIsFullscreen(true);
       }
     } else {
       if (info.offset.y < -30 || info.velocity.y < -200) {
@@ -318,213 +366,250 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
     }
   };
 
+  // Fullscreen overlay drag-to-dismiss
+  const handleFullscreenDragEnd = (_: any, info: PanInfo) => {
+    if (info.offset.y > 80 || info.velocity.y > 400) {
+      setIsFullscreen(false);
+    }
+  };
+
   return (
-    <Container
-      layout
-      transition={{
-        layout: { type: 'spring', damping: 30, stiffness: 400, mass: 0.5 }
-      }}
-      drag="y"
-      dragDirectionLock
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={0.1}
-      onDragEnd={handleVerticalDragEnd}
-      style={{ y: yDrag }}
-    >
-      {/* 
-        PERSISTENT STRUCTURE:
-        1. Background Layer (Actions) - Always rendered
-        2. Foreground Card (Content) - Always rendered, layout morphs
-      */}
+    <PlayerRoot>
+      {/* ── Mini/Expanded Player (bottom bar) ── */}
+      <Container
+        drag="y"
+        dragDirectionLock
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.15}
+        onDragEnd={handleVerticalDragEnd}
+        style={{ y: yDrag }}
+      >
+        <InnerContainer>
+          {/* Background Swipe Actions */}
+          <BackgroundLayer>
+            <SwipeIcon
+              style={{ opacity: opacityPrev, scale: scalePrev }}
+              $canNavigate={canGoPrev}
+            >
+              {canGoPrev ? (
+                <SkipBackIcon size={24} weight="bold" className="opacity-90" />
+              ) : (
+                <XIcon size={28} className="opacity-40" weight="bold" />
+              )}
+            </SwipeIcon>
+            <SwipeIcon
+              style={{ opacity: opacityNext, scale: scaleNext }}
+              $canNavigate={canGoNext}
+            >
+              {canGoNext ? (
+                <SkipForwardIcon size={24} weight="bold" className="opacity-90" />
+              ) : (
+                <XIcon size={28} className="opacity-40" weight="bold" />
+              )}
+            </SwipeIcon>
+          </BackgroundLayer>
 
-      <InnerContainer>
-        {/* Persistent Background Swipe Actions */}
-        <BackgroundLayer>
-          {/* Left Icon (Previous) */}
-          <SwipeIcon
-            style={{ opacity: opacityPrev, scale: scalePrev }}
-            $canNavigate={canGoPrev}
-          >
-            {canGoPrev ? (
-              <SkipBackIcon size={24} weight="bold" className="opacity-90" />
-            ) : (
-              <XIcon size={28} className="opacity-40" weight="bold" />
-            )}
-          </SwipeIcon>
-
-          {/* Right Icon (Next) */}
-          <SwipeIcon
-            style={{ opacity: opacityNext, scale: scaleNext }}
-            $canNavigate={canGoNext}
-          >
-            {canGoNext ? (
-              <SkipForwardIcon size={24} weight="bold" className="opacity-90" />
-            ) : (
-              <XIcon size={28} className="opacity-40" weight="bold" />
-            )}
-          </SwipeIcon>
-        </BackgroundLayer>
-
-        {/* Persistent Foreground Card */}
-        <ForegroundCard
-          layout
-          style={{ x: dragX, boxShadow }}
-          drag="x"
-          dragDirectionLock
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
-          onDragStart={handleDragStart}
-          onDrag={(e, info) => handleHorizontalDrag(e, info)}
-          onDragEnd={handleHorizontalDragEnd}
-          $isExpanded={isExpanded}
-        >
-          {/* Handle (Visual only, always at top) */}
-          <HandleContainer
-            layout="position"
-            style={{ x: dragXHandle }}
+          {/* Foreground Card */}
+          <ForegroundCard
+            style={{ x: dragX, boxShadow }}
+            drag="x"
+            dragDirectionLock
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.15}
+            onDragStart={handleDragStart}
+            onDrag={(e, info) => handleHorizontalDrag(e, info)}
+            onDragEnd={handleHorizontalDragEnd}
             $isExpanded={isExpanded}
-            onClick={() => setIsExpanded(!isExpanded)}
           >
-            <Handle />
-          </HandleContainer>
+            {/* Handle */}
+            <HandleContainer
+              style={{ x: dragXHandle }}
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <Handle />
+            </HandleContainer>
 
-          {/* Content Switcher */}
-          <AnimatePresence mode="popLayout" initial={false}>
-            {isExpanded ? (
-              <ExpandedContent
-                layout
-                key="expanded-content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, opacity: { duration: 0.15 } }}
-              >
-                <ExpandedInner>
-                  {/* Controls Row */}
-                  <ControlsRow>
-                    <SkipButton direction="backward" onClick={onRewind} seconds={15} className="w-14 h-14">
-                      <BackwardIcon size={32} className="ml-1 mb-0.5" />
-                    </SkipButton>
+            {/* Content Switcher — minimized ↔ expanded only */}
+            <AnimatePresence mode="popLayout" initial={false}>
+              {isExpanded ? (
+                /* ── Expanded Content ── */
+                <ExpandedContent
+                  key="expanded-content"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, opacity: { duration: 0.15 } }}
+                >
+                  <ExpandedInner>
+                    {/* Controls Row */}
+                    <ControlsRow>
+                      <SkipButton direction="backward" onClick={onRewind} seconds={15} className="w-14 h-14">
+                        <BackwardIcon size={32} className="ml-1 mb-0.5" />
+                      </SkipButton>
 
-                    <ProgressContainer>
-                      {!isTransitioning && (
-                        <ProgressRing
-                          progress={visualProgress}
-                          size={64}
-                          strokeWidth={3}
-                        />
-                      )}
-                      <PlayPauseButton
-                        isPlaying={isPlaying}
-                        isCompleting={isCompleting}
-                        onClick={onTogglePlay}
-                        size="expanded"
-                        buttonVariants={buttonVariants}
-                      />
-                    </ProgressContainer>
-
-                    <SkipButton direction="forward" onClick={onForward} seconds={15} className="w-14 h-14">
-                      <ForwardIcon size={32} className="mr-1 mb-0.5" />
-                    </SkipButton>
-
-                    {hasTranscription && (
-                      <TranscriptionButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsTranscriptionExpanded(!isTranscriptionExpanded);
-                        }}
-                        onPointerDownCapture={(e) => e.stopPropagation()}
-                        $isExpanded={isTranscriptionExpanded}
-                        className="w-14 h-14"
-                        aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
-                      >
-                        {isTranscriptionExpanded ? (
-                          <ClosedCaptioningIcon size={28} weight="fill" />
-                        ) : (
-                          <ClosedCaptioningIcon size={28} weight="duotone" />
+                      <ProgressContainer>
+                        {!isTransitioning && (
+                          <ProgressRing
+                            progress={visualProgress}
+                            size={64}
+                            strokeWidth={3}
+                          />
                         )}
-                      </TranscriptionButton>
-                    )}
-                  </ControlsRow>
+                        <PlayPauseButton
+                          isPlaying={isPlaying}
+                          isCompleting={isCompleting}
+                          onClick={onTogglePlay}
+                          size="expanded"
+                          buttonVariants={buttonVariants}
+                        />
+                      </ProgressContainer>
 
-                  {/* Title */}
-                  <TitleSection
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onClick();
-                    }}
-                    dragListener={false}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <TitleContainer ref={containerRef}>
-                      <TitleText
-                        ref={titleRef}
-                        animate={controls}
-                      >
-                        {currentStop.title}
-                      </TitleText>
-                    </TitleContainer>
-                  </TitleSection>
+                      <SkipButton direction="forward" onClick={onForward} seconds={15} className="w-14 h-14">
+                        <ForwardIcon size={32} className="mr-1 mb-0.5" />
+                      </SkipButton>
 
-                  {/* Transcription Panel */}
-                  <AnimatePresence>
-                    {hasTranscription && isTranscriptionExpanded && (
-                      <TranscriptionContainer
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                      >
-                        <TranscriptionContent ref={transcriptionRef}>
-                          {transcription ? (
-                            <TranscriptionText>{transcription}</TranscriptionText>
+                      {hasTranscription && (
+                        <TranscriptionButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsTranscriptionExpanded(!isTranscriptionExpanded);
+                          }}
+                          onPointerDownCapture={(e) => e.stopPropagation()}
+                          $isExpanded={isTranscriptionExpanded}
+                          className="w-14 h-14"
+                          aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
+                        >
+                          {isTranscriptionExpanded ? (
+                            <ClosedCaptioningIcon size={28} weight="fill" />
                           ) : (
-                            <EmptyStateText>No transcription available for this stop</EmptyStateText>
+                            <ClosedCaptioningIcon size={28} weight="duotone" />
                           )}
-                        </TranscriptionContent>
-                      </TranscriptionContainer>
-                    )}
-                  </AnimatePresence>
-                </ExpandedInner>
-              </ExpandedContent>
-            ) : (
-              <MinimizedContent
-                layout
-                key="minimized-content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ 
-                  duration: 0.2,
-                  exit: { duration: 0.1, ease: "easeOut" }
-                }}
-              >
-                <MinimizedInner>
-                  <MinimizedTitleSection
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsExpanded(true);
-                    }}
-                    dragListener={false}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <MinimizedTitle>{currentStop.title}</MinimizedTitle>
-                  </MinimizedTitleSection>
+                        </TranscriptionButton>
+                      )}
+                    </ControlsRow>
 
-                  <PlayPauseButton
-                    isPlaying={isPlaying}
-                    onClick={onTogglePlay}
-                    size="sm"
-                    variant="mini"
-                    buttonVariants={buttonVariants}
-                  />
-                </MinimizedInner>
-              </MinimizedContent>
-            )}
-          </AnimatePresence>
-        </ForegroundCard>
-      </InnerContainer>
-    </Container>
+                    {/* Title */}
+                    <TitleSection
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onClick();
+                      }}
+                      dragListener={false}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      <TitleContainer ref={containerRef}>
+                        <TitleText
+                          ref={titleRef}
+                          animate={controls}
+                        >
+                          {currentStop.title}
+                        </TitleText>
+                      </TitleContainer>
+                    </TitleSection>
+
+                    {/* Transcription Panel */}
+                    <AnimatePresence>
+                      {hasTranscription && isTranscriptionExpanded && (
+                        <TranscriptionContainer
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        >
+                          <TranscriptionContent ref={transcriptionRef}>
+                            {transcription ? (
+                              <TranscriptionText>{transcription}</TranscriptionText>
+                            ) : (
+                              <EmptyStateText>No transcription available for this stop</EmptyStateText>
+                            )}
+                          </TranscriptionContent>
+                        </TranscriptionContainer>
+                      )}
+                    </AnimatePresence>
+                  </ExpandedInner>
+                </ExpandedContent>
+              ) : (
+                /* ── Minimized Content ── */
+                <MinimizedContent
+                  key="minimized-content"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    duration: 0.2,
+                    exit: { duration: 0.1, ease: "easeOut" }
+                  }}
+                >
+                  <MinimizedInner>
+                    <MinimizedTitleSection
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(true);
+                      }}
+                      dragListener={false}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      <MinimizedTitle>{currentStop.title}</MinimizedTitle>
+                    </MinimizedTitleSection>
+
+                    <PlayPauseButton
+                      isPlaying={isPlaying}
+                      onClick={onTogglePlay}
+                      size="sm"
+                      variant="mini"
+                      buttonVariants={buttonVariants}
+                    />
+                  </MinimizedInner>
+                </MinimizedContent>
+              )}
+            </AnimatePresence>
+          </ForegroundCard>
+        </InnerContainer>
+      </Container>
+
+      {/* ── Fullscreen Overlay (separate layer, slides up like Spotify/Apple Music) ── */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <FullscreenOverlay
+            key="fullscreen-overlay"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={fullscreenSpring}
+            drag="y"
+            dragDirectionLock
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDragEnd={handleFullscreenDragEnd}
+          >
+            <Suspense fallback={null}>
+              <FullscreenPlayerContent
+                onClose={() => setIsFullscreen(false)}
+                currentStop={currentStop!}
+                tourTitle={tourTitle || ''}
+                isPlaying={isPlaying}
+                progress={visualProgress}
+                currentTime={currentTime}
+                duration={duration}
+                onTogglePlay={onTogglePlay}
+                onSeek={onSeek || (() => {})}
+                onForward={onForward}
+                onRewind={onRewind}
+                onNextTrack={onNextTrack || (() => {})}
+                onPrevTrack={onPrevTrack || (() => {})}
+                canGoNext={canGoNext}
+                canGoPrev={canGoPrev}
+                isCompleting={isCompleting}
+                isTransitioning={isTransitioning}
+                transcription={transcription}
+                transcriptAvailable={transcriptAvailable}
+                stopNumber={stopNumber}
+              />
+            </Suspense>
+          </FullscreenOverlay>
+        )}
+      </AnimatePresence>
+    </PlayerRoot>
   );
 }, (prevProps, nextProps) => {
   // Custom comparison: only re-render if relevant props change
@@ -539,6 +624,10 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
     prevProps.canGoPrev === nextProps.canGoPrev &&
     prevProps.isTranscriptionExpanded === nextProps.isTranscriptionExpanded &&
     prevProps.transcription === nextProps.transcription &&
-    prevProps.transcriptAvailable === nextProps.transcriptAvailable
+    prevProps.transcriptAvailable === nextProps.transcriptAvailable &&
+    prevProps.isFullscreenOpen === nextProps.isFullscreenOpen &&
+    prevProps.currentTime === nextProps.currentTime &&
+    prevProps.duration === nextProps.duration &&
+    prevProps.tourTitle === nextProps.tourTitle
   );
 });

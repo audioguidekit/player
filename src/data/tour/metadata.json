@@ -3,12 +3,13 @@
   "defaultLanguage": "en",
   "offlineMode": "online",
   "transitionAudio": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/audio/end.m4a",
-  "themeId": "default-white",
+  "themeId": "default-dark",
   "transcriptAvailable": true,
   "collectFeedback": true,
   "showLanguageLabel": true,
-  "showStopImage": "thumbnail",
+  "showStopImage": true,
   "showStopDuration": true,
   "showStopNumber": true,
+  "fullscreenPlayer": true,
   "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/01.jpeg"
 }

@@ -19,6 +19,7 @@ export interface TourMetadata {
   showStopImage?: boolean | 'thumbnail'; // Show stop image: true=full card, false=list, 'thumbnail'=compact with thumbnail (default: true)
   showStopDuration?: boolean;  // Show duration on cards (default: true)
   showStopNumber?: boolean;    // Show number indicator (default: true)
+  fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
 }
 
 export interface BaseStop {
@@ -106,6 +107,7 @@ export interface TourData {
   showStopImage?: boolean | 'thumbnail'; // Show stop image: true=full card, false=list, 'thumbnail'=compact with thumbnail (default: true)
   showStopDuration?: boolean;  // Show duration on cards (default: true)
   showStopNumber?: boolean;    // Show number indicator (default: true)
+  fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
 }
 
 export interface Language {

@@ -99,6 +99,9 @@ const App: React.FC = () => {
   const [isMiniPlayerExpanded, setIsMiniPlayerExpanded] = useState(false);
   const [isTranscriptionExpanded, setIsTranscriptionExpanded] = useState(false);
 
+  // Fullscreen Player State
+  const [isFullscreenPlayerOpen, setIsFullscreenPlayerOpen] = useState(false);
+
   // Local state for app flow - MUST be declared before callbacks that use them
   const [hasStarted, setHasStarted] = useState(false);
   const [scrollToStopId, setScrollToStopId] = useState<{ id: string; timestamp: number } | null>(null);
@@ -642,6 +645,10 @@ const App: React.FC = () => {
     }
   }, [currentStopId, setScrollToStopId]);
 
+  const handleSeek = useCallback((time: number) => {
+    audioPlayer.seek(time);
+  }, [audioPlayer]);
+
   const handleRewind = useCallback(() => {
     audioPlayer.skipBackward(15);
   }, [audioPlayer]);
@@ -830,6 +837,13 @@ const App: React.FC = () => {
                     transcriptAvailable={tour?.transcriptAvailable}
                     isTranscriptionExpanded={isTranscriptionExpanded}
                     onToggleTranscription={setIsTranscriptionExpanded}
+                    isFullscreenOpen={tour?.fullscreenPlayer ? isFullscreenPlayerOpen : undefined}
+                    onFullscreenChange={tour?.fullscreenPlayer ? setIsFullscreenPlayerOpen : undefined}
+                    tourTitle={tour?.title}
+                    stopNumber={tour?.showStopNumber !== false && currentAudioStop ? audioPlaylist.findIndex(s => s.id === currentAudioStop.id) + 1 : undefined}
+                    currentTime={audioPlayer.currentTime}
+                    duration={audioPlayer.duration}
+                    onSeek={handleSeek}
                   />
                 )}
               </AnimatePresence>
