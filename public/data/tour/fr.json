@@ -16,7 +16,8 @@
       "imageCaption": "Vue panoramique a 360 degres depuis le sommet de la Tour Urquinaona",
       "imageCredit": "Photo: Unlimited Barcelona / 2024",
       "audioFile": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/audio/en/01.mp3",
-      "transcription": "Bienvenue a <strong>Unlimited Barcelona</strong>. Grace a son emplacement central, c'est le point de vue parfait pour contempler Barcelone sous une <em>toute nouvelle perspective</em> visuelle et historique.\n\nPreparez-vous a profiter d'une vue panoramique a <tooltip title=\"Vue complete couvrant tous les angles autour d'un point central\">360 degres</tooltip> de la ville depuis une hauteur de <strong>70 metres</strong>. Nous proposons une serie de courts commentaires audio qui vous aideront a resoudre certains des mysteres de Barcelone.\n\n<blockquote>Barcelone est une ville qui ne dort jamais — chaque pierre raconte une histoire millenaire.</blockquote>\n\nSuivez-nous sur nos comptes officiels <a href=\"https://instagram.com/unlimitedbcn\">Instagram</a> et <a href=\"https://tiktok.com/@unlimitedbcn\">TikTok</a>. Merci beaucoup!"
+      "transcription": "Bienvenue a <strong>Unlimited Barcelona</strong>. Grace a son emplacement central, c'est le point de vue parfait pour contempler Barcelone sous une <em>toute nouvelle perspective</em> visuelle et historique.\n\nPreparez-vous a profiter d'une vue panoramique a <tooltip title=\"Vue complete couvrant tous les angles autour d'un point central\">360 degres</tooltip> de la ville depuis une hauteur de <strong>70 metres</strong>. Nous proposons une serie de courts commentaires audio qui vous aideront a resoudre certains des mysteres de Barcelone.\n\n<blockquote>Barcelone est une ville qui ne dort jamais — chaque pierre raconte une histoire millenaire.</blockquote>\n\nSuivez-nous sur nos comptes officiels <a href=\"https://instagram.com/unlimitedbcn\">Instagram</a> et <a href=\"https://tiktok.com/@unlimitedbcn\">TikTok</a>. Merci beaucoup!",
+      "content": "Bienvenue au sommet de la <strong>Tour Urquinaona</strong>! Avant de commencer, voici quelques <em>conseils pratiques</em>:\n\n<ul><li>Utilisez vos <strong>ecouteurs</strong> pour une meilleure experience</li><li>Chaque arret dure entre <em>1 et 3 minutes</em></li><li>Vous pouvez <tooltip title=\"Appuyez sur pause a tout moment pour explorer a votre rythme\">faire une pause</tooltip> quand vous le souhaitez</li></ul>\n\n<blockquote>Prenez votre temps et profitez de chaque vue — il n'y a pas de mauvais angle ici!</blockquote>"
     },
     {
       "id": "2",
@@ -100,13 +101,13 @@
       "caption": "Une <strong>courte video</strong> presentant les <em>moments forts</em> de la visite panoramique. <small>Duree: 2 minutes</small>"
     },
     {
-      "id": "10b",
+      "id": "11",
       "type": "3d-object",
       "modelUrl": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
       "caption": "Maquette <strong>3D interactive</strong> — faites pivoter et zoomez pour explorer les details architecturaux. <small>Modele: exemple de demonstration</small>"
     },
     {
-      "id": "10c",
+      "id": "12",
       "type": "image-gallery",
       "images": [
         {
@@ -134,7 +135,7 @@
       "caption": "Galerie de photos: <strong>Les plus belles vues</strong> de Barcelone depuis la Tour Urquinaona"
     },
     {
-      "id": "10d",
+      "id": "13",
       "type": "image-comparison",
       "before": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/02.webp",
       "after": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/09.webp",
@@ -143,7 +144,7 @@
       "caption": "EE Comparaison avant/apres: <strong>L'evolution de Barcelone</strong> sur 50 ans"
     },
     {
-      "id": "10e",
+      "id": "14",
       "type": "hotspot-image",
       "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/07.webp",
       "imageAlt": "Vue aerienne du front de mer de Barcelone",
@@ -170,21 +171,21 @@
       "caption": "Explorez les points d'interet du <strong>front de mer olympique</strong>"
     },
     {
-      "id": "10f",
+      "id": "15",
       "type": "embed",
       "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
       "embedType": "youtube",
       "caption": "Video YouTube: <strong>Decouvrez Barcelone</strong> en images — le <em>meilleur</em> de la ville en 3 minutes"
     },
     {
-      "id": "11",
+      "id": "16",
       "type": "quote",
       "quote": "Barcelone est la grande enchanteresse",
       "author": "Federico Garcia Lorca",
       "year": "1927"
     },
     {
-      "id": "12",
+      "id": "17",
       "type": "email",
       "title": "Restez informe",
       "description": "Inscrivez-vous pour recevoir des <strong>nouvelles</strong> et des <em>offres speciales</em> d'Unlimited Barcelona.",
@@ -192,7 +193,7 @@
       "buttonText": "S'inscrire"
     },
     {
-      "id": "13",
+      "id": "18",
       "type": "rating",
       "question": "Comment avez-vous aime cette visite?",
       "description": "Nous aimerions connaitre votre avis!"

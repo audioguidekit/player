@@ -22,7 +22,7 @@ interface StyledButtonProps {
 }
 
 const StyledButton = styled(motion.button)<StyledButtonProps>(({ $size, $variant, $showCheckmark, theme }) => [
-  tw`rounded-full flex items-center justify-center transition-colors relative overflow-hidden`,
+  tw`rounded-full flex items-center justify-center relative overflow-hidden`,
 
   // Size variants
   $size === 'sm' && tw`w-10 h-10`,
@@ -45,6 +45,12 @@ const StyledButton = styled(motion.button)<StyledButtonProps>(({ $size, $variant
   $variant === 'default' && !$showCheckmark && {
     backgroundColor: theme.miniPlayer.controls.playButtonBackground,
     color: theme.miniPlayer.controls.playButtonIcon,
+  },
+
+  // Tap scale transition (CSS-based, not whileTap which uses invisible WAAPI)
+  {
+    transformOrigin: 'center center',
+    transition: 'color 150ms, background-color 150ms, transform 100ms ease-out',
   },
 ]);
 
@@ -99,13 +105,17 @@ export const PlayPauseButton = React.memo<PlayPauseButtonProps>(({
             animate={buttonVariants ? 'animate' : undefined}
             exit={buttonVariants ? 'exit' : undefined}
             transition={{ duration: 0.3 }}
-            whileTap={{ scale: 0.9 }}
             onClick={(e) => {
                 e.stopPropagation();
                 onClick();
             }}
             className={className}
-            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerDownCapture={(e) => {
+                e.stopPropagation();
+                (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+            }}
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+            onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
         >
             <AnimatePresence mode="popLayout" initial={false}>
                 {showCheckmark && !isMini ? (

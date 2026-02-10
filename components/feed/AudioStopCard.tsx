@@ -95,6 +95,15 @@ const Duration = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
 `;
 
+const ContentArea = styled.div`
+  ${tw`px-5 pb-5`}
+`;
+
+const ContentText = styled.p`
+  ${tw`leading-relaxed`}
+  color: ${({ theme }) => theme.cards.textColor};
+`;
+
 const CaptionArea = styled.div`
   ${tw`px-5 pt-2`}
 `;
@@ -191,6 +200,12 @@ export const AudioStopCard = memo<AudioStopCardProps>(({
             </TextContent>
           </InfoContent>
         </InfoContainer>
+
+        {item.content && (
+          <ContentArea>
+            <ContentText><RichText content={item.content} /></ContentText>
+          </ContentArea>
+        )}
       </CardContainer>
       <ImageLightbox
         isOpen={lightboxOpen}

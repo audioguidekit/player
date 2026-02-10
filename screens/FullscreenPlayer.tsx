@@ -32,6 +32,8 @@ export interface FullscreenPlayerContentProps {
   // Transcription
   transcription?: string;
   transcriptAvailable?: boolean;
+  isTranscriptionOpen?: boolean;
+  onToggleTranscription?: (open: boolean) => void;
   // Stop number
   stopNumber?: number;
 }
@@ -53,8 +55,15 @@ const Header = styled.div`
 `;
 
 const HeaderButton = styled.button`
-  ${tw`w-12 h-12 flex items-center justify-center rounded-full`}
+  ${tw`p-0 border-0 rounded-full flex items-center justify-center shrink-0`}
+  width: 48px;
+  height: 48px;
   color: ${({ theme }) => theme.miniPlayer.textColor};
+  transform-origin: center center;
+  transition: background-color 100ms ease-in-out, transform 100ms ease-out;
+  &:hover {
+    background-color: ${({ theme }) => theme.miniPlayer.controls.otherButtonsHoverBackground || 'transparent'};
+  }
 `;
 
 const TourTitle = styled.span`
@@ -62,24 +71,49 @@ const TourTitle = styled.span`
   color: ${({ theme }) => theme.miniPlayer.textColor};
 `;
 
-const ArtworkContainer = styled.div`
-  ${tw`flex-1 flex items-center justify-center px-8`}
+const MiddleArea = styled.div`
+  ${tw`flex-1 relative`}
   min-height: 0;
+`;
+
+const ArtworkInner = styled.div`
+  ${tw`flex flex-col items-center`}
+  max-height: 100%;
 `;
 
 const ArtworkImage = styled.img`
   ${tw`rounded-2xl object-cover shadow-xl`}
-  width: 100%;
   max-width: 360px;
+  max-height: 100%;
+  width: auto;
   aspect-ratio: 1;
 `;
 
 const ArtworkPlaceholder = styled.div`
   ${tw`rounded-2xl flex items-center justify-center`}
-  width: 100%;
   max-width: 360px;
+  max-height: 100%;
+  width: auto;
   aspect-ratio: 1;
   background-color: ${({ theme }) => theme.cards.image.placeholderColor};
+`;
+
+const CaptionArea = styled.div`
+  ${tw`w-full shrink-0 text-center`}
+  max-width: 360px;
+  margin-top: 24px;
+`;
+
+const Caption = styled.p`
+  ${tw`text-sm leading-relaxed`}
+  color: ${({ theme }) => theme.imageCaption.textColor};
+  text-wrap: balance;
+`;
+
+const Credit = styled.p`
+  ${tw`text-xs italic mt-2`}
+  color: ${({ theme }) => theme.imageCaption.creditColor};
+  text-wrap: balance;
 `;
 
 const BottomSection = styled.div`
@@ -180,10 +214,16 @@ const FSControlsRow = styled.div`
 `;
 
 const TrackButton = styled.button<{ $disabled: boolean }>(({ $disabled, theme }) => [
-  tw`w-12 h-12 flex items-center justify-center rounded-full`,
-  tw`active:scale-90 transition-transform duration-100`,
+  tw`p-0 border-0 rounded-full flex items-center justify-center shrink-0`,
   {
+    width: '48px',
+    height: '48px',
     color: theme.miniPlayer.controls.otherButtonsIcon,
+    transformOrigin: 'center center',
+    transition: 'background-color 100ms ease-in-out, transform 100ms ease-out',
+    '&:hover': {
+      backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || 'transparent',
+    },
   },
   $disabled && tw`opacity-30`,
 ]);
@@ -195,22 +235,23 @@ const ProgressContainer = styled.div`
 `;
 
 const TranscriptionToggle = styled.button<{ $active: boolean }>(({ $active, theme }) => [
-  tw`w-12 h-12 rounded-full flex items-center justify-center shrink-0`,
-  tw`active:scale-90 transition-all duration-100 ease-in-out`,
+  tw`p-0 border-0 rounded-full flex items-center justify-center shrink-0`,
   {
+    width: '48px',
+    height: '48px',
     backgroundColor: $active ? theme.buttons.transcription.backgroundColor : 'transparent',
     color: $active ? theme.buttons.transcription.iconColor : theme.miniPlayer.textColor,
     opacity: $active ? 1 : 0.6,
+    transformOrigin: 'center center',
+    transition: 'background-color 100ms ease-in-out, opacity 100ms ease-in-out, transform 100ms ease-out',
+    '&:hover': {
+      backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || theme.buttons.transcription.backgroundColor,
+    },
   },
 ]);
 
-const TranscriptionPanel = styled(motion.div)`
-  ${tw`overflow-hidden mt-3`}
-`;
-
 const TranscriptionScroll = styled.div`
-  ${tw`overflow-y-auto py-2`}
-  max-height: 160px;
+  ${tw`overflow-y-auto py-2 h-full`}
   background-color: transparent;
 
   &::-webkit-scrollbar {
@@ -245,6 +286,21 @@ const buttonVariants = {
   exit: { opacity: 0 }
 } as const;
 
+// Crossfade variants for artwork ↔ transcription
+const artworkVariants = {
+  initial: { opacity: 0, scale: 0.92 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.92 },
+} as const;
+
+const transcriptionVariants = {
+  initial: { opacity: 0, y: 40 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 40 },
+} as const;
+
+const crossfadeTransition = { duration: 0.25, ease: [0.4, 0, 0.2, 1] } as const;
+
 /**
  * Fullscreen player content — rendered inside the FullscreenOverlay.
  * Builds on the same components as the expanded MiniPlayer for consistency.
@@ -269,10 +325,16 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
   isTransitioning = false,
   transcription,
   transcriptAvailable,
+  isTranscriptionOpen: externalIsTranscriptionOpen,
+  onToggleTranscription,
   stopNumber,
 }) => {
   const [seekValue, setSeekValue] = useState<number | null>(null);
-  const [isTranscriptionOpen, setIsTranscriptionOpen] = useState(false);
+  const [localIsTranscriptionOpen, setLocalIsTranscriptionOpen] = useState(false);
+  const isTranscriptionOpen = externalIsTranscriptionOpen !== undefined
+    ? externalIsTranscriptionOpen
+    : localIsTranscriptionOpen;
+  const setIsTranscriptionOpen = onToggleTranscription || setLocalIsTranscriptionOpen;
   const transcriptionRef = useRef<HTMLDivElement>(null);
 
   const hasTranscription = transcriptAvailable && transcription && transcription.trim().length > 0;
@@ -307,7 +369,12 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
       <Header>
         <HeaderButton
           onClick={onClose}
-          onPointerDownCapture={(e) => e.stopPropagation()}
+          onPointerDownCapture={(e) => {
+            e.stopPropagation();
+            (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+          }}
+          onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+          onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
         >
           <CaretDownIcon size={28} weight="bold" />
         </HeaderButton>
@@ -322,7 +389,12 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
                 transcriptionRef.current.scrollTop = 0;
               }
             }}
-            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerDownCapture={(e) => {
+              e.stopPropagation();
+              (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+            }}
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+            onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
             aria-label={isTranscriptionOpen ? "Hide transcription" : "Show transcription"}
           >
             <ClosedCaptioningIcon size={28} weight={isTranscriptionOpen ? "fill" : "duotone"} />
@@ -332,51 +404,80 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
         )}
       </Header>
 
-      {/* Artwork — swipe left/right for track navigation */}
-      <ArtworkContainer>
-        <motion.div
-          key={currentStop.id}
-          drag="x"
-          dragDirectionLock
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
-          onDragEnd={handleArtworkDragEnd}
-          style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
-        >
-          {currentStop.image ? (
-            <ArtworkImage
-              src={currentStop.image}
-              alt={currentStop.title}
-              draggable={false}
-            />
-          ) : (
-            <ArtworkPlaceholder />
-          )}
-        </motion.div>
-      </ArtworkContainer>
-
-      {/* Bottom Section: Title, Transcription, Seek, Controls */}
-      <BottomSection>
-        <TitleArea>
-          {stopNumber !== undefined && (
-            <NumberContainer>
-              <NumberCircle>
-                <NumberText>{stopNumber}</NumberText>
-              </NumberCircle>
-            </NumberContainer>
-          )}
-          <StopTitle>{currentStop.title}</StopTitle>
-        </TitleArea>
-
-        {/* Transcription Panel */}
-        <AnimatePresence>
-          {hasTranscription && isTranscriptionOpen && (
-            <TranscriptionPanel
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
+      {/* Middle area: crossfade between artwork and transcription */}
+      <MiddleArea>
+        <AnimatePresence mode="wait" initial={false}>
+          {!isTranscriptionOpen ? (
+            <motion.div
+              key="artwork"
+              variants={artworkVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={crossfadeTransition}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 32px',
+              }}
             >
+              <ArtworkInner>
+                <motion.div
+                  key={currentStop.id}
+                  drag="x"
+                  dragDirectionLock
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.15}
+                  onDragEnd={handleArtworkDragEnd}
+                  style={{ display: 'flex', justifyContent: 'center' }}
+                >
+                  {currentStop.image ? (
+                    <ArtworkImage
+                      src={currentStop.image}
+                      alt={currentStop.imageAlt || currentStop.title}
+                      draggable={false}
+                    />
+                  ) : (
+                    <ArtworkPlaceholder />
+                  )}
+                </motion.div>
+                {(currentStop.imageCaption || currentStop.imageCredit) && (
+                  <CaptionArea>
+                    {currentStop.imageCaption && <Caption><RichText content={currentStop.imageCaption} /></Caption>}
+                    {currentStop.imageCredit && <Credit><RichText content={currentStop.imageCredit} /></Credit>}
+                  </CaptionArea>
+                )}
+              </ArtworkInner>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="transcription"
+              variants={transcriptionVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={crossfadeTransition}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '0 32px',
+              }}
+            >
+              <TitleArea style={{ marginBottom: 12, flexShrink: 0 }}>
+                {stopNumber !== undefined && (
+                  <NumberContainer>
+                    <NumberCircle>
+                      <NumberText>{stopNumber}</NumberText>
+                    </NumberCircle>
+                  </NumberContainer>
+                )}
+                <StopTitle>{currentStop.title}</StopTitle>
+              </TitleArea>
               <TranscriptionScroll
                 ref={transcriptionRef}
                 onPointerDownCapture={(e) => e.stopPropagation()}
@@ -385,9 +486,25 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
                   <RichText content={transcription!} />
                 </TranscriptionText>
               </TranscriptionScroll>
-            </TranscriptionPanel>
+            </motion.div>
           )}
         </AnimatePresence>
+      </MiddleArea>
+
+      {/* Bottom Section: Title (hidden when transcription open), Seek, Controls */}
+      <BottomSection>
+        {!isTranscriptionOpen && (
+          <TitleArea>
+            {stopNumber !== undefined && (
+              <NumberContainer>
+                <NumberCircle>
+                  <NumberText>{stopNumber}</NumberText>
+                </NumberCircle>
+              </NumberContainer>
+            )}
+            <StopTitle>{currentStop.title}</StopTitle>
+          </TitleArea>
+        )}
 
         {/* Seek Bar */}
         <SeekBarContainer>
@@ -414,13 +531,18 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
             onClick={canGoPrev ? onPrevTrack : undefined}
             $disabled={!canGoPrev}
             disabled={!canGoPrev}
-            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerDownCapture={(e) => {
+              e.stopPropagation();
+              if (canGoPrev) (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+            }}
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+            onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
           >
             <SkipBackIcon size={24} weight="fill" />
           </TrackButton>
 
-          <SkipButton direction="backward" onClick={onRewind} seconds={15} className="w-14 h-14">
-            <BackwardIcon size={32} className="ml-1 mb-0.5" />
+          <SkipButton direction="backward" onClick={onRewind} seconds={15}>
+            <BackwardIcon size={32} />
           </SkipButton>
 
           <ProgressContainer>
@@ -435,15 +557,20 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
             />
           </ProgressContainer>
 
-          <SkipButton direction="forward" onClick={onForward} seconds={15} className="w-14 h-14">
-            <ForwardIcon size={32} className="mr-1 mb-0.5" />
+          <SkipButton direction="forward" onClick={onForward} seconds={15}>
+            <ForwardIcon size={32} />
           </SkipButton>
 
           <TrackButton
             onClick={canGoNext ? onNextTrack : undefined}
             $disabled={!canGoNext}
             disabled={!canGoNext}
-            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerDownCapture={(e) => {
+              e.stopPropagation();
+              if (canGoNext) (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+            }}
+            onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+            onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
           >
             <SkipForwardIcon size={24} weight="fill" />
           </TrackButton>
@@ -465,6 +592,7 @@ export const FullscreenPlayerContent = React.memo<FullscreenPlayerContentProps>(
     prevProps.tourTitle === nextProps.tourTitle &&
     prevProps.transcription === nextProps.transcription &&
     prevProps.transcriptAvailable === nextProps.transcriptAvailable &&
+    prevProps.isTranscriptionOpen === nextProps.isTranscriptionOpen &&
     prevProps.stopNumber === nextProps.stopNumber
   );
 });

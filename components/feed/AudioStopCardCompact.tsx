@@ -3,6 +3,7 @@ import tw from 'twin.macro';
 import styled from 'styled-components';
 import { AudioStop } from '../../types';
 import { AnimatedCheckmark } from '../AnimatedCheckmark';
+import { RichText } from '../RichText';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AudioStopCardCompactProps {
@@ -63,6 +64,15 @@ const DurationText = styled.span`
   font-size: ${({ theme }) => theme.cards.durationBadgeFontSize};
   font-weight: 400;
   color: ${({ theme }) => theme.cards.image.durationBadgeText};
+`;
+
+const ContentArea = styled.div`
+  ${tw`px-4 pb-4`}
+`;
+
+const ContentText = styled.p`
+  ${tw`leading-relaxed`}
+  color: ${({ theme }) => theme.cards.textColor};
 `;
 
 const BottomSection = styled.div`
@@ -345,6 +355,12 @@ export const AudioStopCardCompact: React.FC<AudioStopCardCompactProps> = ({
           )}
           <Title>{item.title}</Title>
         </BottomSection>
+
+        {item.content && (
+          <ContentArea>
+            <ContentText><RichText content={item.content} /></ContentText>
+          </ContentArea>
+        )}
       </CardContainer>
     </OuterContainer>
   );

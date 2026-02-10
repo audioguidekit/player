@@ -131,6 +131,7 @@ export const defaultDarkTheme: ThemeConfig = {
       playButtonIcon: '#FFFFFF',
       otherButtonsBackground: 'transparent',
       otherButtonsIcon: '#999999',
+      otherButtonsHoverBackground: '#2A2A2A',
     },
     minimized: {
       playButtonIcon: '#FFFFFF',

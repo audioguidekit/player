@@ -131,6 +131,7 @@ export const defaultLightTheme: ThemeConfig = {
       playButtonIcon: '#000000',
       otherButtonsBackground: 'transparent',
       otherButtonsIcon: '#666666',
+      otherButtonsHoverBackground: '#F0F0F0',
     },
     minimized: {
       playButtonIcon: '#000000',

@@ -141,6 +141,7 @@ export interface ThemeConfig {
       playButtonIcon: string;
       otherButtonsBackground: string;
       otherButtonsIcon: string;
+      otherButtonsHoverBackground?: string;
     };
     minimized: {
       playButtonIcon: string;

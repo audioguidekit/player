@@ -39,6 +39,7 @@ export interface AudioStop extends BaseStop {
   imageCredit?: string;
   audioFile?: string;
   transcription?: string;
+  content?: string;
 }
 
 export interface TextStop extends BaseStop {

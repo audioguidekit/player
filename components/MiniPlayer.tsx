@@ -152,14 +152,16 @@ const MinimizedTitle = styled.span`
 `;
 
 const TranscriptionButton = styled.button<{ $isExpanded: boolean }>(({ $isExpanded, theme }) => [
-  tw`w-12 h-12 rounded-full flex items-center justify-center`,
-  tw`active:scale-90 transition-all duration-100 ease-in-out`,
-  tw`absolute right-8`,
+  tw`p-0 border-0 rounded-full flex items-center justify-center absolute right-8`,
   {
+    width: '48px',
+    height: '48px',
     backgroundColor: theme.buttons.transcription.backgroundColor,
     color: theme.buttons.transcription.iconColor,
+    transformOrigin: 'center center',
+    transition: 'background-color 100ms ease-in-out, transform 100ms ease-out',
     '&:hover': {
-      backgroundColor: theme.buttons.transcription.hoverBackground || theme.buttons.transcription.backgroundColor,
+      backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || theme.buttons.transcription.backgroundColor,
     },
   },
 ]);
@@ -444,8 +446,8 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                   <ExpandedInner>
                     {/* Controls Row */}
                     <ControlsRow>
-                      <SkipButton direction="backward" onClick={onRewind} seconds={15} className="w-14 h-14">
-                        <BackwardIcon size={32} className="ml-1 mb-0.5" />
+                      <SkipButton direction="backward" onClick={onRewind} seconds={15}>
+                        <BackwardIcon size={32} />
                       </SkipButton>
 
                       <ProgressContainer>
@@ -465,8 +467,8 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                         />
                       </ProgressContainer>
 
-                      <SkipButton direction="forward" onClick={onForward} seconds={15} className="w-14 h-14">
-                        <ForwardIcon size={32} className="mr-1 mb-0.5" />
+                      <SkipButton direction="forward" onClick={onForward} seconds={15}>
+                        <ForwardIcon size={32} />
                       </SkipButton>
 
                       {hasTranscription && (
@@ -475,10 +477,14 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                             e.stopPropagation();
                             setIsTranscriptionExpanded(!isTranscriptionExpanded);
                           }}
-                          onPointerDownCapture={(e) => e.stopPropagation()}
+                          onPointerDownCapture={(e) => {
+                            e.stopPropagation();
+                            (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
+                          }}
+                          onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+                          onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
                           $isExpanded={isTranscriptionExpanded}
-                          className="w-14 h-14"
-                          aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
+                                                   aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
                         >
                           {isTranscriptionExpanded ? (
                             <ClosedCaptioningIcon size={28} weight="fill" />
@@ -604,6 +610,8 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                 isTransitioning={isTransitioning}
                 transcription={transcription}
                 transcriptAvailable={transcriptAvailable}
+                isTranscriptionOpen={isTranscriptionExpanded}
+                onToggleTranscription={setIsTranscriptionExpanded}
                 stopNumber={stopNumber}
               />
             </Suspense>
