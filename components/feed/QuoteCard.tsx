@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
+import { QuotesIcon } from '@phosphor-icons/react';
 import { QuoteStop } from '../../types';
 
 interface QuoteCardProps {
@@ -15,18 +16,8 @@ const Container = styled.div`
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
-const AvatarContainer = styled.div`
-  ${tw`flex justify-center mb-6`}
-`;
-
-const Avatar = styled.div`
-  ${tw`w-16 h-16 rounded-full`}
-  background-color: ${({ theme }) => theme.cards.image.placeholderColor};
-  border: 2px solid ${({ theme }) => theme.cards.borderColor};
-`;
-
-const QuoteMark = styled.div`
-  ${tw`text-6xl leading-none mb-4 font-serif`}
+const QuoteMarkWrapper = styled.div`
+  ${tw`mb-4`}
   color: ${({ theme }) => theme.colors.border.dark};
 `;
 
@@ -35,22 +26,25 @@ const QuoteText = styled.p`
   color: ${({ theme }) => theme.cards.textColor};
 `;
 
-const AuthorInfo = styled.div`
+const AuthorName = styled.div`
   ${tw`text-sm font-medium`}
   color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const AuthorYear = styled.div`
+  ${tw`text-xs mt-0.5`}
+  color: ${({ theme }) => theme.colors.text.tertiary};
 `;
 
 export const QuoteCard = memo<QuoteCardProps>(({ item }) => {
   return (
     <Container>
-      <AvatarContainer>
-        <Avatar />
-      </AvatarContainer>
-      <QuoteMark>"</QuoteMark>
+<QuoteMarkWrapper>
+        <QuotesIcon size={40} weight="fill" />
+      </QuoteMarkWrapper>
       <QuoteText>{item.quote}</QuoteText>
-      <AuthorInfo>
-        {item.author}{item.year && `, ${item.year}`}
-      </AuthorInfo>
+      <AuthorName>{item.author}</AuthorName>
+      {item.year && <AuthorYear>{item.year}</AuthorYear>}
     </Container>
   );
 });

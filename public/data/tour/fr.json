@@ -162,8 +162,8 @@
           "description": "L'<strong>Hotel Arts Barcelona</strong> est un hotel 5 etoiles de <em>44 etages</em>. Il offre une vue spectaculaire sur la mer Mediterranee."
         },
         {
-          "x": 75,
-          "y": 70,
+          "x": 20,
+          "y": 80,
           "title": "Port Olympique",
           "description": "Le <strong>Port Olympique</strong> a ete construit pour les JO de 1992. Aujourd'hui c'est un quartier anime avec des restaurants et des bars."
         }
@@ -180,8 +180,8 @@
     {
       "id": "16",
       "type": "quote",
-      "quote": "Barcelone est la grande enchanteresse",
-      "author": "Federico Garcia Lorca",
+      "quote": "The happiest man in the world is the one who lives in Barcelona. Barcelona is the city of dreams.",
+      "author": "Salvador Dalí",
       "year": "1927"
     },
     {

@@ -1,6 +1,7 @@
 import React, { memo, useState, useRef, useCallback } from 'react';
 import tw from 'twin.macro';
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
+import { ArrowsOutLineHorizontalIcon } from '@phosphor-icons/react';
 import { ImageComparisonStop } from '../../types';
 import { RichText } from '../RichText';
 
@@ -44,24 +45,38 @@ const SliderLine = styled.div<{ $position: number }>`
   transform: translateX(-1px);
 `;
 
-const SliderHandle = styled.div`
+const handlePulse = keyframes`
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+`;
+
+const SliderHandle = styled.div<{ $dragging: boolean }>`
   ${tw`absolute top-1/2 z-10 w-8 h-8 rounded-full flex items-center justify-center`}
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(${({ $dragging }) => $dragging ? 0.95 : 1});
+  transition: transform 0.15s ease-out;
   background-color: #FFFFFF;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  &::after {
+    content: '';
+    ${tw`absolute inset-0 rounded-full`}
+    z-index: -1;
+    background-color: rgba(255, 255, 255, 0.4);
+    ${({ $dragging }) => !$dragging && css`animation: ${handlePulse} 2s ease-out infinite;`}
+  }
 `;
 
-const HandleArrows = styled.span`
-  ${tw`text-xs font-bold select-none`}
-  color: #333333;
-  letter-spacing: 2px;
-`;
 
-const Label = styled.div<{ $side: 'left' | 'right' }>`
+const Label = styled.div<{ $side: 'left' | 'right'; $position: number }>`
   ${tw`absolute bottom-3 z-10 px-2 py-1 rounded text-xs font-medium`}
   ${({ $side }) => $side === 'left' ? tw`left-3` : tw`right-3`}
   background-color: rgba(0, 0, 0, 0.6);
   color: #FFFFFF;
+  opacity: ${({ $side, $position }) =>
+    $side === 'left'
+      ? Math.min(1, $position / 20)
+      : Math.min(1, (100 - $position) / 20)};
+  transition: opacity 0.1s ease-out;
 `;
 
 const CaptionArea = styled.div`
@@ -75,6 +90,7 @@ const Caption = styled.p`
 
 export const ImageComparisonCard = memo<ImageComparisonCardProps>(({ item }) => {
   const [position, setPosition] = useState(50);
+  const [dragging, setDragging] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
 
@@ -89,6 +105,7 @@ export const ImageComparisonCard = memo<ImageComparisonCardProps>(({ item }) => 
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     draggingRef.current = true;
+    setDragging(true);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     updatePosition(e.clientX);
   }, [updatePosition]);
@@ -100,6 +117,7 @@ export const ImageComparisonCard = memo<ImageComparisonCardProps>(({ item }) => 
 
   const handlePointerUp = useCallback(() => {
     draggingRef.current = false;
+    setDragging(false);
   }, []);
 
   return (
@@ -115,13 +133,13 @@ export const ImageComparisonCard = memo<ImageComparisonCardProps>(({ item }) => 
         <OverlayImage src={item.after} alt={item.afterLabel || 'After'} $position={position} />
 
         <SliderLine $position={position}>
-          <SliderHandle>
-            <HandleArrows>&#x25C0;&#x25B6;</HandleArrows>
+          <SliderHandle $dragging={dragging}>
+            <ArrowsOutLineHorizontalIcon size={18} color="#333333" weight="bold" />
           </SliderHandle>
         </SliderLine>
 
-        {item.beforeLabel && <Label $side="left">{item.beforeLabel}</Label>}
-        {item.afterLabel && <Label $side="right">{item.afterLabel}</Label>}
+        {item.beforeLabel && <Label $side="left" $position={position}>{item.beforeLabel}</Label>}
+        {item.afterLabel && <Label $side="right" $position={position}>{item.afterLabel}</Label>}
       </ComparisonWrapper>
 
       {item.caption && (

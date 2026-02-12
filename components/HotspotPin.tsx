@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useLayoutEffect } from 'react';
 import tw from 'twin.macro';
 import styled, { keyframes } from 'styled-components';
 import { RichText } from './RichText';
@@ -14,14 +14,15 @@ interface HotspotPinProps {
 }
 
 const pulse = keyframes`
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(3.3); opacity: 0; }
 `;
 
-const PinContainer = styled.div<{ $x: number; $y: number }>`
-  ${tw`absolute z-10`}
+const PinContainer = styled.div<{ $x: number; $y: number; $isOpen: boolean }>`
+  ${tw`absolute`}
   left: ${({ $x }) => $x}%;
   top: ${({ $y }) => $y}%;
+  z-index: ${({ $isOpen }) => $isOpen ? 30 : 10};
 `;
 
 const PinDot = styled.button`
@@ -34,17 +35,15 @@ const PinDot = styled.button`
   &::after {
     content: '';
     ${tw`absolute inset-0 rounded-full`}
+    z-index: -1;
     background-color: ${({ theme }) => theme.hotspot.pinPulseColor};
     animation: ${pulse} 2s ease-out infinite;
   }
 `;
 
-const Popover = styled.div<{ $openUp: boolean; $openLeft: boolean }>`
-  ${tw`absolute z-20 p-3 rounded-lg`}
+const Popover = styled.div`
+  ${tw`absolute p-3 rounded-lg`}
   width: 200px;
-  ${({ $openUp }) => $openUp ? 'bottom: 16px;' : 'top: 16px;'}
-  ${({ $openLeft }) => $openLeft ? 'right: -10px;' : 'left: -10px;'}
-  transform: translateX(0);
   background-color: ${({ theme }) => theme.tooltip.backgroundColor};
   border: 1px solid ${({ theme }) => theme.tooltip.borderColor};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -64,14 +63,52 @@ export const HotspotPin: React.FC<HotspotPinProps> = ({
   x, y, title, description, isOpen, onToggle, onClose,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [openUp, setOpenUp] = useState(false);
-  const [openLeft, setOpenLeft] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({ top: 16, left: -10 });
 
-  // Determine popover direction based on pin position
-  useEffect(() => {
-    setOpenUp(y > 60);
-    setOpenLeft(x > 60);
-  }, [x, y]);
+  // Position popover so it stays within the ImageWrapper (parent with position: relative)
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const popover = popoverRef.current;
+    const pin = containerRef.current;
+    if (!popover || !pin) return;
+
+    const wrapper = pin.parentElement;
+    if (!wrapper) return;
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const pinRect = pin.getBoundingClientRect();
+
+    const pinRelX = pinRect.left - wrapperRect.left;
+    const pinRelY = pinRect.top - wrapperRect.top;
+    const popW = popover.offsetWidth;
+    const popH = popover.offsetHeight;
+    const gap = 16;
+
+    // Vertical: prefer below, flip above if not enough room
+    let top: number | undefined;
+    let bottom: number | undefined;
+    if (pinRelY + gap + popH <= wrapperRect.height) {
+      top = gap;
+    } else {
+      bottom = gap;
+    }
+
+    // Horizontal: prefer right-aligned to pin, shift if overflows
+    let left = -10;
+    const popRight = pinRelX + left + popW;
+    if (popRight > wrapperRect.width) {
+      left = wrapperRect.width - pinRelX - popW;
+    }
+    if (pinRelX + left < 0) {
+      left = -pinRelX;
+    }
+
+    setPopoverStyle({
+      ...(top !== undefined ? { top } : { bottom }),
+      left,
+    });
+  }, [isOpen, x, y]);
 
   // Click outside to close
   const handleClickOutside = useCallback((e: MouseEvent) => {
@@ -88,10 +125,10 @@ export const HotspotPin: React.FC<HotspotPinProps> = ({
   }, [isOpen, handleClickOutside]);
 
   return (
-    <PinContainer ref={containerRef} $x={x} $y={y}>
+    <PinContainer ref={containerRef} $x={x} $y={y} $isOpen={isOpen}>
       <PinDot onClick={(e) => { e.stopPropagation(); onToggle(); }} aria-label={title} />
       {isOpen && (
-        <Popover $openUp={openUp} $openLeft={openLeft}>
+        <Popover ref={popoverRef} style={popoverStyle}>
           <PopoverTitle>{title}</PopoverTitle>
           {description && (
             <PopoverDescription><RichText content={description} /></PopoverDescription>
