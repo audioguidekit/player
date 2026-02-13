@@ -86,7 +86,9 @@ const TextContent = styled.div`
 `;
 
 const Title = styled.h3`
-  ${tw`text-xl font-bold mb-1 leading-tight`}
+  ${tw`mb-1 leading-tight`}
+  font-size: ${({ theme }) => theme.cards.titleFontSize};
+  font-weight: ${({ theme }) => theme.cards.titleFontWeight};
   color: ${({ theme }) => theme.cards.textColor};
 `;
 

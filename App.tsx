@@ -841,6 +841,8 @@ const App: React.FC = () => {
                     onFullscreenChange={tour?.fullscreenPlayer ? setIsFullscreenPlayerOpen : undefined}
                     tourTitle={tour?.title}
                     stopNumber={tour?.showStopNumber !== false && currentAudioStop ? audioPlaylist.findIndex(s => s.id === currentAudioStop.id) + 1 : undefined}
+                    nextStopImage={canGoNext ? audioPlaylist[currentAudioIndex + 1]?.image : undefined}
+                    prevStopImage={canGoPrev ? audioPlaylist[currentAudioIndex - 1]?.image : undefined}
                     currentTime={audioPlayer.currentTime}
                     duration={audioPlayer.duration}
                     onSeek={handleSeek}

@@ -25,7 +25,7 @@ const Video = styled.video`
 `;
 
 const CaptionContainer = styled.div`
-  ${tw`p-6`}
+  ${tw`px-6 py-3`}
 `;
 
 const Caption = styled.p`

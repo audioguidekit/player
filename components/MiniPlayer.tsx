@@ -45,6 +45,9 @@ interface MiniPlayerProps {
   currentTime?: number;
   duration?: number;
   onSeek?: (time: number) => void;
+  // Adjacent artwork for drag peek
+  nextStopImage?: string;
+  prevStopImage?: string;
 }
 
 // Root wrapper — display:contents so children position against the MobileFrame parent
@@ -160,8 +163,13 @@ const TranscriptionButton = styled.button<{ $isExpanded: boolean }>(({ $isExpand
     color: theme.buttons.transcription.iconColor,
     transformOrigin: 'center center',
     transition: 'background-color 100ms ease-in-out, transform 100ms ease-out',
-    '&:hover': {
-      backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || theme.buttons.transcription.backgroundColor,
+    '@media (hover: hover)': {
+      '&:hover': {
+        backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || theme.buttons.transcription.backgroundColor,
+      },
+    },
+    '&:active': {
+      transform: 'scale(0.9)',
     },
   },
 ]);
@@ -260,6 +268,8 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   currentTime = 0,
   duration = 0,
   onSeek,
+  nextStopImage,
+  prevStopImage,
 }) => {
   // Use external state if provided, otherwise fall back to local state
   const [localIsExpanded, setLocalIsExpanded] = useState(true);
@@ -298,7 +308,48 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   }, [currentStop?.id]);
 
   const controls = useAnimationControls();
-  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  // Marquee: measure overflow and auto-scroll if title is too long
+  useEffect(() => {
+    const el = titleRef.current;
+    const container = containerRef.current;
+    if (!el || !container || !isExpanded) return;
+
+    controls.set({ x: 0 });
+
+    const raf = requestAnimationFrame(() => {
+      const textWidth = el.scrollWidth;
+      const containerWidth = container.clientWidth;
+      const overflow = textWidth - containerWidth;
+
+      if (overflow <= 0) return;
+
+      const scrollDuration = Math.max(3, overflow / 25);
+      const pauseDuration = 2;
+      const totalDuration = scrollDuration * 2 + pauseDuration * 2;
+
+      controls.start({
+        x: [0, 0, -overflow, -overflow, 0],
+        transition: {
+          duration: totalDuration,
+          times: [
+            0,
+            pauseDuration / totalDuration,
+            (pauseDuration + scrollDuration) / totalDuration,
+            (pauseDuration * 2 + scrollDuration) / totalDuration,
+            1,
+          ],
+          ease: 'linear',
+          repeat: Infinity,
+        },
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      controls.stop();
+    };
+  }, [currentStop?.id, controls, isExpanded]);
 
   // Unified swipe logic
   const dragX = useMotionValue(0);
@@ -477,12 +528,7 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                             e.stopPropagation();
                             setIsTranscriptionExpanded(!isTranscriptionExpanded);
                           }}
-                          onPointerDownCapture={(e) => {
-                            e.stopPropagation();
-                            (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
-                          }}
-                          onPointerUp={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
-                          onPointerLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = ''; }}
+                          onPointerDownCapture={(e) => e.stopPropagation()}
                           $isExpanded={isTranscriptionExpanded}
                                                    aria-label={isTranscriptionExpanded ? "Hide transcription" : "Show transcription"}
                         >
@@ -613,6 +659,8 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                 isTranscriptionOpen={isTranscriptionExpanded}
                 onToggleTranscription={setIsTranscriptionExpanded}
                 stopNumber={stopNumber}
+                nextStopImage={nextStopImage}
+                prevStopImage={prevStopImage}
               />
             </Suspense>
           </FullscreenOverlay>

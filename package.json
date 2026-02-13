@@ -25,8 +25,7 @@
     "styled-components": "^6.1.19",
     "three": "^0.182.0",
     "twin.macro": "^3.4.1",
-    "use-media-session": "^0.0.3",
-    "yet-another-react-lightbox-lite": "^1.10.0"
+    "use-media-session": "^0.0.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",

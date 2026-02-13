@@ -22,7 +22,7 @@ const SingleImage = styled.img`
 `;
 
 const ScrollStrip = styled.div`
-  ${tw`flex gap-2 overflow-x-auto py-4 px-4`}
+  ${tw`flex gap-2 overflow-x-auto pt-4 px-4`}
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
@@ -46,6 +46,7 @@ const Caption = styled.p`
 export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [sourceRect, setSourceRect] = useState<{ top: number; left: number; width: number; height: number } | undefined>();
 
   const isSingle = item.images.length === 1;
 
@@ -56,7 +57,9 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
     credit: img.credit,
   }));
 
-  const openAt = (index: number) => {
+  const openAt = (index: number, e: React.MouseEvent<HTMLImageElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setSourceRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
     setLightboxIndex(index);
     setLightboxOpen(true);
   };
@@ -67,7 +70,7 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
         <SingleImage
           src={item.images[0].url}
           alt={item.images[0].alt || ''}
-          onClick={() => openAt(0)}
+          onClick={(e) => openAt(0, e)}
         />
       ) : (
         <ScrollStrip>
@@ -76,7 +79,7 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
               key={i}
               src={img.url}
               alt={img.alt || ''}
-              onClick={() => openAt(i)}
+              onClick={(e) => openAt(i, e)}
             />
           ))}
         </ScrollStrip>
@@ -93,6 +96,7 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
         images={galleryItems}
         initialIndex={lightboxIndex}
         onClose={() => setLightboxOpen(false)}
+        sourceRect={sourceRect}
       />
     </Container>
   );

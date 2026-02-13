@@ -19,7 +19,7 @@ const Container = styled.div`
 `;
 
 const HeaderRow = styled.div`
-  ${tw`flex items-center gap-3 mb-3`}
+  ${tw`flex items-center gap-3 mb-3 -ml-2`}
 `;
 
 const NumberContainer = styled.div`
@@ -46,7 +46,6 @@ const NumberText = styled.span`
 
 const Title = styled.h3`
   ${tw`leading-tight flex-1`}
-  font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
   font-size: ${({ theme }) => theme.cards.titleFontSize};
   font-weight: ${({ theme }) => theme.cards.titleFontWeight};
   color: ${({ theme }) => theme.cards.textColor};

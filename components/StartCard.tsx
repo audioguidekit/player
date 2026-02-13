@@ -147,8 +147,10 @@ const DownloadButton = styled.button<{ $disabled?: boolean }>(({ $disabled, them
     '& svg': {
       color: theme.buttons.download.iconColor || theme.buttons.download.textColor,
     },
-    '&:hover': {
-      backgroundColor: theme.buttons.download.hoverBackground || theme.buttons.download.backgroundColor,
+    '@media (hover: hover)': {
+      '&:hover': {
+        backgroundColor: theme.buttons.download.hoverBackground || theme.buttons.download.backgroundColor,
+      },
     },
   },
   $disabled && tw`opacity-50 cursor-not-allowed active:scale-100`,

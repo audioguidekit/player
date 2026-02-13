@@ -17,8 +17,13 @@ const Button = styled.button<{ $disabled: boolean }>(({ $disabled, theme }) => [
     color: theme.miniPlayer.controls.otherButtonsIcon,
     transformOrigin: 'center center',
     transition: 'background-color 100ms ease-in-out, transform 100ms ease-out',
-    '&:hover': {
-      backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || theme.miniPlayer.controls.otherButtonsBackground,
+    '@media (hover: hover)': {
+      '&:hover': {
+        backgroundColor: theme.miniPlayer.controls.otherButtonsHoverBackground || theme.miniPlayer.controls.otherButtonsBackground,
+      },
+    },
+    '&:active': {
+      transform: 'scale(0.9)',
     },
   },
   $disabled && tw`opacity-40`,
@@ -37,16 +42,7 @@ export const SkipButton = React.memo<SkipButtonProps>(({
                 e.stopPropagation();
                 if (!disabled) onClick();
             }}
-            onPointerDownCapture={(e) => {
-                e.stopPropagation();
-                (e.currentTarget as HTMLElement).style.transform = 'scale(0.9)';
-            }}
-            onPointerUp={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = '';
-            }}
-            onPointerLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.transform = '';
-            }}
+            onPointerDownCapture={(e) => e.stopPropagation()}
             disabled={disabled}
             $disabled={disabled}
         >

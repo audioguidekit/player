@@ -32,7 +32,7 @@ const ContentContainer = styled.div`
 `;
 
 const HeaderRow = styled.div`
-  ${tw`flex items-center gap-3 mb-3`}
+  ${tw`flex items-center gap-3 mb-3 -ml-2`}
 `;
 
 const NumberContainer = styled.div`

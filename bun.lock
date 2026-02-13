@@ -18,7 +18,6 @@
         "three": "^0.182.0",
         "twin.macro": "^3.4.1",
         "use-media-session": "^0.0.3",
-        "yet-another-react-lightbox-lite": "^1.10.0",
       },
       "devDependencies": {
         "@playwright/test": "^1.58.0",
@@ -1199,8 +1198,6 @@
     "yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
 
     "yaml": ["yaml@1.10.2", "", {}, "sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg=="],
-
-    "yet-another-react-lightbox-lite": ["yet-another-react-lightbox-lite@1.10.0", "", { "peerDependencies": { "@types/react": "^18 || ^19", "@types/react-dom": "^18 || ^19", "react": "^18 || ^19", "react-dom": "^18 || ^19" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-T9zsIN3bEgbnnCegqhurlHifBuG3tIe/WflmGMQ4KyyGB3//WoCN4f5KrWnuG2oz69MuefJq/E5rARhanNr02Q=="],
 
     "yoctocolors": ["yoctocolors@2.1.2", "", {}, "sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug=="],
 
