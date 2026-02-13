@@ -27,6 +27,9 @@ const DISMISS_DISTANCE = 150;
 const DISMISS_VELOCITY = 500;
 const SWIPE_THRESHOLD = 80;
 const SWIPE_VELOCITY = 300;
+const PINCH_SCALE_MIN = 1;
+const PINCH_SCALE_MAX = 4;
+const PINCH_SNAP_BACK_THRESHOLD = 1.15;
 
 const backdropSpring = { type: 'spring' as const, damping: 30, stiffness: 300, mass: 0.8 };
 const imageSpring = { type: 'spring' as const, damping: 25, stiffness: 200 };
@@ -189,6 +192,19 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
   const singleBackdropOpacity = useTransform(dragDistance, [0, 300], [0.92, 0.3]);
   const singleImageScale = useTransform(dragDistance, [0, 300], [1, 0.85]);
 
+  // Pinch-to-zoom (touch only)
+  const pinchScale = useMotionValue(1);
+  const pinchPanX = useMotionValue(0);
+  const pinchPanY = useMotionValue(0);
+  const pinchInitialRef = React.useRef<{
+    distance: number;
+    centerX: number;
+    centerY: number;
+    scale: number;
+    panX: number;
+    panY: number;
+  } | null>(null);
+
   const handleDragStart = useCallback(() => {
     wasDraggingRef.current = true;
   }, []);
@@ -211,20 +227,95 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
     setShowControls((v) => !v);
   }, []);
 
+  // Pinch-to-zoom touch handlers (2 fingers)
+  const getPinchState = useCallback((touches: TouchList) => {
+    const a = touches[0];
+    const b = touches[1];
+    return {
+      centerX: (a.clientX + b.clientX) / 2,
+      centerY: (a.clientY + b.clientY) / 2,
+      distance: Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY),
+    };
+  }, []);
+
+  const handlePinchTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+        const { centerX, centerY, distance } = getPinchState(e.touches);
+        pinchInitialRef.current = {
+          distance,
+          centerX,
+          centerY,
+          scale: pinchScale.get(),
+          panX: pinchPanX.get(),
+          panY: pinchPanY.get(),
+        };
+      }
+    },
+    [getPinchState, pinchScale, pinchPanX, pinchPanY]
+  );
+
+  const handlePinchTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length >= 2 && pinchInitialRef.current) {
+        e.preventDefault();
+        const initial = pinchInitialRef.current;
+        const { centerX, centerY, distance } = getPinchState(e.touches);
+        const scaleDelta = distance / initial.distance;
+        let newScale = initial.scale * scaleDelta;
+        newScale = Math.max(PINCH_SCALE_MIN, Math.min(PINCH_SCALE_MAX, newScale));
+        const imagePointX = (initial.centerX - initial.panX) / initial.scale;
+        const imagePointY = (initial.centerY - initial.panY) / initial.scale;
+        const newPanX = centerX - imagePointX * newScale;
+        const newPanY = centerY - imagePointY * newScale;
+        pinchScale.set(newScale);
+        pinchPanX.set(newPanX);
+        pinchPanY.set(newPanY);
+      }
+    },
+    [getPinchState, pinchScale, pinchPanX, pinchPanY]
+  );
+
+  const handlePinchTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length < 2) {
+        pinchInitialRef.current = null;
+        const scale = pinchScale.get();
+        if (scale < PINCH_SNAP_BACK_THRESHOLD) {
+          animateValue(pinchScale, 1, imageSpring);
+          animateValue(pinchPanX, 0, imageSpring);
+          animateValue(pinchPanY, 0, imageSpring);
+        }
+      }
+    },
+    [pinchScale, pinchPanX, pinchPanY]
+  );
+
   // --- Gallery drag (direction-locked: vertical=dismiss, horizontal=navigate) ---
   const dismissProgress = useMotionValue(0);
   const galleryBackdropOpacity = useTransform(dismissProgress, [0, 300], [0.92, 0.3]);
   const galleryImageScale = useTransform(dismissProgress, [0, 300], [1, 0.85]);
 
-  // Reset drag motion values when lightbox reopens (clears stale drag position from previous dismiss)
+  // Reset drag and pinch motion values when lightbox reopens (clears stale position from previous dismiss)
   if (justOpened) {
     dragX.set(0);
     dragY.set(0);
     dismissProgress.set(0);
+    pinchScale.set(1);
+    pinchPanX.set(0);
+    pinchPanY.set(0);
+    pinchInitialRef.current = null;
   }
 
-  // Reset dismiss progress on slide change
-  useEffect(() => { dismissProgress.set(0); }, [navIndex, dismissProgress]);
+  // Reset dismiss progress and pinch zoom on slide change
+  useEffect(() => {
+    dismissProgress.set(0);
+    pinchScale.set(1);
+    pinchPanX.set(0);
+    pinchPanY.set(0);
+    pinchInitialRef.current = null;
+  }, [navIndex, dismissProgress, pinchScale, pinchPanX, pinchPanY]);
 
   const handleGalleryDrag = useCallback((_: any, info: PanInfo) => {
     dismissProgress.set(Math.abs(info.offset.y));
@@ -443,69 +534,101 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
 
           {/* Image */}
           {isGallery ? (
-            <AnimatePresence mode="popLayout" initial={!!entryTransform} custom={direction}>
-              <motion.img
-                key={navIndex}
-                ref={imageRef}
-                custom={direction}
-                variants={slideVariants}
-                initial={entryTransform ? { ...entryTransform, opacity: 1 } : "enter"}
-                animate="center"
-                exit="exit"
-                transition={entryTransform ? heroTransition : imageSpring}
-                src={currentSlide.src}
-                alt={currentSlide.alt || ''}
-                drag
-                dragDirectionLock
-                dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-                dragElastic={0.9}
-                onDragStart={handleDragStart}
-                onDrag={handleGalleryDrag}
-                onDragEnd={handleGalleryDragEnd}
-                onClick={handleImageClick}
+            <div
+              style={{ display: 'inline-flex', touchAction: 'none' }}
+              onTouchStart={handlePinchTouchStart}
+              onTouchMove={handlePinchTouchMove}
+              onTouchEnd={handlePinchTouchEnd}
+            >
+              <motion.div
                 style={{
-                  maxWidth: '90vw',
-                  maxHeight: '75vh',
-                  objectFit: 'contain',
-                  borderRadius: 8,
-                  cursor: 'grab',
-                  userSelect: 'none',
-                  zIndex: 1,
-                  scale: galleryImageScale,
+                  scale: pinchScale,
+                  x: pinchPanX,
+                  y: pinchPanY,
+                  transformOrigin: 'center center',
                 }}
-                draggable={false}
-              />
-            </AnimatePresence>
+              >
+                <AnimatePresence mode="popLayout" initial={!!entryTransform} custom={direction}>
+                  <motion.img
+                    key={navIndex}
+                    ref={imageRef}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial={entryTransform ? { ...entryTransform, opacity: 1 } : "enter"}
+                    animate="center"
+                    exit="exit"
+                    transition={entryTransform ? heroTransition : imageSpring}
+                    src={currentSlide.src}
+                    alt={currentSlide.alt || ''}
+                    drag
+                    dragDirectionLock
+                    dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                    dragElastic={0.9}
+                    onDragStart={handleDragStart}
+                    onDrag={handleGalleryDrag}
+                    onDragEnd={handleGalleryDragEnd}
+                    onClick={handleImageClick}
+                    style={{
+                      maxWidth: '90vw',
+                      maxHeight: '75vh',
+                      objectFit: 'contain',
+                      borderRadius: 8,
+                      cursor: 'grab',
+                      userSelect: 'none',
+                      zIndex: 1,
+                      scale: galleryImageScale,
+                    }}
+                    draggable={false}
+                  />
+                </AnimatePresence>
+              </motion.div>
+            </div>
           ) : (
-            <motion.img
-              key="single-image"
-              ref={imageRef}
-              initial={entryTransform ? { ...entryTransform, opacity: 1 } : { scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
-              exit={getExitProps()}
-              transition={isHeroExit || entryTransform ? heroTransition : backdropSpring}
-              src={currentSlide.src}
-              alt={currentSlide.alt || ''}
-              drag
-              dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
-              dragElastic={0.9}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onClick={handleImageClick}
-              style={{
-                maxWidth: '90vw',
-                maxHeight: '75vh',
-                objectFit: 'contain',
-                borderRadius: 8,
-                cursor: 'grab',
-                userSelect: 'none',
-                zIndex: 1,
-                scale: singleImageScale,
-                x: dragX,
-                y: dragY,
-              }}
-              draggable={false}
-            />
+            <div
+              style={{ display: 'inline-flex', touchAction: 'none' }}
+              onTouchStart={handlePinchTouchStart}
+              onTouchMove={handlePinchTouchMove}
+              onTouchEnd={handlePinchTouchEnd}
+            >
+              <motion.div
+                style={{
+                  scale: pinchScale,
+                  x: pinchPanX,
+                  y: pinchPanY,
+                  transformOrigin: 'center center',
+                }}
+              >
+                <motion.img
+                  key="single-image"
+                  ref={imageRef}
+                  initial={entryTransform ? { ...entryTransform, opacity: 1 } : { scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1, x: 0, y: 0 }}
+                  exit={getExitProps()}
+                  transition={isHeroExit || entryTransform ? heroTransition : backdropSpring}
+                  src={currentSlide.src}
+                  alt={currentSlide.alt || ''}
+                  drag
+                  dragConstraints={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                  dragElastic={0.9}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onClick={handleImageClick}
+                  style={{
+                    maxWidth: '90vw',
+                    maxHeight: '75vh',
+                    objectFit: 'contain',
+                    borderRadius: 8,
+                    cursor: 'grab',
+                    userSelect: 'none',
+                    zIndex: 1,
+                    scale: singleImageScale,
+                    x: dragX,
+                    y: dragY,
+                  }}
+                  draggable={false}
+                />
+              </motion.div>
+            </div>
           )}
 
           {/* Caption/Credit footer */}
