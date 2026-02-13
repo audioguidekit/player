@@ -35,7 +35,7 @@ CLAUDE.md
 dev-dist/
 
 # Private work files (not public)
-_private/
+.private/
 
 # Playwright
 /test-results/
