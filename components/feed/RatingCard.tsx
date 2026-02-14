@@ -1,5 +1,6 @@
 import React from 'react';
-import { StarIcon, CheckCircleIcon } from '@phosphor-icons/react';
+import { StarIcon } from '@phosphor-icons/react/dist/csr/Star';
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/csr/CheckCircle';
 import { motion } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';

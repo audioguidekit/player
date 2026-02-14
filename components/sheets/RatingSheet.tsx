@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StarIcon, CheckCircleIcon, AtIcon } from '@phosphor-icons/react';
+import { StarIcon } from '@phosphor-icons/react/dist/csr/Star';
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/csr/CheckCircle';
+import { AtIcon } from '@phosphor-icons/react/dist/csr/At';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';

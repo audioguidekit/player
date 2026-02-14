@@ -1,5 +1,6 @@
-import React, { memo, useState } from 'react';
-import { PlayIcon, PauseIcon } from '@phosphor-icons/react';
+import React, { memo, useState, lazy, Suspense } from 'react';
+import { PlayIcon } from '@phosphor-icons/react/dist/csr/Play';
+import { PauseIcon } from '@phosphor-icons/react/dist/csr/Pause';
 import { AudioStop } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import tw from 'twin.macro';
@@ -7,7 +8,8 @@ import styled from 'styled-components';
 import { AnimatedCheckmark } from '../AnimatedCheckmark';
 import { iconVariants, iconTransition } from '../../src/animations/variants';
 import { RichText } from '../RichText';
-import { ImageLightbox } from '../ImageLightbox';
+
+const ImageLightbox = lazy(() => import('../ImageLightbox').then(m => ({ default: m.ImageLightbox })));
 
 interface AudioStopCardProps {
   item: AudioStop;
@@ -209,14 +211,18 @@ export const AudioStopCard = memo<AudioStopCardProps>(({
           </ContentArea>
         )}
       </CardContainer>
-      <ImageLightbox
-        isOpen={lightboxOpen}
-        src={item.image}
-        alt={item.imageAlt || item.title}
-        caption={item.imageCaption}
-        credit={item.imageCredit}
-        onClose={() => setLightboxOpen(false)}
-      />
+      {lightboxOpen && (
+        <Suspense fallback={null}>
+          <ImageLightbox
+            isOpen={lightboxOpen}
+            src={item.image}
+            alt={item.imageAlt || item.title}
+            caption={item.imageCaption}
+            credit={item.imageCredit}
+            onClose={() => setLightboxOpen(false)}
+          />
+        </Suspense>
+      )}
     </OuterContainer>
   );
 });

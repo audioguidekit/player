@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
-import { SkipBackIcon, SkipForwardIcon, XIcon, ClosedCaptioningIcon } from '@phosphor-icons/react';
+import { SkipBackIcon } from '@phosphor-icons/react/dist/csr/SkipBack';
+import { SkipForwardIcon } from '@phosphor-icons/react/dist/csr/SkipForward';
+import { XIcon } from '@phosphor-icons/react/dist/csr/X';
+import { ClosedCaptioningIcon } from '@phosphor-icons/react/dist/csr/ClosedCaptioning';
 import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';

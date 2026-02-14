@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate as animateValue, PanInfo } from 'framer-motion';
-import { XIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react/dist/csr/X';
+import { CaretLeftIcon } from '@phosphor-icons/react/dist/csr/CaretLeft';
+import { CaretRightIcon } from '@phosphor-icons/react/dist/csr/CaretRight';
 import { RichText } from './RichText';
 
 export interface GalleryItem {

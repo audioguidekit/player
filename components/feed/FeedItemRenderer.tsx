@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Stop } from '../../types';
 import { AudioStopCard } from './AudioStopCard';
 import { TextCard } from './TextCard';
 import { ImageTextCard } from './ImageTextCard';
-import { ThreeDObjectCard } from './ThreeDObjectCard';
-import { VideoCard } from './VideoCard';
-import { HeadlineCard } from './HeadlineCard';
-import { RatingCard } from './RatingCard';
-import { EmailCard } from './EmailCard';
-import { QuoteCard } from './QuoteCard';
-import { ImageGalleryCard } from './ImageGalleryCard';
-import { ImageComparisonCard } from './ImageComparisonCard';
-import { HotspotImageCard } from './HotspotImageCard';
-import { EmbedCard } from './EmbedCard';
+
+const ThreeDObjectCard = lazy(() => import('./ThreeDObjectCard').then(m => ({ default: m.ThreeDObjectCard })));
+const VideoCard = lazy(() => import('./VideoCard').then(m => ({ default: m.VideoCard })));
+const HeadlineCard = lazy(() => import('./HeadlineCard').then(m => ({ default: m.HeadlineCard })));
+const RatingCard = lazy(() => import('./RatingCard').then(m => ({ default: m.RatingCard })));
+const EmailCard = lazy(() => import('./EmailCard').then(m => ({ default: m.EmailCard })));
+const QuoteCard = lazy(() => import('./QuoteCard').then(m => ({ default: m.QuoteCard })));
+const ImageGalleryCard = lazy(() => import('./ImageGalleryCard').then(m => ({ default: m.ImageGalleryCard })));
+const ImageComparisonCard = lazy(() => import('./ImageComparisonCard').then(m => ({ default: m.ImageComparisonCard })));
+const HotspotImageCard = lazy(() => import('./HotspotImageCard').then(m => ({ default: m.HotspotImageCard })));
+const EmbedCard = lazy(() => import('./EmbedCard').then(m => ({ default: m.EmbedCard })));
 
 interface FeedItemRendererProps {
   item: Stop;
@@ -57,25 +58,25 @@ export const FeedItemRenderer: React.FC<FeedItemRendererProps> = ({
     case 'image-text':
       return <ImageTextCard item={item} index={index} showNumber={showNumber} />;
     case '3d-object':
-      return <ThreeDObjectCard item={item} />;
+      return <Suspense fallback={null}><ThreeDObjectCard item={item} /></Suspense>;
     case 'video':
-      return <VideoCard item={item} />;
+      return <Suspense fallback={null}><VideoCard item={item} /></Suspense>;
     case 'headline':
-      return <HeadlineCard item={item} />;
+      return <Suspense fallback={null}><HeadlineCard item={item} /></Suspense>;
     case 'rating':
-      return <RatingCard item={item} onOpenRatingSheet={onOpenRatingSheet} compactLayout={compactLayout} />;
+      return <Suspense fallback={null}><RatingCard item={item} onOpenRatingSheet={onOpenRatingSheet} compactLayout={compactLayout} /></Suspense>;
     case 'email':
-      return <EmailCard item={item} />;
+      return <Suspense fallback={null}><EmailCard item={item} /></Suspense>;
     case 'quote':
-      return <QuoteCard item={item} />;
+      return <Suspense fallback={null}><QuoteCard item={item} /></Suspense>;
     case 'image-gallery':
-      return <ImageGalleryCard item={item} />;
+      return <Suspense fallback={null}><ImageGalleryCard item={item} /></Suspense>;
     case 'image-comparison':
-      return <ImageComparisonCard item={item} />;
+      return <Suspense fallback={null}><ImageComparisonCard item={item} /></Suspense>;
     case 'hotspot-image':
-      return <HotspotImageCard item={item} />;
+      return <Suspense fallback={null}><HotspotImageCard item={item} /></Suspense>;
     case 'embed':
-      return <EmbedCard item={item} />;
+      return <Suspense fallback={null}><EmbedCard item={item} /></Suspense>;
     default:
       return null;
   }

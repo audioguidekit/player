@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { PlayIcon, PauseIcon, CheckIcon } from '@phosphor-icons/react';
+import { PlayIcon } from '@phosphor-icons/react/dist/csr/Play';
+import { PauseIcon } from '@phosphor-icons/react/dist/csr/Pause';
+import { CheckIcon } from '@phosphor-icons/react/dist/csr/Check';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 

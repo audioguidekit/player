@@ -6,7 +6,7 @@ import { TourData } from '../types';
 import { FeedItemRenderer } from '../components/feed/FeedItemRenderer';
 import { TourHeader } from '../components/TourHeader';
 import { AudioStopCardCompact } from '../components/feed/AudioStopCardCompact';
-import { HeadphonesIcon } from '@phosphor-icons/react';
+import { HeadphonesIcon } from '@phosphor-icons/react/dist/csr/Headphones';
 
 const Container = styled.div`
   ${tw`flex flex-col h-full relative w-full pb-12`}

@@ -1,5 +1,9 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CaretDownIcon, SkipBackIcon, SkipForwardIcon, ClosedCaptioningIcon, InfoIcon } from '@phosphor-icons/react';
+import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
+import { SkipBackIcon } from '@phosphor-icons/react/dist/csr/SkipBack';
+import { SkipForwardIcon } from '@phosphor-icons/react/dist/csr/SkipForward';
+import { ClosedCaptioningIcon } from '@phosphor-icons/react/dist/csr/ClosedCaptioning';
+import { InfoIcon } from '@phosphor-icons/react/dist/csr/Info';
 import { motion, AnimatePresence, useAnimationControls, useMotionValue, animate, type PanInfo } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';

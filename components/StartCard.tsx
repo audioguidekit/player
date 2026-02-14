@@ -1,5 +1,11 @@
 import React from 'react';
-import { ArrowLineUpIcon, ClockIcon, HeadphonesIcon, SparkleIcon, ArrowClockwiseIcon, CloudArrowDownIcon, CloudSlashIcon } from '@phosphor-icons/react';
+import { ArrowLineUpIcon } from '@phosphor-icons/react/dist/csr/ArrowLineUp';
+import { ClockIcon } from '@phosphor-icons/react/dist/csr/Clock';
+import { HeadphonesIcon } from '@phosphor-icons/react/dist/csr/Headphones';
+import { SparkleIcon } from '@phosphor-icons/react/dist/csr/Sparkle';
+import { ArrowClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
+import { CloudArrowDownIcon } from '@phosphor-icons/react/dist/csr/CloudArrowDown';
+import { CloudSlashIcon } from '@phosphor-icons/react/dist/csr/CloudSlash';
 import tw from 'twin.macro';
 import styled, { useTheme } from 'styled-components';
 import { TourData } from '../types';

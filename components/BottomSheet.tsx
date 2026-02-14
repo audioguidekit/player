@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { XIcon } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react/dist/csr/X';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 

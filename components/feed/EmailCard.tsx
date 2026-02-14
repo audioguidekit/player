@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EnvelopeSimpleIcon } from '@phosphor-icons/react';
+import { EnvelopeSimpleIcon } from '@phosphor-icons/react/dist/csr/EnvelopeSimple';
 import { motion } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';

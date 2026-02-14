@@ -1,5 +1,6 @@
 import React from 'react';
-import { HouseIcon, CloudSlashIcon } from '@phosphor-icons/react';
+import { HouseIcon } from '@phosphor-icons/react/dist/csr/House';
+import { CloudSlashIcon } from '@phosphor-icons/react/dist/csr/CloudSlash';
 import { motion, MotionValue, AnimatePresence } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';

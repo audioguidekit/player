@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckIcon } from '@phosphor-icons/react';
+import { CheckIcon } from '@phosphor-icons/react/dist/csr/Check';
 // Direct imports instead of wildcard to reduce bundle size (~80-120KB savings)
 import { GB, CZ, DE, FR, IT, ES } from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';

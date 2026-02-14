@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
-import { QuotesIcon } from '@phosphor-icons/react';
+import { QuotesIcon } from '@phosphor-icons/react/dist/csr/Quotes';
 import { QuoteStop } from '../../types';
 
 interface QuoteCardProps {

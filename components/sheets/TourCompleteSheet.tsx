@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircleIcon } from '@phosphor-icons/react';
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/csr/CheckCircle';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { BottomSheet } from '../BottomSheet';

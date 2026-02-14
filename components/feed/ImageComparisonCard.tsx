@@ -1,7 +1,7 @@
 import React, { memo, useState, useRef, useCallback } from 'react';
 import tw from 'twin.macro';
 import styled, { keyframes, css } from 'styled-components';
-import { ArrowsOutLineHorizontalIcon } from '@phosphor-icons/react';
+import { ArrowsOutLineHorizontalIcon } from '@phosphor-icons/react/dist/csr/ArrowsOutLineHorizontal';
 import { ImageComparisonStop } from '../../types';
 import { RichText } from '../RichText';
 

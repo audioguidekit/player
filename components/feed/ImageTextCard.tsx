@@ -1,9 +1,10 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, lazy, Suspense } from 'react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { ImageTextStop } from '../../types';
 import { RichText } from '../RichText';
-import { ImageLightbox } from '../ImageLightbox';
+
+const ImageLightbox = lazy(() => import('../ImageLightbox').then(m => ({ default: m.ImageLightbox })));
 
 interface ImageTextCardProps {
   item: ImageTextStop;
@@ -94,14 +95,18 @@ export const ImageTextCard = memo<ImageTextCardProps>(({ item, index = 0, showNu
       <ImageContainer onClick={() => setLightboxOpen(true)}>
         <Image src={item.image} alt={item.imageAlt || item.title || 'Content'} />
       </ImageContainer>
-      <ImageLightbox
-        isOpen={lightboxOpen}
-        src={item.image}
-        alt={item.imageAlt || item.title}
-        caption={item.imageCaption}
-        credit={item.imageCredit}
-        onClose={() => setLightboxOpen(false)}
-      />
+      {lightboxOpen && (
+        <Suspense fallback={null}>
+          <ImageLightbox
+            isOpen={lightboxOpen}
+            src={item.image}
+            alt={item.imageAlt || item.title}
+            caption={item.imageCaption}
+            credit={item.imageCredit}
+            onClose={() => setLightboxOpen(false)}
+          />
+        </Suspense>
+      )}
       {(item.imageCaption || item.imageCredit) && (
         <CaptionArea>
           {item.imageCaption && <Caption><RichText content={item.imageCaption} /></Caption>}

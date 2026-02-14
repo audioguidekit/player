@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, useTransform, MotionValue, useMotionTemplate } from 'framer-motion';
-import { ChatCircleDotsIcon, CaretDownIcon } from '@phosphor-icons/react';
+import { ChatCircleDotsIcon } from '@phosphor-icons/react/dist/csr/ChatCircleDots';
+import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 // Direct imports instead of wildcard to reduce bundle size (~80-120KB savings)
 import { GB, CZ, DE, FR, IT, ES } from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';

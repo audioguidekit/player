@@ -1,9 +1,10 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, lazy, Suspense } from 'react';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { ImageGalleryStop } from '../../types';
 import { RichText } from '../RichText';
-import { ImageLightbox } from '../ImageLightbox';
+
+const ImageLightbox = lazy(() => import('../ImageLightbox').then(m => ({ default: m.ImageLightbox })));
 
 interface ImageGalleryCardProps {
   item: ImageGalleryStop;
@@ -91,13 +92,17 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
         </CaptionArea>
       )}
 
-      <ImageLightbox
-        isOpen={lightboxOpen}
-        images={galleryItems}
-        initialIndex={lightboxIndex}
-        onClose={() => setLightboxOpen(false)}
-        sourceRect={sourceRect}
-      />
+      {lightboxOpen && (
+        <Suspense fallback={null}>
+          <ImageLightbox
+            isOpen={lightboxOpen}
+            images={galleryItems}
+            initialIndex={lightboxIndex}
+            onClose={() => setLightboxOpen(false)}
+            sourceRect={sourceRect}
+          />
+        </Suspense>
+      )}
     </Container>
   );
 });
