@@ -32,7 +32,7 @@ const HomeButton = styled.button`
   background-color: transparent;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: ${({ theme }) => theme.header.hoverBackground || 'rgba(0, 0, 0, 0.05)'};
   }
 `;
 

@@ -17,6 +17,7 @@ export const defaultDarkTheme: ThemeConfig = {
     textColor: '#D4D4D4', // Soft white for text
     timeFontSize: '14px',
     timeFontWeight: '400',
+    hoverBackground: 'rgba(255, 255, 255, 0.05)',
     progressBar: {
       backgroundColor: 'rgba(255, 255, 255, 0.1)', // Very faint track
       highlightColor: '#459825', // Green for progress
@@ -122,6 +123,7 @@ export const defaultDarkTheme: ThemeConfig = {
     titleFontSize: '15px',
     titleFontWeight: '400',
     transcriptionFontSize: '15px',
+    shadow: '0 -10px 40px rgba(0, 0, 0, 0.15)',
     progressBar: {
       backgroundColor: '#333333',
       highlightColor: '#FFFFFF', // White progress line
@@ -145,6 +147,8 @@ export const defaultDarkTheme: ThemeConfig = {
     borderColor: 'transparent', // No border needed due to background color shift
     titleFontSize: '18px',
     titleFontWeight: '600',
+    backdropColor: 'rgba(0, 0, 0, 0.2)',
+    shadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
   },
 
   status: {
@@ -173,6 +177,12 @@ export const defaultDarkTheme: ThemeConfig = {
       borderColor: 'rgba(255, 255, 255, 0.15)',
       textColor: '#a3a3a3',
     },
+    overlay: {
+      buttonBackground: 'rgba(0, 0, 0, 0.4)',
+      buttonColor: '#FFFFFF',
+      gradientTop: 'rgba(0, 0, 0, 0.3)',
+      gradientBottom: 'rgba(0, 0, 0, 0.6)',
+    },
   },
 
   inputs: {
@@ -195,14 +205,34 @@ export const defaultDarkTheme: ThemeConfig = {
   },
 
   hotspot: {
-    pinColor: '#FFFFFF',
-    pinPulseColor: 'rgba(255, 255, 255, 0.3)',
+    pinColor: '#9E86FF',
+    pinPulseColor: 'rgba(158, 134, 255, 0.3)',
+    pinBorderColor: 'rgba(0, 0, 0, 0.3)',
+    pinShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
+    popoverShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
   },
 
   tooltip: {
     backgroundColor: '#333333',
     textColor: '#D4D4D4',
     borderColor: '#555555',
+  },
+
+  fullscreenPlayer: {
+    artworkBorderRadius: '16px',
+    artworkShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+    adjacentArtworkOpacity: 0.6,
+    infoButton: {
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+      iconColor: 'rgba(255, 255, 255, 0.55)',
+      backdropBlur: '4px',
+    },
+    captionOverlay: {
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      borderRadius: '12px',
+      backdropBlur: '12px',
+    },
+    transcriptionTextOpacity: 0.8,
   },
 
   colors: {

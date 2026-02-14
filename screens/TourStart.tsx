@@ -31,11 +31,20 @@ const Image = styled.img`
 `;
 
 const TopGradient = styled.div`
-  ${tw`absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/10`}
+  ${tw`absolute inset-0`}
+  background: linear-gradient(to bottom,
+    ${({ theme }) => theme.startCard.overlay?.gradientTop || 'rgba(0, 0, 0, 0.3)'} 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.1) 100%);
 `;
 
 const BottomGradient = styled.div`
-  ${tw`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80`}
+  ${tw`absolute inset-0`}
+  opacity: 0.8;
+  background: linear-gradient(to top,
+    ${({ theme }) => theme.startCard.overlay?.gradientBottom || 'rgba(0, 0, 0, 0.6)'} 0%,
+    transparent 50%,
+    transparent 100%);
 `;
 
 const DarkOverlay = styled(motion.div)`
@@ -49,16 +58,16 @@ const TopButtonsContainer = styled.div`
 
 const ActionButton = styled.button`
   ${tw`w-12 h-12 backdrop-blur-md rounded-full flex items-center justify-center transition-colors`}
-  background-color: rgba(0, 0, 0, 0.4);
-  color: #FFFFFF;
+  background-color: ${({ theme }) => theme.startCard.overlay?.buttonBackground || 'rgba(0, 0, 0, 0.4)'};
+  color: ${({ theme }) => theme.startCard.overlay?.buttonColor || '#FFFFFF'};
 `;
 
 const LanguageButton = styled.button<{ $iconOnly?: boolean }>`
   ${tw`backdrop-blur-md rounded-full flex items-center gap-2 transition-all active:scale-95`}
   height: 48px;
   padding: ${({ $iconOnly }) => $iconOnly ? '0 12px' : '0 12px'};
-  background-color: rgba(0, 0, 0, 0.4);
-  color: #FFFFFF;
+  background-color: ${({ theme }) => theme.startCard.overlay?.buttonBackground || 'rgba(0, 0, 0, 0.4)'};
+  color: ${({ theme }) => theme.startCard.overlay?.buttonColor || '#FFFFFF'};
   margin-left: auto; /* Stay on right side even when rating button is hidden */
 `;
 

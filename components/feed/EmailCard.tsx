@@ -15,7 +15,7 @@ const Container = styled.div`
   ${tw`p-6 mb-4`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
   border-radius: ${({ theme }) => theme.cards.borderRadius};
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: ${({ theme }) => theme.cards.shadow};
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
@@ -23,7 +23,7 @@ const SuccessContainer = styled(motion.div)`
   ${tw`p-6 mb-4`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
   border-radius: ${({ theme }) => theme.cards.borderRadius};
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: ${({ theme }) => theme.cards.shadow};
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
@@ -92,7 +92,7 @@ const SubmitButton = styled.button<{ $isValid: boolean }>(({ $isValid, theme }) 
   $isValid && {
     backgroundColor: theme.buttons.primary.backgroundColor,
     color: theme.buttons.primary.textColor,
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+    boxShadow: theme.cards.shadow,
   },
   $isValid && tw`active:scale-[0.98]`,
 ]);

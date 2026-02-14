@@ -29,8 +29,8 @@ const PinDot = styled.button`
   ${tw`w-5 h-5 rounded-full border-2 cursor-pointer relative`}
   transform: translate(-50%, -50%);
   background-color: ${({ theme }) => theme.hotspot.pinColor};
-  border-color: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border-color: ${({ theme }) => theme.hotspot.pinBorderColor || 'rgba(0, 0, 0, 0.3)'};
+  box-shadow: ${({ theme }) => theme.hotspot.pinShadow || '0 1px 4px rgba(0, 0, 0, 0.3)'};
 
   &::after {
     content: '';
@@ -44,19 +44,19 @@ const PinDot = styled.button`
 const Popover = styled.div`
   ${tw`absolute p-3 rounded-lg`}
   width: 200px;
-  background-color: ${({ theme }) => theme.tooltip.backgroundColor};
-  border: 1px solid ${({ theme }) => theme.tooltip.borderColor};
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: ${({ theme }) => theme.hotspot.popoverBackground || theme.tooltip.backgroundColor};
+  border: 1px solid ${({ theme }) => theme.hotspot.popoverBorderColor || theme.tooltip.borderColor};
+  box-shadow: ${({ theme }) => theme.hotspot.popoverShadow || '0 4px 12px rgba(0, 0, 0, 0.15)'};
 `;
 
 const PopoverTitle = styled.div`
   ${tw`text-sm font-semibold mb-1`}
-  color: ${({ theme }) => theme.tooltip.textColor};
+  color: ${({ theme }) => theme.hotspot.popoverTitleColor || theme.tooltip.textColor};
 `;
 
 const PopoverDescription = styled.div`
   ${tw`text-xs leading-relaxed`}
-  color: ${({ theme }) => theme.colors.text.secondary};
+  color: ${({ theme }) => theme.hotspot.popoverTextColor || theme.colors.text.secondary};
 `;
 
 export const HotspotPin: React.FC<HotspotPinProps> = ({

@@ -17,6 +17,7 @@ export const defaultLightTheme: ThemeConfig = {
     textColor: '#1A1A1A', // Sharp dark text
     timeFontSize: '14px',
     timeFontWeight: '400',
+    hoverBackground: 'rgba(0, 0, 0, 0.05)',
     progressBar: {
       backgroundColor: 'rgba(0, 0, 0, 0.05)', // Subtle track
       highlightColor: '#459825', // Green for progress
@@ -32,7 +33,7 @@ export const defaultLightTheme: ThemeConfig = {
     textColor: '#1A1A1A',
     borderColor: '#E5E5E5', // Soft border instead of shadow
     borderRadius: '6px',
-    shadow: 'none', // Flat design
+    shadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // Subtle card shadow
     titleFontSize: '18px',
     titleFontWeight: '400',
     durationBadgeFontSize: '13px',
@@ -122,6 +123,7 @@ export const defaultLightTheme: ThemeConfig = {
     titleFontSize: '15px',
     titleFontWeight: '400',
     transcriptionFontSize: '15px',
+    shadow: '0 -10px 40px rgba(0, 0, 0, 0.15)',
     progressBar: {
       backgroundColor: '#F0F0F0',
       highlightColor: '#000000', // Black progress line
@@ -145,6 +147,8 @@ export const defaultLightTheme: ThemeConfig = {
     borderColor: '#EEEEEE',
     titleFontSize: '18px',
     titleFontWeight: '600',
+    backdropColor: 'rgba(0, 0, 0, 0.2)',
+    shadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
   },
 
   status: {
@@ -173,6 +177,12 @@ export const defaultLightTheme: ThemeConfig = {
       borderColor: 'rgba(0, 0, 0, 0.1)',
       textColor: '#525252',
     },
+    overlay: {
+      buttonBackground: 'rgba(0, 0, 0, 0.4)',
+      buttonColor: '#FFFFFF',
+      gradientTop: 'rgba(0, 0, 0, 0.3)',
+      gradientBottom: 'rgba(0, 0, 0, 0.6)',
+    },
   },
 
   inputs: {
@@ -195,14 +205,34 @@ export const defaultLightTheme: ThemeConfig = {
   },
 
   hotspot: {
-    pinColor: '#000000',
-    pinPulseColor: 'rgba(0, 0, 0, 0.2)',
+    pinColor: '#9E86FF',
+    pinPulseColor: 'rgba(158, 134, 255, 0.3)',
+    pinBorderColor: 'rgba(0, 0, 0, 0.3)',
+    pinShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
+    popoverShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
   },
 
   tooltip: {
     backgroundColor: '#FFFFFF',
     textColor: '#1A1A1A',
     borderColor: '#E5E5E5',
+  },
+
+  fullscreenPlayer: {
+    artworkBorderRadius: '16px',
+    artworkShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+    adjacentArtworkOpacity: 0.6,
+    infoButton: {
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+      iconColor: 'rgba(255, 255, 255, 0.55)',
+      backdropBlur: '4px',
+    },
+    captionOverlay: {
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      borderRadius: '12px',
+      backdropBlur: '12px',
+    },
+    transcriptionTextOpacity: 0.8,
   },
 
   colors: {

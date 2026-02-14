@@ -29,7 +29,7 @@ const CardContainer = styled.div`
   ${tw`relative cursor-pointer transition-transform active:scale-[0.99]`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
   border-radius: ${({ theme }) => theme.cards.borderRadius};
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: ${({ theme }) => theme.cards.shadow};
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
 `;
 
@@ -89,8 +89,8 @@ const TextContent = styled.div`
 
 const Title = styled.h3`
   ${tw`mb-1 leading-tight`}
-  font-size: ${({ theme }) => theme.cards.titleFontSize};
-  font-weight: ${({ theme }) => theme.cards.titleFontWeight};
+  font-size: ${({ theme }) => theme.cards.stopTitleFontSize || theme.cards.titleFontSize};
+  font-weight: ${({ theme }) => theme.cards.stopTitleFontWeight || theme.cards.titleFontWeight};
   color: ${({ theme }) => theme.cards.textColor};
 `;
 

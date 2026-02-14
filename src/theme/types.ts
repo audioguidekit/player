@@ -16,6 +16,7 @@ export interface ThemeConfig {
     textColor: string;
     timeFontSize: string; // Remaining time display
     timeFontWeight: string;
+    hoverBackground?: string; // Button hover background
     progressBar: {
       backgroundColor: string;
       highlightColor: string;
@@ -36,6 +37,8 @@ export interface ThemeConfig {
     shadow: string; // e.g., "0 2px 15px rgba(0, 0, 0, 0.1)"
     titleFontSize: string; // Card title text
     titleFontWeight: string;
+    stopTitleFontSize?: string; // Audio stop title (defaults to titleFontSize)
+    stopTitleFontWeight?: string;
     durationBadgeFontSize: string; // Duration badge on card images
     numberFontSize: string; // Step number in audio stops
     numberFontWeight: string;
@@ -132,6 +135,7 @@ export interface ThemeConfig {
     titleFontSize: string; // Track title
     titleFontWeight: string;
     transcriptionFontSize: string; // Transcription text
+    shadow?: string; // Container shadow
     progressBar: {
       backgroundColor: string;
       highlightColor: string;
@@ -156,6 +160,8 @@ export interface ThemeConfig {
     borderColor?: string;
     titleFontSize: string; // Sheet title
     titleFontWeight: string;
+    backdropColor?: string; // Backdrop overlay color (e.g. 'rgba(0,0,0,0.2)')
+    shadow?: string; // Sheet container shadow
   };
 
   // Status & Feedback Colors
@@ -188,6 +194,13 @@ export interface ThemeConfig {
       borderColor: string;
       textColor: string;
     };
+    // Overlay controls on the start screen background image/video
+    overlay?: {
+      buttonBackground?: string;    // Action/language button background
+      buttonColor?: string;         // Action/language button icon/text color
+      gradientTop?: string;         // Top gradient (e.g. 'rgba(0,0,0,0.3)')
+      gradientBottom?: string;      // Bottom gradient (e.g. 'rgba(0,0,0,0.6)')
+    };
   };
 
   // Form Inputs
@@ -216,6 +229,13 @@ export interface ThemeConfig {
   hotspot: {
     pinColor: string;
     pinPulseColor: string;
+    pinBorderColor?: string;
+    pinShadow?: string;
+    popoverBackground?: string;   // Defaults to tooltip.backgroundColor
+    popoverBorderColor?: string;  // Defaults to tooltip.borderColor
+    popoverShadow?: string;
+    popoverTitleColor?: string;   // Defaults to tooltip.textColor
+    popoverTextColor?: string;    // Defaults to colors.text.secondary
   };
 
   // Tooltips
@@ -223,6 +243,24 @@ export interface ThemeConfig {
     backgroundColor: string;
     textColor: string;
     borderColor: string;
+  };
+
+  // Fullscreen Player
+  fullscreenPlayer?: {
+    artworkBorderRadius?: string;
+    artworkShadow?: string;
+    adjacentArtworkOpacity?: number;
+    infoButton?: {
+      backgroundColor?: string;
+      iconColor?: string;
+      backdropBlur?: string;
+    };
+    captionOverlay?: {
+      backgroundColor?: string;
+      borderRadius?: string;
+      backdropBlur?: string;
+    };
+    transcriptionTextOpacity?: number;
   };
 
   // Semantic Colors (for text, borders, etc.)

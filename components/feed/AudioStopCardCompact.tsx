@@ -127,8 +127,8 @@ const NumberText = styled.span<{ $isPlaying: boolean }>`
 const Title = styled.h3`
   ${tw`leading-tight flex-1`}
   font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
-  font-size: ${({ theme }) => theme.cards.titleFontSize};
-  font-weight: ${({ theme }) => theme.cards.titleFontWeight};
+  font-size: ${({ theme }) => theme.cards.stopTitleFontSize || theme.cards.titleFontSize};
+  font-weight: ${({ theme }) => theme.cards.stopTitleFontWeight || theme.cards.titleFontWeight};
   color: ${({ theme }) => theme.cards.textColor};
 `;
 

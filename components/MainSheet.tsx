@@ -19,13 +19,13 @@ const Container = styled.div`
 
 const Backdrop = styled.div`
   ${tw`absolute inset-0 z-10 pointer-events-auto`}
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: ${({ theme }) => theme.sheets.backdropColor || 'rgba(0, 0, 0, 0.2)'};
 `;
 
 const SheetContainer = styled(motion.div)<{ $isExpanded: boolean }>`
   ${tw`absolute inset-x-0 bottom-0 overflow-hidden z-20 flex flex-col pointer-events-auto`}
   background-color: ${({ theme }) => theme.sheets.backgroundColor};
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: ${({ theme }) => theme.sheets.shadow || '0 -4px 20px rgba(0, 0, 0, 0.15)'};
   padding-bottom: max(${({ theme }) => theme.platform.safeArea.bottom}, 0px);
   top: ${({ $isExpanded, theme }) => $isExpanded ? `calc(-1 * ${theme.platform.safeArea.top})` : '0'};
 `;

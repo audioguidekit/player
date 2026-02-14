@@ -95,7 +95,9 @@ const ArtworkInner = styled.div`
 `;
 
 const ArtworkImage = styled.img`
-  ${tw`rounded-2xl object-cover shadow-xl`}
+  ${tw`object-cover`}
+  border-radius: ${({ theme }) => theme.fullscreenPlayer?.artworkBorderRadius || '16px'};
+  box-shadow: ${({ theme }) => theme.fullscreenPlayer?.artworkShadow || '0 20px 25px -5px rgba(0, 0, 0, 0.3)'};
   max-width: 100%;
   max-height: 100%;
   min-height: 0;
@@ -104,7 +106,8 @@ const ArtworkImage = styled.img`
 `;
 
 const ArtworkPlaceholder = styled.div`
-  ${tw`rounded-2xl flex items-center justify-center`}
+  ${tw`flex items-center justify-center`}
+  border-radius: ${({ theme }) => theme.fullscreenPlayer?.artworkBorderRadius || '16px'};
   max-width: 100%;
   max-height: 100%;
   min-height: 0;
@@ -126,13 +129,15 @@ const TrackSlide = styled(motion.div)`
 `;
 
 const AdjacentArtwork = styled.img<{ $side: 'left' | 'right' }>`
-  ${tw`rounded-2xl object-cover shadow-xl absolute`}
+  ${tw`object-cover absolute`}
+  border-radius: ${({ theme }) => theme.fullscreenPlayer?.artworkBorderRadius || '16px'};
+  box-shadow: ${({ theme }) => theme.fullscreenPlayer?.artworkShadow || '0 20px 25px -5px rgba(0, 0, 0, 0.3)'};
   top: 50%;
   transform: translateY(-50%);
   ${({ $side }) => $side === 'left' ? 'right: calc(100% + 32px);' : 'left: calc(100% + 32px);'}
   width: 100%;
   aspect-ratio: 1;
-  opacity: 0.6;
+  opacity: ${({ theme }) => theme.fullscreenPlayer?.adjacentArtworkOpacity ?? 0.6};
   pointer-events: none;
 `;
 
@@ -142,10 +147,10 @@ const InfoButton = styled.button`
   right: 12px;
   width: 32px;
   height: 32px;
-  background: rgba(0, 0, 0, 0.45);
-  color: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: ${({ theme }) => theme.fullscreenPlayer?.infoButton?.backgroundColor || 'rgba(0, 0, 0, 0.45)'};
+  color: ${({ theme }) => theme.fullscreenPlayer?.infoButton?.iconColor || 'rgba(255, 255, 255, 0.55)'};
+  backdrop-filter: blur(${({ theme }) => theme.fullscreenPlayer?.infoButton?.backdropBlur || '4px'});
+  -webkit-backdrop-filter: blur(${({ theme }) => theme.fullscreenPlayer?.infoButton?.backdropBlur || '4px'});
   z-index: 2;
   cursor: pointer;
   transition: background-color 100ms ease-in-out, transform 100ms ease-out;
@@ -155,13 +160,14 @@ const InfoButton = styled.button`
 `;
 
 const CaptionOverlay = styled(motion.div)`
-  ${tw`absolute rounded-xl px-4 py-3 text-center`}
+  ${tw`absolute px-4 py-3 text-center`}
+  border-radius: ${({ theme }) => theme.fullscreenPlayer?.captionOverlay?.borderRadius || '12px'};
   bottom: 8px;
   left: 8px;
   right: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: ${({ theme }) => theme.fullscreenPlayer?.captionOverlay?.backgroundColor || 'rgba(0, 0, 0, 0.6)'};
+  backdrop-filter: blur(${({ theme }) => theme.fullscreenPlayer?.captionOverlay?.backdropBlur || '12px'});
+  -webkit-backdrop-filter: blur(${({ theme }) => theme.fullscreenPlayer?.captionOverlay?.backdropBlur || '12px'});
   z-index: 2;
   cursor: pointer;
 `;
@@ -313,7 +319,7 @@ const TranscriptionToggle = styled.button<{ $active: boolean }>(({ $active, them
     height: '48px',
     backgroundColor: $active ? theme.buttons.transcription.backgroundColor : 'transparent',
     color: $active ? theme.buttons.transcription.iconColor : theme.miniPlayer.textColor,
-    opacity: $active ? 1 : 0.6,
+    opacity: $active ? 1 : (theme.fullscreenPlayer?.transcriptionTextOpacity ?? 0.6),
     transformOrigin: 'center center',
     transition: 'background-color 100ms ease-in-out, opacity 100ms ease-in-out, transform 100ms ease-out',
     '@media (hover: hover)': {
@@ -349,7 +355,7 @@ const TranscriptionText = styled.p`
   margin: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
-  opacity: 0.8;
+  opacity: ${({ theme }) => theme.fullscreenPlayer?.transcriptionTextOpacity ?? 0.8};
 `;
 
 // Swipe thresholds for track navigation

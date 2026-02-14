@@ -60,8 +60,9 @@ const PlayerRoot = styled.div`
 
 // Container — always the bottom bar, never morphs to fullscreen
 const Container = styled(motion.div)`
-  ${tw`absolute bottom-0 left-0 right-0 z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] overflow-hidden rounded-t-[2.5rem]`}
+  ${tw`absolute bottom-0 left-0 right-0 z-[70] overflow-hidden rounded-t-[2.5rem]`}
   background-color: ${({ theme }) => theme.miniPlayer.backgroundColor};
+  box-shadow: ${({ theme }) => theme.miniPlayer.shadow || '0 -10px 40px rgba(0, 0, 0, 0.15)'};
   padding-bottom: calc(200px + ${({ theme }) => theme.platform.safeArea.bottom});
   margin-bottom: -200px;
 `;

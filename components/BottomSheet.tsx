@@ -16,12 +16,14 @@ interface BottomSheetProps {
 }
 
 const Backdrop = styled(motion.div)`
-  ${tw`absolute inset-0 bg-black z-[60]`}
+  ${tw`absolute inset-0 z-[60]`}
+  background-color: ${({ theme }) => theme.sheets.backdropColor || 'rgba(0, 0, 0, 0.2)'};
 `;
 
 const SheetContainer = styled(motion.div)`
-  ${tw`absolute bottom-0 left-0 right-0 z-[70] rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] flex flex-col h-auto max-h-[90%]`}
+  ${tw`absolute bottom-0 left-0 right-0 z-[70] rounded-t-[2.5rem] flex flex-col h-auto max-h-[90%]`}
   background-color: ${({ theme }) => theme.sheets.backgroundColor};
+  box-shadow: ${({ theme }) => theme.sheets.shadow || '0 -10px 40px rgba(0, 0, 0, 0.15)'};
   border-top: 1px solid ${({ theme }) => theme.sheets.borderColor || theme.colors.border.light};
   will-change: transform;
 `;
@@ -80,7 +82,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           {showBackdrop && (
             <Backdrop
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.3 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               onClick={onClose}
