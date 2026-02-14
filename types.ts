@@ -20,6 +20,7 @@ export interface TourMetadata {
   showStopDuration?: boolean;  // Show duration on cards (default: true)
   showStopNumber?: boolean;    // Show number indicator (default: true)
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
+  showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
 }
 
 export interface BaseStop {
@@ -162,6 +163,7 @@ export interface TourData {
   showStopDuration?: boolean;  // Show duration on cards (default: true)
   showStopNumber?: boolean;    // Show number indicator (default: true)
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
+  showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
 }
 
 export interface Language {

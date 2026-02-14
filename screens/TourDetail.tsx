@@ -192,6 +192,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
         progressWidth={width}
         consumedMinutes={consumedMinutes}
         totalMinutes={totalMinutes}
+        showProgressBar={tour.showProgressBar}
       />
 
       {/* Scrollable List */}

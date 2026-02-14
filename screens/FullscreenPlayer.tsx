@@ -61,7 +61,7 @@ const HeaderButton = styled.button`
   ${tw`p-0 border-0 rounded-full flex items-center justify-center shrink-0`}
   width: 48px;
   height: 48px;
-  color: ${({ theme }) => theme.miniPlayer.textColor};
+  color: ${({ theme }) => theme.miniPlayer.controls.otherButtonsIcon};
   transform-origin: center center;
   transition: background-color 100ms ease-in-out, transform 100ms ease-out;
   @media (hover: hover) {

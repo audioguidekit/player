@@ -6,10 +6,11 @@
   "themeId": "default-light",
   "transcriptAvailable": true,
   "collectFeedback": true,
-  "showLanguageLabel": true,
-  "showStopImage": true,
+  "showLanguageLabel": false,
+  "showStopImage": "thumbnail",
   "showStopDuration": true,
   "showStopNumber": true,
   "fullscreenPlayer": true,
+  "showProgressBar": true,
   "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/cover.webp"
 }

@@ -146,8 +146,12 @@ const MinimizedTitleSection = styled(motion.div)`
   ${tw`flex items-center flex-1 min-w-0 cursor-pointer`}
 `;
 
-const MinimizedTitle = styled.span`
-  ${tw`truncate`}
+const MinimizedTitleContainer = styled.div`
+  ${tw`overflow-hidden flex-1 min-w-0`}
+`;
+
+const MinimizedTitle = styled(motion.span)`
+  ${tw`whitespace-nowrap inline-block`}
   font-size: ${({ theme }) => theme.miniPlayer.titleFontSize};
   font-weight: ${({ theme }) => theme.miniPlayer.titleFontWeight};
   font-family: ${({ theme }) => theme?.typography?.fontFamily?.sans?.join(', ')};
@@ -293,9 +297,14 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   // Use real progress from audio player
   const visualProgress = Math.max(0, Math.min(100, progress || 0));
 
-  // Marquee animation for title
+  // Marquee animation for expanded title
   const titleRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Marquee animation for minimized title
+  const miniTitleRef = useRef<HTMLSpanElement>(null);
+  const miniContainerRef = useRef<HTMLDivElement>(null);
+  const miniControls = useAnimationControls();
 
   // Ref for transcription scroll container
   const transcriptionRef = useRef<HTMLDivElement>(null);
@@ -350,6 +359,48 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
       controls.stop();
     };
   }, [currentStop?.id, controls, isExpanded]);
+
+  // Marquee for minimized title
+  useEffect(() => {
+    const el = miniTitleRef.current;
+    const container = miniContainerRef.current;
+    if (!el || !container || isExpanded) return;
+
+    miniControls.set({ x: 0 });
+
+    const raf = requestAnimationFrame(() => {
+      const textWidth = el.scrollWidth;
+      const containerWidth = container.clientWidth;
+      const overflow = textWidth - containerWidth;
+
+      if (overflow <= 0) return;
+
+      const scrollDuration = Math.max(3, overflow / 25);
+      const pauseDuration = 2;
+      const totalDuration = scrollDuration * 2 + pauseDuration * 2;
+
+      miniControls.start({
+        x: [0, 0, -overflow, -overflow, 0],
+        transition: {
+          duration: totalDuration,
+          times: [
+            0,
+            pauseDuration / totalDuration,
+            (pauseDuration + scrollDuration) / totalDuration,
+            (pauseDuration * 2 + scrollDuration) / totalDuration,
+            1,
+          ],
+          ease: 'linear',
+          repeat: Infinity,
+        },
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      miniControls.stop();
+    };
+  }, [currentStop?.id, miniControls, isExpanded]);
 
   // Unified swipe logic
   const dragX = useMotionValue(0);
@@ -602,7 +653,11 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                       dragListener={false}
                       onPointerDown={(e) => e.stopPropagation()}
                     >
-                      <MinimizedTitle>{currentStop.title}</MinimizedTitle>
+                      <MinimizedTitleContainer ref={miniContainerRef}>
+                        <MinimizedTitle ref={miniTitleRef} animate={miniControls}>
+                          {currentStop.title}
+                        </MinimizedTitle>
+                      </MinimizedTitleContainer>
                     </MinimizedTitleSection>
 
                     <PlayPauseButton

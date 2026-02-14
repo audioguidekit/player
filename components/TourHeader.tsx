@@ -12,6 +12,7 @@ interface TourHeaderProps {
     progressWidth: MotionValue<string>;
     consumedMinutes: number;
     totalMinutes: number;
+    showProgressBar?: boolean;
 }
 
 const Container = styled(motion.div)`
@@ -73,6 +74,7 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
     progressWidth,
     consumedMinutes,
     totalMinutes,
+    showProgressBar = true,
 }) => {
     const { t } = useTranslation();
     const isOnline = useOnlineStatus();
@@ -90,33 +92,31 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
                     <HouseIcon size={24} weight="bold" />
                 </HomeButton>
 
-                {/* Progress Section (Inline) - No Container */}
-                <ProgressSection>
-                    {/* Progress Bar */}
-                    <ProgressBarContainer>
-                        <ProgressBar style={{ width: progressWidth }} />
-                    </ProgressBarContainer>
+                {showProgressBar && (
+                    <ProgressSection>
+                        <ProgressBarContainer>
+                            <ProgressBar style={{ width: progressWidth }} />
+                        </ProgressBarContainer>
 
-                    {/* Time Remaining Text - always shown */}
-                    <TimeText>
-                        <AnimatedCounter value={totalMinutes - consumedMinutes} /> {t.tourHeader.minLeft}
-                    </TimeText>
+                        <TimeText>
+                            <AnimatedCounter value={totalMinutes - consumedMinutes} /> {t.tourHeader.minLeft}
+                        </TimeText>
 
-                    {/* Offline Badge - shown when offline */}
-                    <AnimatePresence>
-                        {!isOnline && (
-                            <OfflineBadge
-                                key="offline"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <CloudSlashIcon size={14} weight="bold" />
-                            </OfflineBadge>
-                        )}
-                    </AnimatePresence>
-                </ProgressSection>
+                        <AnimatePresence>
+                            {!isOnline && (
+                                <OfflineBadge
+                                    key="offline"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <CloudSlashIcon size={14} weight="bold" />
+                                </OfflineBadge>
+                            )}
+                        </AnimatePresence>
+                    </ProgressSection>
+                )}
             </FlexContainer>
         </Container>
     );
