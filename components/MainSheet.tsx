@@ -56,7 +56,11 @@ export const MainSheet: React.FC<MainSheetProps> = ({
   const controls = useAnimation();
   const internalY = useMotionValue(0);
   const y = sheetY || internalY;
-  const isPWA = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches;
+  // navigator.standalone is iOS-specific; matchMedia covers Android/desktop Chrome
+  const isPWA = typeof window !== 'undefined' && (
+    (window.navigator as any).standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches
+  );
   
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
