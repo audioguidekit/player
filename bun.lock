@@ -11,8 +11,10 @@
         "dompurify": "^3.3.1",
         "framer-motion": "^12.23.24",
         "idb": "^8.0.3",
+        "leaflet": "^1.9.4",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
+        "react-leaflet": "^5.0.0",
         "react-router-dom": "^6.30.2",
         "styled-components": "^6.1.19",
         "three": "^0.182.0",
@@ -24,6 +26,7 @@
         "@playwright/test": "^1.58.0",
         "@react-grab/claude-code": "^0.0.98",
         "@types/dompurify": "^3.2.0",
+        "@types/leaflet": "^1.9.21",
         "@types/node": "^22.14.0",
         "@types/styled-components": "^5.1.36",
         "@vitejs/plugin-react": "^5.0.0",
@@ -397,6 +400,8 @@
 
     "@react-grab/claude-code": ["@react-grab/claude-code@0.0.98", "", { "dependencies": { "@anthropic-ai/claude-agent-sdk": "^0.1.0", "@hono/node-server": "^1.19.6", "execa": "^9.6.0", "fkill": "^9.0.0", "hono": "^4.0.0", "picocolors": "^1.1.1", "react-grab": "0.0.98" }, "bin": { "react-grab-claude-code": "dist/cli.cjs" } }, "sha512-917z5r0e01MmWFuACKX4Mn97WYNxXTYS20dgpPkjmVTPTtVoD2l3KWmWuXtne4pLOig56ND3jRqy/VB87ooVyg=="],
 
+    "@react-leaflet/core": ["@react-leaflet/core@3.0.0", "", { "peerDependencies": { "leaflet": "^1.9.0", "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-3EWmekh4Nz+pGcr+xjf0KNyYfC3U2JjnkWsh0zcqaexYqmmB5ZhH37kz41JXGmKzpaMZCnPofBBm64i+YrEvGQ=="],
+
     "@remix-run/router": ["@remix-run/router@1.23.1", "", {}, "sha512-vDbaOzF7yT2Qs4vO6XV1MHcJv+3dgR1sT+l3B8xxOVhUC336prMvqrvsLL/9Dnw2xr6Qhz4J0dmS0llNAbnUmQ=="],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.47", "", {}, "sha512-8QagwMH3kNCuzD8EWL8R2YPW5e4OrHNSAHRFDdmFqEwEaD/KcNKjVoumo+gP2vW5eKB2UPbM6vTYiGZX0ixLnw=="],
@@ -473,7 +478,11 @@
 
     "@types/estree": ["@types/estree@1.0.8", "", {}, "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="],
 
+    "@types/geojson": ["@types/geojson@7946.0.16", "", {}, "sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg=="],
+
     "@types/hoist-non-react-statics": ["@types/hoist-non-react-statics@3.3.7", "", { "dependencies": { "hoist-non-react-statics": "^3.3.0" }, "peerDependencies": { "@types/react": "*" } }, "sha512-PQTyIulDkIDro8P+IHbKCsw7U2xxBYflVzW/FgWdCAePD9xGSidgA76/GeJ6lBKoblyhf9pBY763gbrN+1dI8g=="],
+
+    "@types/leaflet": ["@types/leaflet@1.9.21", "", { "dependencies": { "@types/geojson": "*" } }, "sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w=="],
 
     "@types/node": ["@types/node@22.19.1", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-LCCV0HdSZZZb34qifBsyWlUmok6W7ouER+oQIGBScS8EsZsQbrtFTUrDX4hOl+CS6p7cnNC4td+qrSVGSCTUfQ=="],
 
@@ -853,6 +862,8 @@
 
     "jsonpointer": ["jsonpointer@5.0.1", "", {}, "sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ=="],
 
+    "leaflet": ["leaflet@1.9.4", "", {}, "sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA=="],
+
     "leven": ["leven@3.1.0", "", {}, "sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A=="],
 
     "lie": ["lie@3.3.0", "", { "dependencies": { "immediate": "~3.0.5" } }, "sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ=="],
@@ -998,6 +1009,8 @@
     "react-grab": ["react-grab@0.0.98", "", { "dependencies": { "bippy": "^0.5.28", "solid-js": "^1.9.10" }, "bin": { "react-grab": "dist/cli.cjs" } }, "sha512-PChqv7DWRpsUw+eBqMFNwzhG0vlMv/RXbAuEGrFD3R53k+tKM6B0zgnN4jgIPvDSYEUmni3ApN1IerHOWCIuRQ=="],
 
     "react-is": ["react-is@16.13.1", "", {}, "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="],
+
+    "react-leaflet": ["react-leaflet@5.0.0", "", { "dependencies": { "@react-leaflet/core": "^3.0.0" }, "peerDependencies": { "leaflet": "^1.9.0", "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-CWbTpr5vcHw5bt9i4zSlPEVQdTVcML390TjeDG0cK59z1ylexpqC6M1PJFjV8jD7CF+ACBFsLIDs6DRMoLEofw=="],
 
     "react-refresh": ["react-refresh@0.18.0", "", {}, "sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw=="],
 

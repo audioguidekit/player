@@ -1,6 +1,8 @@
 import React from 'react';
 import { HouseIcon } from '@phosphor-icons/react/dist/csr/House';
 import { CloudSlashIcon } from '@phosphor-icons/react/dist/csr/CloudSlash';
+import { MapPinIcon } from '@phosphor-icons/react/dist/csr/MapPin';
+import { ListIcon } from '@phosphor-icons/react/dist/csr/List';
 import { motion, MotionValue, AnimatePresence } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
@@ -14,6 +16,9 @@ interface TourHeaderProps {
     consumedMinutes: number;
     totalMinutes: number;
     showProgressBar?: boolean;
+    showViewToggle?: boolean;
+    viewMode?: 'map' | 'list';
+    onViewModeChange?: (mode: 'map' | 'list') => void;
 }
 
 const Container = styled(motion.div)`
@@ -64,6 +69,21 @@ const TimeText = styled.div`
   color: ${({ theme }) => theme.header.textColor};
 `;
 
+const SegmentedControl = styled.div`
+  ${tw`flex items-center rounded-full p-0.5 shrink-0 ml-auto`}
+  background-color: ${({ theme }) => theme.colors.background.secondary};
+  border: 1px solid ${({ theme }) => theme.colors.border.light};
+`;
+
+const SegmentButton = styled.button<{ $isActive: boolean }>`
+  ${tw`w-9 h-8 rounded-full flex items-center justify-center transition-colors`}
+  color: ${({ $isActive, theme }) =>
+    $isActive ? theme.header.iconColor : theme.colors.text.tertiary};
+  background-color: ${({ $isActive, theme }) =>
+    $isActive ? theme.colors.background.primary : 'transparent'};
+  box-shadow: ${({ $isActive }) => $isActive ? '0 1px 3px rgba(0,0,0,0.15)' : 'none'};
+`;
+
 const OfflineBadge = styled(motion.div)`
   ${tw`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium`}
   background-color: ${({ theme }) => `${theme.status.warning}20`};
@@ -78,6 +98,9 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
     consumedMinutes,
     totalMinutes,
     showProgressBar = true,
+    showViewToggle,
+    viewMode,
+    onViewModeChange,
 }) => {
     const { t } = useTranslation();
     const isOnline = useOnlineStatus();
@@ -119,6 +142,25 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
                             )}
                         </AnimatePresence>
                     </ProgressSection>
+                )}
+
+                {showViewToggle && (
+                    <SegmentedControl>
+                        <SegmentButton
+                            $isActive={viewMode === 'map'}
+                            onClick={() => onViewModeChange?.('map')}
+                            aria-label="Map view"
+                        >
+                            <MapPinIcon size={18} weight={viewMode === 'map' ? 'fill' : 'regular'} />
+                        </SegmentButton>
+                        <SegmentButton
+                            $isActive={viewMode === 'list'}
+                            onClick={() => onViewModeChange?.('list')}
+                            aria-label="List view"
+                        >
+                            <ListIcon size={18} weight={viewMode === 'list' ? 'bold' : 'regular'} />
+                        </SegmentButton>
+                    </SegmentedControl>
                 )}
             </FlexContainer>
         </Container>

@@ -1,5 +1,10 @@
 export type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email' | 'quote' | 'image-gallery' | 'image-comparison' | 'hotspot-image' | 'embed';
 
+export interface StopLocation {
+  lat: number;
+  lng: number;
+}
+
 export type OfflineMode = 'online-only' | 'optional' | 'offline-only';
 
 /**
@@ -22,11 +27,15 @@ export interface TourMetadata {
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
   backgroundColor?: string;    // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
+  mapView?: boolean;           // Enable map tab (default: false)
+  mapProvider?: 'openstreetmap' | 'mapbox'; // Tile provider (default: 'openstreetmap')
+  mapApiKey?: string;          // Needed only for mapbox
 }
 
 export interface BaseStop {
   id: string;
   type: StopType;
+  location?: StopLocation;
 }
 
 export interface AudioStop extends BaseStop {
@@ -166,6 +175,9 @@ export interface TourData {
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
   backgroundColor?: string;    // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
+  mapView?: boolean;           // Enable map tab (default: false)
+  mapProvider?: 'openstreetmap' | 'mapbox'; // Tile provider (default: 'openstreetmap')
+  mapApiKey?: string;          // Needed only for mapbox
 }
 
 export interface Language {

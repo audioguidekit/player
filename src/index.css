@@ -1,6 +1,10 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.leaflet-control-attribution { font-size: 10px !important; opacity: 0.7; }
 
 /*
   Note: Base HTML/body/#root styles are now handled by GlobalStyles.tsx
