@@ -57,13 +57,14 @@ export interface TourMetadata {
   mapStyleId?: string;         // Provider-specific style/map ID (uses provider's default outdoor style if omitted)
   mapCenter?: { lat: number; lng: number }; // Initial map center; defaults to fitting all stops in view
   mapZoom?: number;            // Initial zoom level 0–23; if mapCenter is omitted, fitBounds zoom is used instead
-  mapMarkerIcon?: string;      // URL to a custom marker image — replaces numbered circle (clusters unaffected)
+  mapMarkerCustomIcon?: boolean | string; // Custom marker image URL for all stops; false = use default numbered circle (default: false)
   mapMarkerNumber?: boolean;   // Show stop number on markers (default: true)
   mapCluster?: {
     disableClusteringAtZoom?: number; // Zoom level at which clustering stops (e.g. 16)
     spiderfyOnMaxZoom?: boolean;     // Fan out overlapping markers at max zoom (default: true)
   };
   mapRoute?: boolean | MapRouteConfig; // Show route polyline with progress indicator (default: false)
+  mapLocateButton?: boolean;           // Show locate-me button on map (default: true)
 }
 
 export interface BaseStop {
@@ -216,13 +217,14 @@ export interface TourData {
   mapStyleId?: string;         // Provider-specific style/map ID (uses provider's default outdoor style if omitted)
   mapCenter?: { lat: number; lng: number }; // Initial map center; defaults to fitting all stops in view
   mapZoom?: number;            // Initial zoom level 0–23; if mapCenter is omitted, fitBounds zoom is used instead
-  mapMarkerIcon?: string;      // URL to a custom marker image — replaces numbered circle (clusters unaffected)
+  mapMarkerCustomIcon?: boolean | string; // Custom marker image URL for all stops; false = use default numbered circle (default: false)
   mapMarkerNumber?: boolean;   // Show stop number on markers (default: true)
   mapCluster?: {
     disableClusteringAtZoom?: number;
     spiderfyOnMaxZoom?: boolean;
   };
   mapRoute?: boolean | MapRouteConfig; // Show route polyline with progress indicator (default: false)
+  mapLocateButton?: boolean;           // Show locate-me button on map (default: true)
 }
 
 export interface Language {

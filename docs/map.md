@@ -28,10 +28,11 @@ Without `mapView: true` the map tab is hidden and everything works as before.
 | `mapStyleId` | string | — | Provider-specific style/map ID (see per-provider defaults below) |
 | `mapCenter` | `{ lat, lng }` | — | Initial map center; if omitted, the map fits all stops in view |
 | `mapZoom` | number (0–23) | — | Initial zoom level; if `mapCenter` is omitted, fitBounds zoom is used |
-| `mapMarkerIcon` | string (URL) | — | Custom image for all markers; replaces numbered circle |
+| `mapMarkerCustomIcon` | `false` \| string (URL) | `false` | Custom image URL for all markers; replaces numbered circle |
 | `mapMarkerNumber` | boolean | `true` | Show stop number on markers |
 | `mapCluster` | object | — | Marker clustering behaviour (see below) |
 | `mapRoute` | `boolean` \| object | `false` | Route polyline with progress indicator (see below) |
+| `mapLocateButton` | boolean | `true` | Show the locate-me button on the map |
 
 ### mapCenter and mapZoom
 
@@ -92,10 +93,10 @@ Stops without `location` are silently skipped — no marker is rendered.
 
 ### Tour-level (all stops)
 
-Set `mapMarkerIcon` in `metadata.json` to a URL. All stops use this image instead of the numbered circle.
+Set `mapMarkerCustomIcon` in `metadata.json` to a URL. All stops use this image instead of the numbered circle. Set to `false` (default) to use the standard numbered circle markers.
 
 ```json
-"mapMarkerIcon": "https://api.iconify.design/ph/map-pin-duotone.svg"
+"mapMarkerCustomIcon": "https://api.iconify.design/ph/map-pin-duotone.svg"
 ```
 
 ### Stop-level (individual stop)
@@ -307,7 +308,6 @@ Map tiles require an internet connection. When the device is offline the map is 
 |-----------|----------|------|
 | `TourMapView` | `components/TourMapView.tsx` | Main map component (lazy-loaded) |
 | `MapRoute` | `components/map/MapRoute.tsx` | Route polyline with progress split |
-| `MapZoomControls` | `components/map/MapZoomControls.tsx` | +/− zoom buttons |
 | `MapLocateButton` | `components/map/MapLocateButton.tsx` | User location button |
 | `UserLocationLayer` | `components/map/MapLocateButton.tsx` | Pulsing blue dot + drag detection |
 | `useUserLocation` | `components/map/MapLocateButton.tsx` | Location state hook |

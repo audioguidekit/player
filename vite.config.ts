@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import { VitePWA } from 'vite-plugin-pwa';
 import macrosPlugin from 'vite-plugin-babel-macros';
 
@@ -79,6 +80,7 @@ export default defineConfig(({ mode }) => {
       logOverride: { 'this-is-undefined-in-esm': 'silent' }
     },
     plugins: [
+      basicSsl(),
       // Treat .geojson files as JSON modules (Vite only handles .json by default)
       {
         name: 'vite-plugin-geojson',

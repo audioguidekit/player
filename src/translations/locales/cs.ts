@@ -59,4 +59,7 @@ export const cs: Translations = {
     minLeft: 'min zbývá',
     offline: 'Offline',
   },
+  map: {
+    locationError: 'Poloha nedostupná',
+  },
 } as const;

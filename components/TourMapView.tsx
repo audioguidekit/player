@@ -23,7 +23,7 @@ interface TourMapViewProps {
   mapStyleId?: string;
   mapCenter?: { lat: number; lng: number };
   mapZoom?: number;
-  mapMarkerIcon?: string;
+  mapMarkerCustomIcon?: boolean | string;
   mapMarkerNumber?: boolean;
   mapCluster?: {
     disableClusteringAtZoom?: number;
@@ -262,7 +262,7 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
   mapStyleId,
   mapCenter,
   mapZoom,
-  mapMarkerIcon,
+  mapMarkerCustomIcon,
   mapMarkerNumber = true,
   mapCluster,
   mapRoute,
@@ -355,7 +355,7 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           isStopCompleted={isStopCompleted}
           onStopClick={onStopClick}
           theme={theme}
-          markerIcon={mapMarkerIcon || undefined}
+          markerIcon={typeof mapMarkerCustomIcon === 'string' ? mapMarkerCustomIcon : undefined}
           showNumber={mapMarkerNumber}
           clusterConfig={mapCluster}
         />

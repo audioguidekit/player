@@ -56,6 +56,9 @@ export interface Translations {
     minLeft: string;
     offline: string;
   };
+  map: {
+    locationError: string;
+  };
 }
 
 export type LanguageCode = 'en' | 'cs' | 'de' | 'fr' | 'it' | 'es';

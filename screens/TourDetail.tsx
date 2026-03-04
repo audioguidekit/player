@@ -237,12 +237,12 @@ export const TourDetail = React.memo<TourDetailProps>(({
               mapStyleId={tour.mapStyleId}
               mapCenter={tour.mapCenter}
               mapZoom={tour.mapZoom}
-              mapMarkerIcon={tour.mapMarkerIcon}
+              mapMarkerCustomIcon={tour.mapMarkerCustomIcon}
               mapMarkerNumber={tour.mapMarkerNumber}
               mapCluster={tour.mapCluster}
               mapRoute={tour.mapRoute}
               onRequestListView={() => setViewMode('list')}
-              showLocateButton={showMapLocateButton}
+              showLocateButton={showMapLocateButton && tour.mapLocateButton !== false}
             />
           </Suspense>
         </motion.div>

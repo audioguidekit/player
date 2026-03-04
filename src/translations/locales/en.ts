@@ -58,4 +58,7 @@ export const en: Translations = {
     minLeft: 'min left',
     offline: 'Offline',
   },
+  map: {
+    locationError: 'Location unavailable',
+  },
 } as const;
