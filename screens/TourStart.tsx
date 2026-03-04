@@ -166,7 +166,7 @@ export const TourStart: React.FC<TourStartProps> = ({
   const blurFilter = useMotionTemplate`blur(${blurAmount}px)`;
 
   return (
-    <Container style={tour.backgroundColor ? { backgroundColor: tour.backgroundColor } : undefined}>
+    <Container style={tour.imageColor ? { backgroundColor: tour.imageColor } : undefined}>
       {/* Background Image Area */}
       <MediaContainer style={{ scale, y, filter: blurFilter }}>
         {tour.image && (isVideo ? (

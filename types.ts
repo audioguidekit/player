@@ -50,7 +50,7 @@ export interface TourMetadata {
   showStopNumber?: boolean;    // Show number indicator (default: true)
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
-  backgroundColor?: string;    // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
+  imageColor?: string;         // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
   mapView?: boolean;           // Enable map tab (default: false)
   mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // API key for the chosen provider
@@ -209,7 +209,7 @@ export interface TourData {
   showStopNumber?: boolean;    // Show number indicator (default: true)
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
-  backgroundColor?: string;    // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
+  imageColor?: string;         // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
   mapView?: boolean;           // Enable map tab (default: false)
   mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // API key for the chosen provider

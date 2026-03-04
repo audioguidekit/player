@@ -129,7 +129,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
 
     const elementId = `stop-${scrollToStopId}`;
     const element = document.getElementById(elementId);
-    
+
     if (!element) {
       onScrollComplete?.();
       return;
@@ -138,9 +138,9 @@ export const TourDetail = React.memo<TourDetailProps>(({
     const container = containerRef.current;
     const stopIndex = tour.stops.findIndex(s => s.id === scrollToStopId);
     const isFirstStop = stopIndex === 0;
-    
+
     let targetScrollTop: number;
-    
+
     if (isFirstStop) {
       targetScrollTop = 0;
     } else {
@@ -157,12 +157,12 @@ export const TourDetail = React.memo<TourDetailProps>(({
 
     const startScrollTop = container.scrollTop;
     const distance = targetScrollTop - startScrollTop;
-    
+
     if (Math.abs(distance) < 1) {
       onScrollComplete?.();
       return;
     }
-    
+
     const duration = 400;
     const startTime = performance.now();
     const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
@@ -291,7 +291,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
           })}
 
           <Signature
-            href="https://github.com/audioguidekit"
+            href="https://audioguidekit.com"
             target="_blank"
             rel="noopener noreferrer"
           >

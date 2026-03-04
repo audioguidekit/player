@@ -47,7 +47,7 @@
       "type": "audio",
       "title": "Plaza Urquinaona",
       "duration": "2:04 min",
-      "location": { "lat": 41.3860, "lng": 2.1740 },
+      "location": { "lat": 41.386, "lng": 2.174 },
       "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/05.webp",
       "audioFile": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/audio/en/05.mp3"
     },

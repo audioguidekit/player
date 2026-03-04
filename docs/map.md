@@ -95,7 +95,7 @@ Stops without `location` are silently skipped — no marker is rendered.
 Set `mapMarkerIcon` in `metadata.json` to a URL. All stops use this image instead of the numbered circle.
 
 ```json
-"mapMarkerIcon": "https://example.com/marker.png"
+"mapMarkerIcon": "https://api.iconify.design/ph/map-pin-duotone.svg"
 ```
 
 ### Stop-level (individual stop)
@@ -106,7 +106,7 @@ Add `mapMarkerIcon` directly to a stop in a language file. Overrides the tour-le
 {
   "id": "3",
   "type": "audio",
-  "mapMarkerIcon": "https://example.com/stop3-icon.png"
+  "mapMarkerIcon": "https://api.iconify.design/ph/map-pin-plus-bold.svg"
 }
 ```
 
