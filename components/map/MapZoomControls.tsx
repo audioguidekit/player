@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react';
-import tw from 'twin.macro';
+import React from 'react';
 import styled from 'styled-components';
 import { PlusIcon } from '@phosphor-icons/react/dist/csr/Plus';
 import { MinusIcon } from '@phosphor-icons/react/dist/csr/Minus';
 import L from 'leaflet';
+import { useMobilePress } from '../../src/hooks/useMobilePress';
 
 interface MapZoomControlsProps {
   mapRef: React.RefObject<L.Map | null>;
@@ -25,34 +25,37 @@ const ZoomButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.15s;
   background-color: ${({ theme }) => theme.colors.background.primary};
   color: ${({ theme }) => theme.colors.text.secondary};
   border: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 
   &:first-child {
     border-bottom: 1px solid ${({ theme }) => theme.colors.border.light};
   }
 
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.background.secondary};
-  }
-
-  &:active {
-    background-color: ${({ theme }) => theme.colors.background.tertiary};
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.border.light};
+    outline-offset: -2px;
   }
 `;
 
 export const MapZoomControls: React.FC<MapZoomControlsProps> = ({ mapRef }) => {
-  const zoomIn  = useCallback(() => mapRef.current?.zoomIn(),  [mapRef]);
-  const zoomOut = useCallback(() => mapRef.current?.zoomOut(), [mapRef]);
+  const handlePress = useMobilePress();
 
   return (
     <ZoomGroup>
-      <ZoomButton onClick={zoomIn} aria-label="Zoom in">
+      <ZoomButton
+        aria-label="Zoom in"
+        onPointerDown={e => handlePress(e, () => mapRef.current?.zoomIn())}
+      >
         <PlusIcon size={18} weight="bold" />
       </ZoomButton>
-      <ZoomButton onClick={zoomOut} aria-label="Zoom out">
+      <ZoomButton
+        aria-label="Zoom out"
+        onPointerDown={e => handlePress(e, () => mapRef.current?.zoomOut())}
+      >
         <MinusIcon size={18} weight="bold" />
       </ZoomButton>
     </ZoomGroup>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.markercluster';
@@ -8,7 +9,6 @@ import { Stop, MapRouteConfig, RouteGeoJSON } from '../types';
 import { getTileConfig, MapProvider } from '../src/utils/mapTileProvider';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { ThemeConfig } from '../src/theme/types';
-import { MapZoomControls } from './map/MapZoomControls';
 import { MapLocateButton, UserLocationLayer, useUserLocation } from './map/MapLocateButton';
 import { MapRoute } from './map/MapRoute';
 
@@ -73,23 +73,16 @@ const NoLocationsPlaceholder = styled.div`
   height: 100%;
 `;
 
+// Portaled into #map-controls-portal (InnerFrame-relative, z-75, pointer-events:none).
+// --btn-bottom is written in real-time by MiniPlayer (ResizeObserver + yDrag).
 const ControlsOverlay = styled.div`
   position: absolute;
-  top: 12px;
+  bottom: var(--btn-bottom, 12px);
   right: 12px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  pointer-events: all;
 `;
 
 // ─── Internal sub-components (require MapContainer context) ───────────────────
-
-const MapRefCapture: React.FC<{ mapRef: React.MutableRefObject<L.Map | null> }> = ({ mapRef }) => {
-  const map = useMap();
-  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
-  return null;
-};
 
 interface MapBoundsFitterProps {
   locations: Array<{ lat: number; lng: number }>;
@@ -292,8 +285,6 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
   } : null;
   const isOnline = useOnlineStatus();
   const tileConfig = getTileConfig(mapProvider, mapApiKey, mapStyleId);
-  const mapRef = useRef<L.Map | null>(null);
-
   const {
     locateState,
     userLocation,
@@ -342,7 +333,6 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           maxZoom={tileConfig.maxZoom}
           {...(tileConfig.subdomains ? { subdomains: tileConfig.subdomains } : {})}
         />
-        <MapRefCapture mapRef={mapRef} />
         <MapBoundsFitter locations={locations} center={mapCenter} zoom={mapZoom} />
         {resolvedRoute && (
           <MapRoute
@@ -377,13 +367,19 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
         />
       </MapContainer>
 
-      <ControlsOverlay>
-        <MapZoomControls mapRef={mapRef} />
-        <MapLocateButton
-          locateState={locateState}
-          onLocate={() => handleLocate(locateState, userLocation)}
-        />
-      </ControlsOverlay>
+      {(() => {
+        const portal = document.getElementById('map-controls-portal');
+        if (!portal) return null;
+        return createPortal(
+          <ControlsOverlay>
+            <MapLocateButton
+              locateState={locateState}
+              onLocate={() => handleLocate(locateState, userLocation)}
+            />
+          </ControlsOverlay>,
+          portal
+        );
+      })()}
     </MapWrapper>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWebHaptics } from 'web-haptics/react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { PlayIcon } from '@phosphor-icons/react/dist/csr/Play';
 import { PauseIcon } from '@phosphor-icons/react/dist/csr/Pause';
@@ -93,6 +94,7 @@ export const PlayPauseButton = React.memo<PlayPauseButtonProps>(({
     className = '',
     buttonVariants
 }) => {
+    const { trigger } = useWebHaptics();
     const { icon, checkSize } = sizeConfig[size];
     const showCheckmark = isCompleting || isTransitioning;
     const isMini = variant === 'mini';
@@ -109,6 +111,7 @@ export const PlayPauseButton = React.memo<PlayPauseButtonProps>(({
             transition={{ duration: 0.3 }}
             onClick={(e) => {
                 e.stopPropagation();
+                trigger('nudge');
                 onClick();
             }}
             className={className}

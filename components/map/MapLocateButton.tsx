@@ -4,6 +4,7 @@ import L from 'leaflet';
 import styled from 'styled-components';
 import { NavigationArrowIcon } from '@phosphor-icons/react/dist/csr/NavigationArrow';
 import { GpsSlashIcon } from '@phosphor-icons/react/dist/csr/GpsSlash';
+import { useMobilePress } from '../../src/hooks/useMobilePress';
 
 export type LocateState = 'idle' | 'locating' | 'following' | 'tracking' | 'error';
 
@@ -17,7 +18,7 @@ const Button = styled.button<{ $following: boolean; $error: boolean }>`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition: color 0.15s;
   background-color: ${({ theme }) => theme.colors.background.primary};
   color: ${({ $following, $error, theme }) =>
     $error     ? theme.status.error :
@@ -25,14 +26,8 @@ const Button = styled.button<{ $following: boolean; $error: boolean }>`
                  theme.colors.text.secondary};
   border: 1px solid ${({ theme }) => theme.colors.border.light};
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.background.secondary};
-  }
-
-  &:active {
-    background-color: ${({ theme }) => theme.colors.background.tertiary};
-  }
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 `;
 
 interface MapLocateButtonProps {
@@ -43,10 +38,11 @@ interface MapLocateButtonProps {
 export const MapLocateButton: React.FC<MapLocateButtonProps> = ({ locateState, onLocate }) => {
   const isFollowing = locateState === 'following';
   const isError     = locateState === 'error';
+  const handlePress = useMobilePress();
 
   return (
     <Button
-      onClick={onLocate}
+      onPointerDown={e => handlePress(e, onLocate)}
       $following={isFollowing}
       $error={isError}
       aria-label="Show my location"

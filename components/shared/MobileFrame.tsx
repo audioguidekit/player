@@ -27,6 +27,13 @@ const InnerFrame = styled.div`
  * - Rounded corners with shadow on desktop
  * - Max width of 400px on desktop
  */
+const OverlayPortal = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 75; /* above MiniPlayer z-[70], below sheets */
+`;
+
 export const MobileFrame: React.FC<MobileFrameProps> = ({
     children,
     className = ''
@@ -35,6 +42,7 @@ export const MobileFrame: React.FC<MobileFrameProps> = ({
         <OuterContainer className={className}>
             <InnerFrame>
                 {children}
+                <OverlayPortal id="map-controls-portal" />
             </InnerFrame>
         </OuterContainer>
     );

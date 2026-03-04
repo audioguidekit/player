@@ -100,7 +100,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
   scrollToStopId,
   scrollTrigger,
   onScrollComplete,
-  onOpenRatingSheet
+  onOpenRatingSheet,
 }) => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>(
     tour.mapView === true ? 'map' : 'list'

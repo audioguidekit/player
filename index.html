@@ -48,6 +48,29 @@
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
             rel="stylesheet"
         />
+        <script>
+            // Reset viewport zoom immediately on load (iOS Safari persists zoom across reloads)
+            (function () {
+                var meta = document.querySelector('meta[name=viewport]');
+                if (meta) {
+                    meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover');
+                }
+            })();
+
+            // Prevent browser pinch-to-zoom. iOS Safari ignores user-scalable=no since iOS 10.
+            // Leaflet zooms via its own JS handlers — unaffected by preventDefault() here.
+            document.addEventListener('gesturestart', function (e) {
+                e.preventDefault();
+            }, { passive: false });
+            document.addEventListener('gesturechange', function (e) {
+                e.preventDefault();
+            }, { passive: false });
+            document.addEventListener('touchmove', function (e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        </script>
         <style>
             /* Ensure full viewport height including safe areas */
             html,
@@ -56,6 +79,8 @@
                 margin: 0;
                 padding: 0;
                 overflow: hidden;
+                /* Prevent pinch-to-zoom on Chrome/Android at CSS level */
+                touch-action: pan-x pan-y;
             }
 
             /* Initialize viewport height variable immediately */

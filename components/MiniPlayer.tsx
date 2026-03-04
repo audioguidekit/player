@@ -3,7 +3,7 @@ import { SkipBackIcon } from '@phosphor-icons/react/dist/csr/SkipBack';
 import { SkipForwardIcon } from '@phosphor-icons/react/dist/csr/SkipForward';
 import { XIcon } from '@phosphor-icons/react/dist/csr/X';
 import { ClosedCaptioningIcon } from '@phosphor-icons/react/dist/csr/ClosedCaptioning';
-import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, useMotionValueEvent, PanInfo, useMotionTemplate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { AudioStop } from '../types';
@@ -459,6 +459,34 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   // Vertical Drag Logic (Container — minimized ↔ expanded, drag-up → fullscreen)
   const yDrag = useMotionValue(0);
 
+  // Keep locate button above the player by writing --btn-bottom to the portal.
+  // Tracks both ForegroundCard height (expand/collapse) and yDrag (live drag).
+  const cardRef = useRef<HTMLDivElement>(null);
+  const cardHeightRef = useRef(72);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      cardHeightRef.current = entry.contentRect.height;
+      const portal = document.getElementById('map-controls-portal');
+      if (portal) portal.style.setProperty('--btn-bottom', `${cardHeightRef.current - yDrag.get() + 12}px`);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [yDrag]);
+
+  useMotionValueEvent(yDrag, 'change', (y) => {
+    const portal = document.getElementById('map-controls-portal');
+    if (portal) portal.style.setProperty('--btn-bottom', `${cardHeightRef.current - y + 12}px`);
+  });
+
+  useEffect(() => {
+    return () => {
+      document.getElementById('map-controls-portal')?.style.setProperty('--btn-bottom', '12px');
+    };
+  }, []);
+
   const handleVerticalDragEnd = (_: any, info: PanInfo) => {
     if (isExpanded) {
       if (info.offset.y > 50 || info.velocity.y > 300) {
@@ -520,6 +548,7 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
 
           {/* Foreground Card */}
           <ForegroundCard
+            ref={cardRef}
             style={{ x: dragX, boxShadow }}
             drag="x"
             dragDirectionLock
