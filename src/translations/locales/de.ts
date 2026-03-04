@@ -29,6 +29,7 @@ export const de: Translations = {
     downloadForOffline: 'Für offline herunterladen',
     availableOffline: 'Offline verfügbar',
     downloading: 'Wird heruntergeladen...',
+    stops: 'Stationen',
   },
   rating: {
     title: 'Wie hat Ihnen diese Tour gefallen?',

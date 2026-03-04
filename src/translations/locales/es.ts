@@ -29,6 +29,7 @@ export const es: Translations = {
     downloadForOffline: 'Descargar sin conexión',
     availableOffline: 'Disponible sin conexión',
     downloading: 'Descargando...',
+    stops: 'paradas',
   },
   rating: {
     title: '¿Cómo te gustó este tour?',

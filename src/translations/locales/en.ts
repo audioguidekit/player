@@ -28,6 +28,7 @@ export const en: Translations = {
     downloadForOffline: 'Download for offline',
     availableOffline: 'Available offline',
     downloading: 'Downloading...',
+    stops: 'stops',
   },
   rating: {
     title: 'How did you like this tour?',

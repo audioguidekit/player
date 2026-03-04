@@ -253,7 +253,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
           {...scrollableListAnimation}
           transition={scrollableListTransition}
           className="no-scrollbar"
-          $compact={tour.showStopImage === false}
+          $compact={tour.showStopImage !== true}
         >
           {tour.stops
             .filter(stop => !(stop.type === 'rating' && tour.collectFeedback === false))

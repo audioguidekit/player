@@ -26,6 +26,7 @@ export interface Translations {
     downloadForOffline: string;
     availableOffline: string;
     downloading: string;
+    stops: string;
   };
   rating: {
     title: string;

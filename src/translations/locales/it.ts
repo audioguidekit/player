@@ -29,6 +29,7 @@ export const it: Translations = {
     downloadForOffline: 'Scarica per offline',
     availableOffline: 'Disponibile offline',
     downloading: 'Scaricamento...',
+    stops: 'tappe',
   },
   rating: {
     title: 'Come ti è piaciuto questo tour?',

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLineUpIcon } from '@phosphor-icons/react/dist/csr/ArrowLineUp';
 import { ClockIcon } from '@phosphor-icons/react/dist/csr/Clock';
+import { PathIcon } from '@phosphor-icons/react/dist/csr/Path';
 import { HeadphonesIcon } from '@phosphor-icons/react/dist/csr/Headphones';
 import { SparkleIcon } from '@phosphor-icons/react/dist/csr/Sparkle';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
@@ -240,6 +241,10 @@ export const StartCard = React.memo<StartCardProps>(({
         <MetaItem>
           <ClockIcon size={18} />
           <span>{tour.totalDuration}</span>
+        </MetaItem>
+        <MetaItem>
+          <PathIcon size={18} />
+          <span>{tour.stops.length} {t.startCard.stops}</span>
         </MetaItem>
       </MetaContainer>
       <Description>
