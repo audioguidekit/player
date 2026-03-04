@@ -10,9 +10,9 @@ export type LocateState = 'idle' | 'locating' | 'following' | 'tracking' | 'erro
 // ─── Button ───────────────────────────────────────────────────────────────────
 
 const Button = styled.button<{ $following: boolean; $error: boolean }>`
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;

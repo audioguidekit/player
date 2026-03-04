@@ -146,11 +146,12 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         content = `<span style="font-size:${fs};font-weight:${fw};color:${m.inactive.numberColor}">${index + 1}</span>`;
       }
 
+      // 44px outer tap area (invisible) wrapping 32px visual — meets minimum touch target size
       return L.divIcon({
-        html: `<div style="width:32px;height:32px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;box-shadow:${shadow};cursor:pointer;box-sizing:border-box">${content}</div>`,
+        html: `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;box-shadow:${shadow};box-sizing:border-box">${content}</div></div>`,
         className: '',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
       });
     },
     [currentStopId, isStopCompleted, theme]
@@ -238,6 +239,7 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
         zoom={14}
         style={{ height: '100%', width: '100%', background: theme.mainContent.backgroundColor }}
         zoomControl={false}
+        bounceAtZoomLimits={false}
       >
         <TileLayer
           url={tileConfig.url}

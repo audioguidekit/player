@@ -12,15 +12,15 @@ interface MapZoomControlsProps {
 const ZoomGroup = styled.div`
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   border: 1px solid ${({ theme }) => theme.colors.border.light};
 `;
 
 const ZoomButton = styled.button`
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
