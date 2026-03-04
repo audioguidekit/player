@@ -20,6 +20,7 @@ interface TourMapViewProps {
   mapProvider?: MapProvider;
   mapApiKey?: string;
   mapMarkerIcon?: string;
+  mapMarkerNumber?: boolean;
   mapCluster?: {
     disableClusteringAtZoom?: number;
     spiderfyOnMaxZoom?: boolean;
@@ -115,21 +116,23 @@ interface MapMarkersProps {
   onStopClick: (stopId: string) => void;
   theme: ThemeConfig;
   markerIcon?: string;
+  showNumber?: boolean;
   clusterConfig?: TourMapViewProps['mapCluster'];
 }
 
 const MapMarkers: React.FC<MapMarkersProps> = ({
-  stops, currentStopId, isStopCompleted, onStopClick, theme, markerIcon, clusterConfig,
+  stops, currentStopId, isStopCompleted, onStopClick, theme, markerIcon, showNumber = true, clusterConfig,
 }) => {
   const map = useMap();
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
 
   const createStopIcon = useCallback(
     (stop: Stop, index: number): L.DivIcon => {
-      // Custom image marker — just the image, no number, no state variants
-      if (markerIcon) {
+      // Custom image marker: stop-level overrides tour-level; no number, no state variants
+      const resolvedIcon = stop.mapMarkerIcon || markerIcon;
+      if (resolvedIcon) {
         return L.divIcon({
-          html: `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer"><img src="${markerIcon}" style="width:32px;height:32px;object-fit:contain" draggable="false" /></div>`,
+          html: `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer"><img src="${resolvedIcon}" style="width:32px;height:32px;object-fit:contain" draggable="false" /></div>`,
           className: '',
           iconSize: [44, 44],
           iconAnchor: [22, 22],
@@ -155,14 +158,14 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         shadow = theme.mapMarkers?.active.shadow ?? '0 2px 6px rgba(0,0,0,0.25)';
         const fs = theme.mapMarkers?.inactive.numberFontSize ?? '12px';
         const fw = theme.mapMarkers?.inactive.numberFontWeight ?? '700';
-        content = `<span style="font-size:${fs};font-weight:${fw};color:${m.active.numberColor}">${index + 1}</span>`;
+        content = showNumber ? `<span style="font-size:${fs};font-weight:${fw};color:${m.active.numberColor}">${index + 1}</span>` : '';
       } else {
         bg = m.inactive.backgroundColor;
         border = m.inactive.borderColor !== 'transparent' ? `2px solid ${m.inactive.borderColor}` : 'none';
         shadow = '0 2px 6px rgba(0,0,0,0.25)';
         const fs = theme.mapMarkers?.inactive.numberFontSize ?? '12px';
         const fw = theme.mapMarkers?.inactive.numberFontWeight ?? '600';
-        content = `<span style="font-size:${fs};font-weight:${fw};color:${m.inactive.numberColor}">${index + 1}</span>`;
+        content = showNumber ? `<span style="font-size:${fs};font-weight:${fw};color:${m.inactive.numberColor}">${index + 1}</span>` : '';
       }
 
       return L.divIcon({
@@ -172,7 +175,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         iconAnchor: [22, 22],
       });
     },
-    [markerIcon, currentStopId, isStopCompleted, theme]
+    [markerIcon, currentStopId, isStopCompleted, theme, showNumber]
   );
 
   const createClusterIcon = useCallback(
@@ -250,6 +253,9 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
   onStopClick,
   mapProvider = 'openstreetmap',
   mapApiKey,
+  mapMarkerIcon,
+  mapMarkerNumber = true,
+  mapCluster,
   onRequestListView,
 }) => {
   const theme = useTheme() as ThemeConfig;
@@ -312,6 +318,9 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           isStopCompleted={isStopCompleted}
           onStopClick={onStopClick}
           theme={theme}
+          markerIcon={mapMarkerIcon || undefined}
+          showNumber={mapMarkerNumber}
+          clusterConfig={mapCluster}
         />
         <UserLocationLayer
           position={userLocation}

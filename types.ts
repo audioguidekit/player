@@ -31,6 +31,7 @@ export interface TourMetadata {
   mapProvider?: 'openstreetmap' | 'mapbox'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // Needed only for mapbox
   mapMarkerIcon?: string;      // URL to a custom marker image — replaces numbered circle (clusters unaffected)
+  mapMarkerNumber?: boolean;   // Show stop number on markers (default: true)
   mapCluster?: {
     disableClusteringAtZoom?: number; // Zoom level at which clustering stops (e.g. 16)
     spiderfyOnMaxZoom?: boolean;     // Fan out overlapping markers at max zoom (default: true)
@@ -41,6 +42,7 @@ export interface BaseStop {
   id: string;
   type: StopType;
   location?: StopLocation;
+  mapMarkerIcon?: string; // Per-stop custom marker image — overrides the tour-level mapMarkerIcon
 }
 
 export interface AudioStop extends BaseStop {
@@ -184,6 +186,7 @@ export interface TourData {
   mapProvider?: 'openstreetmap' | 'mapbox'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // Needed only for mapbox
   mapMarkerIcon?: string;      // URL to a custom marker image — replaces numbered circle (clusters unaffected)
+  mapMarkerNumber?: boolean;   // Show stop number on markers (default: true)
   mapCluster?: {
     disableClusteringAtZoom?: number;
     spiderfyOnMaxZoom?: boolean;
