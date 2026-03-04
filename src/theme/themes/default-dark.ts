@@ -96,6 +96,10 @@ export const defaultDarkTheme: ThemeConfig = {
       size: 64,
       maxClusterRadius: 48,
     },
+    userLocation: {
+      dotColor: '#60A5FA', // Vibrant sky-blue — readable on dark tiles
+      borderColor: '#FFFFFF',
+    },
   },
 
   buttons: {

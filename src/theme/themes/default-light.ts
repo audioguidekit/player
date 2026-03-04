@@ -96,6 +96,10 @@ export const defaultLightTheme: ThemeConfig = {
       size: 64,
       maxClusterRadius: 48,
     },
+    userLocation: {
+      dotColor: '#2563EB', // Deep saturated blue — crisp on light/beige tiles
+      borderColor: '#FFFFFF',
+    },
   },
 
   buttons: {

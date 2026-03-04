@@ -66,6 +66,8 @@ interface UserLocationLayerProps {
   shouldCenter: boolean;
   onCentered: () => void;
   onUserMoved: () => void;
+  dotColor?: string;
+  borderColor?: string;
 }
 
 export const UserLocationLayer: React.FC<UserLocationLayerProps> = ({
@@ -73,6 +75,8 @@ export const UserLocationLayer: React.FC<UserLocationLayerProps> = ({
   shouldCenter,
   onCentered,
   onUserMoved,
+  dotColor = '#3B82F6',
+  borderColor = '#FFFFFF',
 }) => {
   const map = useMap();
   const markerRef = useRef<L.Marker | null>(null);
@@ -94,8 +98,8 @@ export const UserLocationLayer: React.FC<UserLocationLayerProps> = ({
     const icon = L.divIcon({
       html: `
         <div style="position:relative;width:20px;height:20px">
-          <div class="map-location-pulse" style="position:absolute;inset:0;border-radius:50%;background:#3B82F6"></div>
-          <div style="position:absolute;inset:3px;border-radius:50%;background:#3B82F6;border:2px solid #FFFFFF;box-shadow:0 0 8px rgba(59,130,246,0.6)"></div>
+          <div class="map-location-pulse" style="position:absolute;inset:0;border-radius:50%;background:${dotColor}"></div>
+          <div style="position:absolute;inset:3px;border-radius:50%;background:${dotColor};border:2px solid ${borderColor};box-shadow:0 0 8px ${dotColor}99"></div>
         </div>`,
       className: '',
       iconSize: [20, 20],

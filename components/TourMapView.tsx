@@ -341,6 +341,8 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           shouldCenter={shouldCenter}
           onCentered={handleCentered}
           onUserMoved={handleUserMoved}
+          dotColor={theme.mapMarkers?.userLocation?.dotColor}
+          borderColor={theme.mapMarkers?.userLocation?.borderColor}
         />
       </MapContainer>
 

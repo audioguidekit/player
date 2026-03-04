@@ -101,6 +101,10 @@ export interface ThemeConfig {
       size?: number;           // Visual diameter in px (default: 64)
       maxClusterRadius?: number; // Pixel radius at which markers cluster (default: 48)
     };
+    userLocation?: {
+      dotColor: string;
+      borderColor?: string;  // Inner dot border (default: '#FFFFFF')
+    };
   };
 
   // Primary Buttons (main action buttons)

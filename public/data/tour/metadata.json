@@ -14,7 +14,7 @@
   "showProgressBar": true,
   "mapView": true,
   "mapProvider": "carto",
-  "mapStyleId": "",
+  "mapStyleId": "light_nolabels",
   "mapCenter": { "lat": 41.3851, "lng": 2.1734 },
   "mapZoom": 13,
   "mapCluster": {

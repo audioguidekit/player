@@ -43,5 +43,5 @@ const PROVIDERS: Record<MapProvider, (apiKey?: string, styleId?: string) => Tile
 };
 
 export function getTileConfig(provider: MapProvider = 'openstreetmap', apiKey?: string, styleId?: string): TileConfig {
-  return (PROVIDERS[provider] ?? PROVIDERS.openstreetmap)(apiKey, styleId);
+  return (PROVIDERS[provider] ?? PROVIDERS.openstreetmap)(apiKey, styleId || undefined);
 }

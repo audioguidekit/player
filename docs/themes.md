@@ -121,6 +121,50 @@ stepIndicators: {
 
 ---
 
+### `mapMarkers` (optional)
+
+Map pin styles for stop markers and the user location dot. If omitted, falls back to `stepIndicators` values for stop markers.
+
+> **Note:** The map tile style (provider, style ID, initial center/zoom) is configured in `metadata.json`, not the theme. See [map-view.md](./map-view.md) for those settings.
+
+```typescript
+mapMarkers: {
+  active: {
+    outlineColor: '#6366F1',
+    numberColor: '#FFFFFF',
+    backgroundColor: '#6366F1',
+    shadow: '0 2px 8px rgba(0,0,0,0.35)',  // Optional
+  },
+  inactive: {
+    borderColor: 'transparent',
+    numberColor: '#FFFFFF',
+    backgroundColor: '#9CA3AF',
+    numberFontSize: '12px',                // Optional
+    numberFontWeight: '700',               // Optional
+  },
+  completed: {
+    backgroundColor: '#6366F1',
+    checkmarkColor: '#FFFFFF',
+  },
+  cluster: {
+    backgroundColor: '#1A1A1A',
+    numberColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.2)',  // Optional
+    shadow: '0 3px 10px rgba(0,0,0,0.35)', // Optional
+    fontSize: '18px',                      // Optional
+    fontWeight: '700',                     // Optional
+    size: 64,                              // Optional: visual diameter in px
+    maxClusterRadius: 48,                  // Optional: pixel radius for clustering
+  },
+  userLocation: {                          // Optional: "you are here" dot
+    dotColor: '#2563EB',
+    borderColor: '#FFFFFF',               // Optional: inner dot border
+  },
+}
+```
+
+---
+
 ### `buttons`
 
 ```typescript

@@ -193,7 +193,15 @@ Requires an API key from [maptiler.com](https://www.maptiler.com/). Default styl
 
 No API key required — free public basemaps. Default style: `rastertiles/voyager`.
 
-Available styles: `rastertiles/voyager`, `light_all`, `dark_all`, `light_nolabels`, `dark_nolabels`.
+Available raster styles:
+
+| Style | `mapStyleId` |
+|-------|-------------|
+| Voyager (default) | `rastertiles/voyager` |
+| Positron (light) | `light_all` |
+| Dark Matter | `dark_all` |
+| Positron no labels | `light_nolabels` |
+| Dark Matter no labels | `dark_nolabels` |
 
 ```json
 "mapProvider": "carto"
