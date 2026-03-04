@@ -28,7 +28,7 @@ export interface TourMetadata {
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
   backgroundColor?: string;    // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
   mapView?: boolean;           // Enable map tab (default: false)
-  mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler'; // Tile provider (default: 'openstreetmap')
+  mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // API key for the chosen provider
   mapStyleId?: string;         // Provider-specific style/map ID (uses provider's default outdoor style if omitted)
   mapCenter?: { lat: number; lng: number }; // Initial map center; defaults to fitting all stops in view
@@ -186,7 +186,7 @@ export interface TourData {
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
   backgroundColor?: string;    // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
   mapView?: boolean;           // Enable map tab (default: false)
-  mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler'; // Tile provider (default: 'openstreetmap')
+  mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // API key for the chosen provider
   mapStyleId?: string;         // Provider-specific style/map ID (uses provider's default outdoor style if omitted)
   mapCenter?: { lat: number; lng: number }; // Initial map center; defaults to fitting all stops in view

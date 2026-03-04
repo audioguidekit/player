@@ -44,6 +44,13 @@ type MetadataRegistry = Record<string, TourMetadata>;
 // Hardcoded fallback if no defaultLanguage is set in metadata
 const FALLBACK_DEFAULT_LANGUAGE = 'en';
 
+// Map API keys from environment variables — env takes priority over metadata.json
+const MAP_ENV_KEYS: Partial<Record<string, string>> = {
+  mapbox:    import.meta.env.VITE_MAPBOX_API_KEY,
+  jawg:      import.meta.env.VITE_JAWG_API_KEY,
+  maptiler:  import.meta.env.VITE_MAPTILER_API_KEY,
+};
+
 /**
  * Build metadata registry from discovered metadata files
  */
@@ -116,6 +123,12 @@ function buildTourRegistry(): TourRegistry {
     const mergedTourData: TourData = metadata
       ? { ...metadata, ...tourData }
       : tourData;
+
+    // Inject map API key from env var if available (env takes priority over metadata.json)
+    if (mergedTourData.mapProvider) {
+      const envKey = MAP_ENV_KEYS[mergedTourData.mapProvider];
+      if (envKey) mergedTourData.mapApiKey = envKey;
+    }
 
     // Store merged tour by language
     registry[id][language] = mergedTourData;

@@ -1,9 +1,10 @@
-export type MapProvider = 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler';
+export type MapProvider = 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto';
 
 interface TileConfig {
   url: string;
   attribution: string;
   maxZoom: number;
+  subdomains?: string;
 }
 
 const OSM_FALLBACK: TileConfig = {
@@ -32,6 +33,13 @@ const PROVIDERS: Record<MapProvider, (apiKey?: string, styleId?: string) => Tile
     attribution: '© <a href="https://www.maptiler.com/">MapTiler</a> © OpenStreetMap',
     maxZoom: 22,
   } : OSM_FALLBACK,
+
+  carto: (_apiKey, styleId = 'rastertiles/voyager') => ({
+    url: `https://{s}.basemaps.cartocdn.com/${styleId}/{z}/{x}/{y}.png`,
+    attribution: '© <a href="https://carto.com/">CARTO</a> © OpenStreetMap contributors',
+    maxZoom: 19,
+    subdomains: 'abcd',
+  }),
 };
 
 export function getTileConfig(provider: MapProvider = 'openstreetmap', apiKey?: string, styleId?: string): TileConfig {

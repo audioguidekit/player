@@ -26,8 +26,8 @@ Without `mapView: true` the map tab is hidden and everything works as before.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `mapView` | boolean | `false` | Show map tab in tour detail |
-| `mapProvider` | `"openstreetmap"` \| `"mapbox"` \| `"jawg"` \| `"maptiler"` | `"openstreetmap"` | Tile provider |
-| `mapApiKey` | string | — | API key for the chosen provider |
+| `mapProvider` | `"openstreetmap"` \| `"mapbox"` \| `"jawg"` \| `"maptiler"` \| `"carto"` | `"openstreetmap"` | Tile provider |
+| `mapApiKey` | — | — | Set via env var (see Tile providers below), not in this file |
 | `mapStyleId` | string | — | Provider-specific style/map ID (see per-provider defaults below) |
 | `mapCenter` | `{ lat, lng }` | — | Initial map center; if omitted, the map fits all stops in view |
 | `mapZoom` | number (0–23) | — | Initial zoom level; if `mapCenter` is omitted, fitBounds zoom is used |
@@ -130,7 +130,17 @@ Set `mapMarkerNumber: false` in `metadata.json` to render plain dots instead of 
 
 ## Tile providers
 
-All providers except OpenStreetMap require an API key via `mapApiKey`. If the key is missing the player silently falls back to OpenStreetMap.
+All providers except OpenStreetMap and CARTO require an API key. Keys are set as environment variables — never put them in `metadata.json`.
+
+Copy `.env` to `.env.local` and fill in your keys:
+
+```bash
+VITE_MAPBOX_API_KEY=pk.eyJ1...
+VITE_JAWG_API_KEY=your-jawg-token
+VITE_MAPTILER_API_KEY=your-maptiler-key
+```
+
+`.env.local` is gitignored. The active provider's key is automatically injected at build time — no other configuration needed.
 
 ### OpenStreetMap (default)
 
@@ -177,6 +187,23 @@ Requires an API key from [maptiler.com](https://www.maptiler.com/). Default styl
 "mapProvider": "maptiler",
 "mapApiKey": "your-maptiler-api-key",
 "mapStyleId": "topo-v2"
+```
+
+### CARTO
+
+No API key required — free public basemaps. Default style: `rastertiles/voyager`.
+
+Available styles: `rastertiles/voyager`, `light_all`, `dark_all`, `light_nolabels`, `dark_nolabels`.
+
+```json
+"mapProvider": "carto"
+```
+
+To use a different style:
+
+```json
+"mapProvider": "carto",
+"mapStyleId": "dark_all"
 ```
 
 ---

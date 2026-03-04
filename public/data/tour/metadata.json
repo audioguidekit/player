@@ -13,7 +13,7 @@
   "fullscreenPlayer": true,
   "showProgressBar": true,
   "mapView": true,
-  "mapProvider": "openstreetmap",
+  "mapProvider": "carto",
   "mapStyleId": "",
   "mapCenter": { "lat": 41.3851, "lng": 2.1734 },
   "mapZoom": 13,

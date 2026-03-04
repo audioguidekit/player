@@ -322,6 +322,7 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           url={tileConfig.url}
           attribution={tileConfig.attribution}
           maxZoom={tileConfig.maxZoom}
+          {...(tileConfig.subdomains ? { subdomains: tileConfig.subdomains } : {})}
         />
         <MapRefCapture mapRef={mapRef} />
         <MapBoundsFitter locations={locations} center={mapCenter} zoom={mapZoom} />
