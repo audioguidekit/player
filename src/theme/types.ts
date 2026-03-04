@@ -71,6 +71,28 @@ export interface ThemeConfig {
     };
   };
 
+  // Map Markers — independent from list stepIndicators since map is a visually different context.
+  // If omitted, falls back to stepIndicators values.
+  mapMarkers?: {
+    active: {
+      outlineColor: string;
+      numberColor: string;
+      backgroundColor: string;
+      shadow?: string;
+    };
+    inactive: {
+      borderColor: string;
+      numberColor: string;
+      backgroundColor: string;
+      numberFontSize?: string;
+      numberFontWeight?: string;
+    };
+    completed: {
+      backgroundColor: string;
+      checkmarkColor: string;
+    };
+  };
+
   // Primary Buttons (main action buttons)
   buttons: {
     primary: {

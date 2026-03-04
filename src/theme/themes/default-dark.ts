@@ -67,6 +67,27 @@ export const defaultDarkTheme: ThemeConfig = {
     },
   },
 
+  // Map markers use a solid-background style for legibility on the tile layer
+  mapMarkers: {
+    active: {
+      outlineColor: '#459825',
+      numberColor: '#FFFFFF',
+      backgroundColor: '#459825',
+      shadow: '0 2px 8px rgba(0,0,0,0.5)',
+    },
+    inactive: {
+      borderColor: 'transparent',
+      numberColor: '#FFFFFF',
+      backgroundColor: '#555555',
+      numberFontSize: '12px',
+      numberFontWeight: '700',
+    },
+    completed: {
+      backgroundColor: '#459825',
+      checkmarkColor: '#FFFFFF',
+    },
+  },
+
   buttons: {
     primary: {
       backgroundColor: '#FFFFFF', // High contrast white button

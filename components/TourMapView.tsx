@@ -7,6 +7,8 @@ import { Stop } from '../types';
 import { getTileConfig, MapProvider } from '../src/utils/mapTileProvider';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { ThemeConfig } from '../src/theme/types';
+import { MapZoomControls } from './map/MapZoomControls';
+import { MapLocateButton, UserLocationLayer, useUserLocation } from './map/MapLocateButton';
 
 interface TourMapViewProps {
   stops: Stop[];
@@ -18,6 +20,8 @@ interface TourMapViewProps {
   mapApiKey?: string;
   onRequestListView?: () => void;
 }
+
+// ─── Styled components ────────────────────────────────────────────────────────
 
 const MapWrapper = styled.div`
   ${tw`flex-1 w-full relative overflow-hidden`}
@@ -57,7 +61,24 @@ const NoLocationsPlaceholder = styled.div`
   height: 100%;
 `;
 
-// Sub-component: fits map bounds to markers on mount
+const ControlsOverlay = styled.div`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+// ─── Internal sub-components (require MapContainer context) ───────────────────
+
+const MapRefCapture: React.FC<{ mapRef: React.MutableRefObject<L.Map | null> }> = ({ mapRef }) => {
+  const map = useMap();
+  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
+  return null;
+};
+
 interface MapBoundsFitterProps {
   locations: Array<{ lat: number; lng: number }>;
 }
@@ -81,7 +102,6 @@ const MapBoundsFitter: React.FC<MapBoundsFitterProps> = ({ locations }) => {
   return null;
 };
 
-// Sub-component: renders imperative Leaflet markers
 interface MapMarkersProps {
   stops: Stop[];
   currentStopId: string | null;
@@ -91,11 +111,7 @@ interface MapMarkersProps {
 }
 
 const MapMarkers: React.FC<MapMarkersProps> = ({
-  stops,
-  currentStopId,
-  isStopCompleted,
-  onStopClick,
-  theme,
+  stops, currentStopId, isStopCompleted, onStopClick, theme,
 }) => {
   const map = useMap();
   const markersRef = useRef<L.Marker[]>([]);
@@ -104,48 +120,34 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     (stop: Stop, index: number): L.DivIcon => {
       const isActive = stop.id === currentStopId;
       const isCompleted = isStopCompleted(stop.id);
+      const m = theme.mapMarkers ?? theme.stepIndicators;
 
-      let bg: string;
-      let border: string;
-      let textColor: string;
-      let content: string;
+      let bg: string, border: string, shadow: string, content: string;
 
       if (isCompleted) {
-        bg = theme.stepIndicators.completed.backgroundColor;
+        bg = m.completed.backgroundColor;
         border = 'none';
-        textColor = theme.stepIndicators.completed.checkmarkColor;
-        // Checkmark SVG
-        content = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256" fill="${textColor}"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>`;
+        shadow = theme.mapMarkers?.active.shadow ?? '0 2px 6px rgba(0,0,0,0.25)';
+        const c = m.completed.checkmarkColor;
+        content = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="11" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
       } else if (isActive) {
-        bg = theme.stepIndicators.active.backgroundColor;
-        border = `3px solid ${theme.stepIndicators.active.outlineColor}`;
-        textColor = theme.stepIndicators.active.numberColor;
-        content = `<span style="font-size:12px;font-weight:700;color:${textColor}">${index + 1}</span>`;
+        bg = m.active.backgroundColor;
+        border = `3px solid ${m.active.outlineColor}`;
+        shadow = theme.mapMarkers?.active.shadow ?? '0 2px 6px rgba(0,0,0,0.25)';
+        const fs = theme.mapMarkers?.inactive.numberFontSize ?? '12px';
+        const fw = theme.mapMarkers?.inactive.numberFontWeight ?? '700';
+        content = `<span style="font-size:${fs};font-weight:${fw};color:${m.active.numberColor}">${index + 1}</span>`;
       } else {
-        bg = theme.stepIndicators.inactive.backgroundColor;
-        border = `2px solid ${theme.stepIndicators.inactive.borderColor}`;
-        textColor = theme.stepIndicators.inactive.numberColor;
-        content = `<span style="font-size:12px;font-weight:600;color:${textColor}">${index + 1}</span>`;
+        bg = m.inactive.backgroundColor;
+        border = m.inactive.borderColor !== 'transparent' ? `2px solid ${m.inactive.borderColor}` : 'none';
+        shadow = '0 2px 6px rgba(0,0,0,0.25)';
+        const fs = theme.mapMarkers?.inactive.numberFontSize ?? '12px';
+        const fw = theme.mapMarkers?.inactive.numberFontWeight ?? '600';
+        content = `<span style="font-size:${fs};font-weight:${fw};color:${m.inactive.numberColor}">${index + 1}</span>`;
       }
 
-      const html = `
-        <div style="
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: ${bg};
-          border: ${border};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-          cursor: pointer;
-          box-sizing: border-box;
-        ">${content}</div>
-      `;
-
       return L.divIcon({
-        html,
+        html: `<div style="width:32px;height:32px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;box-shadow:${shadow};cursor:pointer;box-sizing:border-box">${content}</div>`,
         className: '',
         iconSize: [32, 32],
         iconAnchor: [16, 16],
@@ -155,7 +157,6 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   );
 
   useEffect(() => {
-    // Remove existing markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
@@ -164,11 +165,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
       if (stop.type === 'audio') {
         const idx = audioIndex++;
         if (!stop.location) return;
-
-        const marker = L.marker([stop.location.lat, stop.location.lng], {
-          icon: createIcon(stop, idx),
-        });
-
+        const marker = L.marker([stop.location.lat, stop.location.lng], { icon: createIcon(stop, idx) });
         marker.on('click', () => onStopClick(stop.id));
         marker.addTo(map);
         markersRef.current.push(marker);
@@ -184,6 +181,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
   return null;
 };
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export const TourMapView: React.FC<TourMapViewProps> = ({
   stops,
   currentStopId,
@@ -197,13 +196,20 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
   const theme = useTheme() as ThemeConfig;
   const isOnline = useOnlineStatus();
   const tileConfig = getTileConfig(mapProvider, mapApiKey);
+  const mapRef = useRef<L.Map | null>(null);
 
-  const mappableStops = stops.filter(
-    s => s.type === 'audio' && s.location != null
-  );
-  const locations = mappableStops
-    .map(s => s.location!)
-    .filter(Boolean);
+  const {
+    locateState,
+    userLocation,
+    shouldCenter,
+    handleLocate,
+    handleCentered,
+    handleUserMoved,
+  } = useUserLocation();
+
+  const locations = stops
+    .filter(s => s.type === 'audio' && s.location != null)
+    .map(s => s.location!);
 
   if (!isOnline) {
     return (
@@ -219,13 +225,10 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
 
   if (locations.length === 0) {
     return (
-      <NoLocationsPlaceholder>
-        No stops have GPS coordinates
-      </NoLocationsPlaceholder>
+      <NoLocationsPlaceholder>No stops have GPS coordinates</NoLocationsPlaceholder>
     );
   }
 
-  // Default center for initial render — bounds fitter will correct it
   const defaultCenter: [number, number] = [locations[0].lat, locations[0].lng];
 
   return (
@@ -233,14 +236,15 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
       <MapContainer
         center={defaultCenter}
         zoom={14}
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={true}
+        style={{ height: '100%', width: '100%', background: theme.mainContent.backgroundColor }}
+        zoomControl={false}
       >
         <TileLayer
           url={tileConfig.url}
           attribution={tileConfig.attribution}
           maxZoom={tileConfig.maxZoom}
         />
+        <MapRefCapture mapRef={mapRef} />
         <MapBoundsFitter locations={locations} />
         <MapMarkers
           stops={stops}
@@ -249,7 +253,21 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           onStopClick={onStopClick}
           theme={theme}
         />
+        <UserLocationLayer
+          position={userLocation}
+          shouldCenter={shouldCenter}
+          onCentered={handleCentered}
+          onUserMoved={handleUserMoved}
+        />
       </MapContainer>
+
+      <ControlsOverlay>
+        <MapZoomControls mapRef={mapRef} />
+        <MapLocateButton
+          locateState={locateState}
+          onLocate={() => handleLocate(locateState, userLocation)}
+        />
+      </ControlsOverlay>
     </MapWrapper>
   );
 };
