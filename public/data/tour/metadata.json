@@ -16,7 +16,7 @@
   "mapView": true,
   "mapProvider": "carto",
   "mapStyleId": "light_nolabels",
-  "mapCenter": { "lat": 41.3851, "lng": 2.1734 },
+  "mapCenter": { "lat": 41.3880, "lng": 2.1850 },
   "mapZoom": 13,
   "mapCluster": {
     "disableClusteringAtZoom": 16,
@@ -24,7 +24,7 @@
   },
   "mapMarkerCustomIcon": false,
   "mapMarkerNumber": true,
-  "mapRoute": true,
+  "mapRoute": { "geoJSON": "./route-test.geojson" },
   "mapLocateButton": true,
   "imageColor": "#1A2634",
   "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/cover.webp"
