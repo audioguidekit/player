@@ -55,6 +55,7 @@ const Title = styled.h1`
   font-weight: ${({ theme }) => theme.startCard.titleFontWeight};
   line-height: ${({ theme }) => theme.startCard.titleLineHeight};
   color: ${({ theme }) => theme.colors.text.primary};
+  text-wrap: balance;
 `;
 
 const MetaContainer = styled.div`
