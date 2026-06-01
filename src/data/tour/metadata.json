@@ -1,31 +1,17 @@
 {
   "id": "barcelona",
   "defaultLanguage": "en",
-  "offlineMode": "online-only",
-  "hapticsEnabled": true,
+  "offlineMode": "optional",
   "transitionAudio": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/audio/end.m4a",
   "themeId": "default-light",
   "transcriptAvailable": true,
   "collectFeedback": true,
   "showLanguageLabel": false,
-  "showStopImage": true,
+  "showStopImage": "thumbnail",
   "showStopDuration": true,
   "showStopNumber": true,
   "fullscreenPlayer": true,
   "showProgressBar": true,
-  "mapView": true,
-  "mapProvider": "carto",
-  "mapStyleId": "light_nolabels",
-  "mapCenter": { "lat": 41.388, "lng": 2.185 },
-  "mapZoom": 13,
-  "mapCluster": {
-    "disableClusteringAtZoom": 14,
-    "spiderfyOnMaxZoom": true
-  },
-  "mapMarkerCustomIcon": false,
-  "mapMarkerNumber": true,
-  "mapRoute": { "geoJSON": "./route.geojson" },
-  "mapLocateButton": true,
   "imageColor": "#1A2634",
-  "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/rambla/cover.webp"
+  "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/cover.webp"
 }
