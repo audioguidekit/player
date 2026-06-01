@@ -8,7 +8,7 @@ Each stop in a tour's `stops` array must have `id` and `type`. All other fields 
 |-------|------|----------|-------------|
 | `id` | string | ✓ | Unique within the tour; must match across all language files |
 | `type` | StopType | ✓ | Determines which component renders the stop |
-| `location` | `{ lat, lng }` | | GPS coordinates — shows the stop as a map marker |
+| `location` | `{ lat, lng }` | | GPS coordinates — `audio` stops with a location appear as map markers; all stop types with a location contribute to the route line |
 | `mapMarkerIcon` | string (URL) | | Per-stop custom marker image; overrides the tour-level `mapMarkerIcon` |
 
 ---

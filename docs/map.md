@@ -24,7 +24,7 @@ Without `mapView: true` the map tab is hidden and everything works as before.
 |-------|------|---------|-------------|
 | `mapView` | boolean | `false` | Show map tab in tour detail |
 | `mapProvider` | `"openstreetmap"` \| `"mapbox"` \| `"jawg"` \| `"maptiler"` \| `"carto"` | `"openstreetmap"` | Tile provider |
-| `mapApiKey` | — | — | Set via env var (see Tile providers below), not in this file |
+| `mapApiKey` | string | — | API key for the chosen provider. Set via `.env.local` (recommended) or directly here as a fallback — env var takes priority |
 | `mapStyleId` | string | — | Provider-specific style/map ID (see per-provider defaults below) |
 | `mapCenter` | `{ lat, lng }` | — | Initial map center; if omitted, the map fits all stops in view |
 | `mapZoom` | number (0–23) | — | Initial zoom level; if `mapCenter` is omitted, fitBounds zoom is used |

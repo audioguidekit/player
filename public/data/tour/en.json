@@ -3,8 +3,7 @@
   "language": "en",
   "title": "From La Rambla to Port Vell",
   "description": "A walk through Barcelona's iconic La Rambla, from the Font de Canaletes at the top down to the historic Port Vell waterfront",
-  "coverImage": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/rambla/cover.webp",
-  "totalDuration": "30 minutes",
+  "totalDuration": "60 minutes",
   "totalStops": 10,
   "stops": [
     {
@@ -62,7 +61,7 @@
       "type": "audio",
       "title": "Plaça Reial",
       "duration": "1:45 mins",
-      "location": { "lat": 41.3800909, "lng": 2.1750157 },
+      "location": { "lat": 41.380111, "lng": 2.175259 },
       "image": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/images/rambla/06.webp",
       "audioFile": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/audio/rambla/en/06.mp3",
       "transcription": "You won't believe how Plaça Reial started its life. It was once a convent. The cloisters? Gone. Demolished to make way for this square. Talk about a makeover. And Gaudí's lanterns? They're functional art. Look up: those lanterns are Gaudí's first big public project. Classic Gaudí — he didn't do subtle. If you're in the mood for cocktails, Sidecar Factory is the kind of place where history meets a Negroni. Trust me, it's worth it. This square gets lively at night — live music, drinks, and enough energy to keep you up until dawn. If you're here after dark, stick around. And Gocce di Latte does the best gelato in town. If you need a sweet break, this is the spot. One thing: don't sit on the benches unless you want to be surrounded by pigeons. They're sneaky and will steal your snacks if you're not careful."

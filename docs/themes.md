@@ -33,7 +33,7 @@ The narrow safe-area at the top of the screen is filled automatically:
 
 | Screen | Color source |
 |--------|-------------|
-| TourStart | `backgroundColor` in `metadata.json` |
+| TourStart | `imageColor` in `metadata.json` |
 | TourDetail | `header.backgroundColor` from the theme |
 
 Both values also update `<meta name="theme-color">`.
@@ -109,7 +109,7 @@ stepIndicators: {
 
 Map pin styles for stop markers and the user location dot. If omitted, falls back to `stepIndicators` values for stop markers.
 
-> **Note:** The map tile style (provider, style ID, initial center/zoom) is configured in `metadata.json`, not the theme. See [map-view.md](./map-view.md) for those settings.
+> **Note:** The map tile style (provider, style ID, initial center/zoom) is configured in `metadata.json`, not the theme. See [map.md](./map.md) for those settings.
 
 ```typescript
 mapMarkers: {

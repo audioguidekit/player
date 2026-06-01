@@ -38,7 +38,7 @@ Shared properties across all language versions. Individual language files can ov
 | `offlineMode` | `"optional"` \| `"online-only"` \| `"offline-only"` | `"optional"` | Offline behavior |
 | `transitionAudio` | string | — | Audio played between stops |
 | `themeId` | string | — | `"default-light"` or `"default-dark"` |
-| `backgroundColor` | string | — | Status bar / start screen background (e.g. `"#1A2634"`) |
+| `imageColor` | string | — | Status bar / start screen background (e.g. `"#1A2634"`) |
 | `transcriptAvailable` | boolean | — | Show transcription toggle |
 | `collectFeedback` | boolean | — | Show rating button |
 | `fullscreenPlayer` | boolean | `false` | Enable fullscreen overlay player |
@@ -48,7 +48,7 @@ Shared properties across all language versions. Individual language files can ov
 | `showStopDuration` | boolean | `true` | Show duration on stop cards |
 | `showStopNumber` | boolean | `true` | Show number indicator on stops |
 | `hapticsEnabled` | boolean | `true` | Enable haptic feedback on taps |
-| `image` | string | — | Default tour cover image URL |
+| `image` | string | — | Default tour cover image URL. Can be overridden per language by adding `"image"` to the language file. |
 
 ### Stop card display options
 
@@ -101,6 +101,18 @@ Each language file contains translated content and can override any metadata fie
       "audioFile": "https://your-storage.com/audio/stop-01.mp3"
     }
   ]
+}
+```
+
+To override the cover image for a specific language, add `"image"` to that language file — it takes precedence over `metadata.json`'s `"image"`. Languages that don't include it fall back to the metadata value.
+
+```json
+{
+  "id": "your-tour-id",
+  "language": "es",
+  "image": "https://your-storage.com/images/cover-es.webp",
+  "title": "Tu título en español",
+  ...
 }
 ```
 
