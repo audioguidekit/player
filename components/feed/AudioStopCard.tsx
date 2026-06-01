@@ -130,6 +130,7 @@ const Title = styled.h3`
   font-size: ${({ theme }) => theme.cards.stopTitleFontSize || theme.cards.titleFontSize};
   font-weight: ${({ theme }) => theme.cards.stopTitleFontWeight || theme.cards.titleFontWeight};
   color: ${({ theme }) => theme.cards.textColor};
+  text-wrap: balance;
 `;
 
 // List item layout components (when showImage is false)

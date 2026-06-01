@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
-import { motion, useSpring, useTransform, animate } from 'framer-motion';
+import React, { useEffect, useCallback, useMemo, useState, lazy, Suspense } from 'react';
+import { motion, AnimatePresence, useSpring, useTransform, animate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { TourData } from '../types';
@@ -7,6 +7,17 @@ import { StopCardRenderer } from '../components/feed/StopCardRenderer';
 import { TourHeader } from '../components/TourHeader';
 import { AudioStopCard } from '../components/feed/AudioStopCard';
 import { HeadphonesIcon } from '@phosphor-icons/react/dist/csr/Headphones';
+
+const TourMapView = lazy(() =>
+  import('../components/TourMapView').then(m => ({ default: m.TourMapView }))
+);
+
+const MapLoadingState = styled.div`
+  ${tw`flex-1 flex items-center justify-center`}
+  background-color: ${({ theme }) => theme.mainContent.backgroundColor};
+  color: ${({ theme }) => theme.colors.text.tertiary};
+  font-size: 14px;
+`;
 
 const Container = styled.div`
   ${tw`flex flex-col h-full relative w-full pb-12`}
@@ -71,6 +82,7 @@ interface TourDetailProps {
   scrollTrigger?: number | null;
   onScrollComplete?: () => void;
   onOpenRatingSheet?: () => void;
+  showMapLocateButton?: boolean;
 }
 
 export const TourDetail = React.memo<TourDetailProps>(({
@@ -89,8 +101,13 @@ export const TourDetail = React.memo<TourDetailProps>(({
   scrollToStopId,
   scrollTrigger,
   onScrollComplete,
-  onOpenRatingSheet
+  onOpenRatingSheet,
+  showMapLocateButton = true,
 }) => {
+  const [viewMode, setViewMode] = useState<'map' | 'list'>(
+    tour.mapView === true ? 'map' : 'list'
+  );
+
   // Slower spring: reduced stiffness from 75 to 35 to match counter
   const progressSpring = useSpring(0, { mass: 0.8, stiffness: 35, damping: 15 });
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -114,7 +131,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
 
     const elementId = `stop-${scrollToStopId}`;
     const element = document.getElementById(elementId);
-    
+
     if (!element) {
       onScrollComplete?.();
       return;
@@ -123,9 +140,9 @@ export const TourDetail = React.memo<TourDetailProps>(({
     const container = containerRef.current;
     const stopIndex = tour.stops.findIndex(s => s.id === scrollToStopId);
     const isFirstStop = stopIndex === 0;
-    
+
     let targetScrollTop: number;
-    
+
     if (isFirstStop) {
       targetScrollTop = 0;
     } else {
@@ -142,12 +159,12 @@ export const TourDetail = React.memo<TourDetailProps>(({
 
     const startScrollTop = container.scrollTop;
     const distance = targetScrollTop - startScrollTop;
-    
+
     if (Math.abs(distance) < 1) {
       onScrollComplete?.();
       return;
     }
-    
+
     const duration = 400;
     const startTime = performance.now();
     const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
@@ -194,57 +211,98 @@ export const TourDetail = React.memo<TourDetailProps>(({
         consumedMinutes={consumedMinutes}
         totalMinutes={totalMinutes}
         showProgressBar={tour.showProgressBar}
+        showViewToggle={tour.mapView === true}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
-      {/* Scrollable List */}
-      <ScrollableList
-        ref={containerRef}
-        {...scrollableListAnimation}
-        transition={scrollableListTransition}
-        className="no-scrollbar"
-        $compact={tour.showStopImage === false}
-      >
-        {tour.stops
-          .filter(stop => !(stop.type === 'rating' && tour.collectFeedback === false))
-          .map((stop, index) => {
-          // Render audio stops with compact card
-          if (stop.type === 'audio') {
-            const stopIsPlaying = stop.id === currentStopId && isPlaying;
+      {viewMode === 'map' ? (
+        <motion.div
+          key="map"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+        >
+          <Suspense fallback={<MapLoadingState>Loading map…</MapLoadingState>}>
+            <TourMapView
+              stops={tour.stops}
+              currentStopId={currentStopId}
+              isPlaying={isPlaying}
+              isStopCompleted={isStopCompleted}
+              onStopClick={handleStopClick}
+              mapProvider={tour.mapProvider}
+              mapApiKey={tour.mapApiKey}
+              mapStyleId={tour.mapStyleId}
+              mapCenter={tour.mapCenter}
+              mapZoom={tour.mapZoom}
+              mapMarkerCustomIcon={tour.mapMarkerCustomIcon}
+              mapMarkerNumber={tour.mapMarkerNumber}
+              mapCluster={tour.mapCluster}
+              mapRoute={tour.mapRoute}
+              onRequestListView={() => setViewMode('list')}
+              showLocateButton={showMapLocateButton && tour.mapLocateButton !== false}
+            />
+          </Suspense>
+        </motion.div>
+      ) : (
+        // Scrollable List (matches pre-map layout)
+        <ScrollableList
+          ref={containerRef}
+          {...scrollableListAnimation}
+          transition={scrollableListTransition}
+          className="no-scrollbar"
+          $compact={tour.showStopImage !== true}
+        >
+          {tour.stops
+            .filter(stop => !(stop.type === 'rating' && tour.collectFeedback === false))
+            .map((stop, index) => {
+            // Render audio stops with compact card
+            if (stop.type === 'audio') {
+              const stopIsPlaying = stop.id === currentStopId && isPlaying;
+              return (
+                <StopItemWrapper key={stop.id}>
+                  <AudioStopCard
+                    id={`stop-${stop.id}`}
+                    item={stop}
+                    index={index}
+                    isActive={stop.id === currentStopId}
+                    isPlaying={stopIsPlaying}
+                    isCompleted={isStopCompleted(stop.id)}
+                    onClick={() => handleStopClick(stop.id)}
+                    showImage={tour.showStopImage}
+                    showDuration={tour.showStopDuration}
+                    showNumber={tour.showStopNumber}
+                  />
+                </StopItemWrapper>
+              );
+            }
+
+            // Render other content types with StopCardRenderer
             return (
               <StopItemWrapper key={stop.id}>
-                <AudioStopCard
-                  id={`stop-${stop.id}`}
+                <StopCardRenderer
                   item={stop}
                   index={index}
-                  isActive={stop.id === currentStopId}
-                  isPlaying={stopIsPlaying}
-                  isCompleted={isStopCompleted(stop.id)}
-                  onClick={() => handleStopClick(stop.id)}
-                  showImage={tour.showStopImage}
-                  showDuration={tour.showStopDuration}
                   showNumber={tour.showStopNumber}
+                  onOpenRatingSheet={onOpenRatingSheet}
+                  compactLayout={tour.showStopImage !== true}
                 />
               </StopItemWrapper>
             );
-          }
+          })}
 
-          // Render other content types with StopCardRenderer
-          return (
-            <StopItemWrapper key={stop.id}>
-              <StopCardRenderer item={stop} index={index} showNumber={tour.showStopNumber} onOpenRatingSheet={onOpenRatingSheet} compactLayout={tour.showStopImage !== true} />
-            </StopItemWrapper>
-          );
-        })}
-
-        <Signature
-          href="https://github.com/audioguidekit"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <HeadphonesIcon weight="bold" />
-          AudioGuideKit · open-source audio player
-        </Signature>
-      </ScrollableList>
+          <Signature
+            href="https://audioguidekit.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <HeadphonesIcon weight="bold" />
+            AudioGuideKit · open-source audio player
+          </Signature>
+        </ScrollableList>
+      )}
     </Container>
   );
   }, (prevProps, nextProps) => {
@@ -259,6 +317,9 @@ export const TourDetail = React.memo<TourDetailProps>(({
       return false;
     }
     if (prevProps.tour.id !== nextProps.tour.id) {
+      return false;
+    }
+    if (prevProps.showMapLocateButton !== nextProps.showMapLocateButton) {
       return false;
     }
     if (prevProps.scrollTrigger !== nextProps.scrollTrigger) {

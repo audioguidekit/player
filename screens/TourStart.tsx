@@ -7,6 +7,7 @@ import { GB, CZ, DE, FR, IT, ES } from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { TourData, Language } from '../types';
+import { useHaptics } from '../src/hooks/useHaptics';
 
 // Map country codes to flag components
 const flagComponents: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
@@ -52,7 +53,7 @@ const DarkOverlay = styled(motion.div)`
 `;
 
 const TopButtonsContainer = styled.div`
-  ${tw`absolute left-6 right-6 flex justify-between z-10`}
+  ${tw`absolute left-3 right-3 flex justify-between z-10`}
   top: calc(env(safe-area-inset-top, 0px) + 1rem);
 `;
 
@@ -165,8 +166,10 @@ export const TourStart: React.FC<TourStartProps> = ({
 
   const blurFilter = useMotionTemplate`blur(${blurAmount}px)`;
 
+  const triggerHaptic = useHaptics();
+
   return (
-    <Container style={tour.backgroundColor ? { backgroundColor: tour.backgroundColor } : undefined}>
+    <Container style={tour.imageColor ? { backgroundColor: tour.imageColor } : undefined}>
       {/* Background Image Area */}
       <MediaContainer style={{ scale, y, filter: blurFilter }}>
         {tour.image && (isVideo ? (
@@ -194,12 +197,23 @@ export const TourStart: React.FC<TourStartProps> = ({
         {/* Top Buttons */}
         <TopButtonsContainer>
           {tour.collectFeedback !== false && (
-            <ActionButton onClick={onOpenRating}>
+            <ActionButton
+              onClick={() => {
+                triggerHaptic();
+                onOpenRating();
+              }}
+            >
               <ChatCircleDotsIcon size={28} weight="regular" />
             </ActionButton>
           )}
           {languages.length > 1 && (
-            <LanguageButton onClick={onOpenLanguage} $iconOnly={!showLanguageLabel}>
+            <LanguageButton
+              onClick={() => {
+                triggerHaptic();
+                onOpenLanguage();
+              }}
+              $iconOnly={!showLanguageLabel}
+            >
               <LanguageFlag>
                 <FlagIcon />
               </LanguageFlag>

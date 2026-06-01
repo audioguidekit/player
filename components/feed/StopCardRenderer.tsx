@@ -50,7 +50,7 @@ export const StopCardRenderer: React.FC<StopCardRendererProps> = ({
       return <Suspense fallback={null}><ImageGalleryCard item={item} /></Suspense>;
     case 'image-comparison':
       return <Suspense fallback={null}><ImageComparisonCard item={item} /></Suspense>;
-    case 'hotspot-image':
+    case 'image-hotspot':
       return <Suspense fallback={null}><HotspotImageCard item={item} /></Suspense>;
     case 'embed':
       return <Suspense fallback={null}><EmbedCard item={item} /></Suspense>;

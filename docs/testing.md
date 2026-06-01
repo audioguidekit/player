@@ -37,7 +37,8 @@ tests/
 ├── stop-card-display.spec.ts     # All 8 showStopImage/Duration/Number combinations
 ├── button-origin.spec.ts         # Button transform-origin consistency
 ├── lightbox-backdrop-blur.spec.ts # Image lightbox backdrop blur
-└── lightbox-zoom.spec.ts         # Image lightbox double-tap zoom
+├── lightbox-zoom.spec.ts         # Image lightbox double-tap zoom
+└── locate-button-debug.spec.ts   # Map locate-me button diagnostics
 ```
 
 > Tests are generic — they use `helpers.ts` to discover tour IDs and languages at runtime rather than hardcoding values.

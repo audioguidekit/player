@@ -38,7 +38,7 @@ Shared properties across all language versions. Individual language files can ov
 | `offlineMode` | `"optional"` \| `"online-only"` \| `"offline-only"` | `"optional"` | Offline behavior |
 | `transitionAudio` | string | — | Audio played between stops |
 | `themeId` | string | — | `"default-light"` or `"default-dark"` |
-| `backgroundColor` | string | — | Status bar / start screen background (e.g. `"#1A2634"`) |
+| `imageColor` | string | — | Status bar / start screen background (e.g. `"#1A2634"`) |
 | `transcriptAvailable` | boolean | — | Show transcription toggle |
 | `collectFeedback` | boolean | — | Show rating button |
 | `fullscreenPlayer` | boolean | `false` | Enable fullscreen overlay player |
@@ -47,7 +47,8 @@ Shared properties across all language versions. Individual language files can ov
 | `showStopImage` | `boolean \| "thumbnail"` | `true` | Stop card layout (see below) |
 | `showStopDuration` | boolean | `true` | Show duration on stop cards |
 | `showStopNumber` | boolean | `true` | Show number indicator on stops |
-| `image` | string | — | Default tour cover image URL |
+| `hapticsEnabled` | boolean | `true` | Enable haptic feedback on taps |
+| `image` | string | — | Default tour cover image URL. Can be overridden per language by adding `"image"` to the language file. |
 
 ### Stop card display options
 
@@ -61,6 +62,14 @@ Shared properties across all language versions. Individual language files can ov
 | `false` | `true` | `false` | List: `Title ......... 5:30` |
 | `false` | `false` | `true` | List: `[1] Title` |
 | `false` | `false` | `false` | List: `Title` |
+
+> **Map view:** The map tab (`mapView`, `mapProvider`, `mapCenter`, etc.) is also configured in `metadata.json`. See [map.md](./map.md) for the full field reference.
+
+### Haptic feedback
+
+Set `"hapticsEnabled": false` to disable all haptic feedback for a tour. Defaults to `true`.
+
+Haptics work on Android via the Vibration API and on iOS via a hidden-checkbox trick that fires the system Taptic Engine — the same feel as toggling a native switch. Desktop is a no-op. The flag is read once at startup; there is no runtime toggle.
 
 ### Offline modes
 
@@ -95,45 +104,19 @@ Each language file contains translated content and can override any metadata fie
 }
 ```
 
-### Language file fields
+To override the cover image for a specific language, add `"image"` to that language file — it takes precedence over `metadata.json`'s `"image"`. Languages that don't include it fall back to the metadata value.
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | ✓ | Must match `metadata.json` id |
-| `language` | string | ✓ | ISO 639-1 code: `"en"`, `"cs"`, `"de"` |
-| `title` | string | ✓ | Translated tour title |
-| `description` | string | ✓ | Translated description |
-| `totalDuration` | string | ✓ | Total tour length |
-| `totalStops` | number | ✓ | Number of stops |
-| `stops` | array | ✓ | Array of stop objects |
+```json
+{
+  "id": "your-tour-id",
+  "language": "es",
+  "image": "https://your-storage.com/images/cover-es.webp",
+  "title": "Tu título en español",
+  ...
+}
+```
 
-### Stop fields
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | ✓ | Unique within tour, must match across languages |
-| `type` | StopType | ✓ | See stop types below |
-| `title` | string | ✓ | Stop name |
-| `duration` | string | ✓ | Audio length (e.g. `"5 min audio"`) |
-| `image` | string | ✓ | Stop image URL (for audio stops) |
-| `imageAlt` | string | | Accessibility alt text |
-| `imageCaption` | string | | Caption shown below image |
-| `imageCredit` | string | | Photo credit |
-| `audioFile` | string | | Audio URL (required for `type: "audio"`) |
-| `transcription` | string | | Text transcription of audio |
-
-### Stop types
-
-`"audio"`, `"text"`, `"image-text"`, `"video"`, `"headline"`, `"rating"`, `"email"`, `"quote"`, `"image-gallery"`, `"image-comparison"`, `"hotspot-image"`, `"embed"`, `"3d-object"`
-
-See `types.ts` for the full interface of each stop type.
-
-## Multi-language requirements
-
-- All language files must share the same `id`
-- Stop `id` values must match across all languages
-- `totalStops` must be the same across all languages
-- See [languages.md](./languages.md) for the full language system
+For stop fields, types, and per-type JSON examples see [stops.md](./stops.md). For the full language system (selection order, adding languages, localStorage) see [languages.md](./languages.md).
 
 ## Validation checklist
 

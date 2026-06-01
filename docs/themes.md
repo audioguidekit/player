@@ -4,23 +4,7 @@ Themes are TypeScript config objects in `src/theme/themes/`. Each follows the `T
 
 Two built-in themes: `default-light` and `default-dark`.
 
-## Tour-level layout options
-
-These settings live in `metadata.json`, not in the theme file:
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `showStopImage` | `boolean \| "thumbnail"` | `true` | Stop card layout: `true` = full image card, `"thumbnail"` = compact row, `false` = text list |
-| `showStopDuration` | `boolean` | `true` | Duration badge on stop cards |
-| `showStopNumber` | `boolean` | `true` | Numbered circle indicator |
-| `showProgressBar` | `boolean` | `true` | Playback progress bar in header |
-| `showLanguageLabel` | `boolean` | `true` | Language name next to flag |
-| `fullscreenPlayer` | `boolean` | `false` | Fullscreen overlay player |
-| `backgroundColor` | `string` | — | TourStart status bar / background color (see [Status bar background](#status-bar-background)) |
-
-See [adding-tours.md](./adding-tours.md#stop-card-display-options) for layout combinations.
-
----
+> **Layout options** (stop card style, progress bar, fullscreen player, etc.) are configured in `metadata.json`, not the theme. See [adding-tours.md](./adding-tours.md#metadata-json).
 
 ## Theme properties
 
@@ -49,7 +33,7 @@ The narrow safe-area at the top of the screen is filled automatically:
 
 | Screen | Color source |
 |--------|-------------|
-| TourStart | `backgroundColor` in `metadata.json` |
+| TourStart | `imageColor` in `metadata.json` |
 | TourDetail | `header.backgroundColor` from the theme |
 
 Both values also update `<meta name="theme-color">`.
@@ -115,6 +99,57 @@ stepIndicators: {
   completed: {
     backgroundColor: '#6366F1',
     checkmarkColor: '#FFFFFF',
+  },
+}
+```
+
+---
+
+### `mapMarkers` (optional)
+
+Map pin styles for stop markers and the user location dot. If omitted, falls back to `stepIndicators` values for stop markers.
+
+> **Note:** The map tile style (provider, style ID, initial center/zoom) is configured in `metadata.json`, not the theme. See [map.md](./map.md) for those settings.
+
+```typescript
+mapMarkers: {
+  active: {
+    outlineColor: '#6366F1',
+    numberColor: '#FFFFFF',
+    backgroundColor: '#6366F1',
+    shadow: '0 2px 8px rgba(0,0,0,0.35)',  // Optional
+  },
+  inactive: {
+    borderColor: 'transparent',
+    numberColor: '#FFFFFF',
+    backgroundColor: '#9CA3AF',
+    numberFontSize: '12px',                // Optional
+    numberFontWeight: '700',               // Optional
+  },
+  completed: {
+    backgroundColor: '#6366F1',
+    checkmarkColor: '#FFFFFF',
+  },
+  cluster: {
+    backgroundColor: '#1A1A1A',
+    numberColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.2)',  // Optional
+    shadow: '0 3px 10px rgba(0,0,0,0.35)', // Optional
+    fontSize: '18px',                      // Optional
+    fontWeight: '700',                     // Optional
+    size: 64,                              // Optional: visual diameter in px
+    maxClusterRadius: 48,                  // Optional: pixel radius for clustering
+  },
+  userLocation: {                          // Optional: "you are here" dot
+    dotColor: '#2563EB',
+    borderColor: '#FFFFFF',               // Optional: inner dot border
+  },
+  route: {                                 // Optional: route polyline (requires mapRoute in metadata.json)
+    completedColor: '#459825',             // color for visited segments
+    upcomingColor: '#888888',             // color for unvisited (dashed) segments
+    weight: 3,                            // line width in px
+    opacity: 0.85,                        // opacity for completed line (upcoming renders at 75% of this)
+    dashArray: '8 6',                     // SVG dash pattern for upcoming segment
   },
 }
 ```
@@ -341,7 +376,7 @@ imageCaption: {
 
 ### `hotspot`
 
-Pins and popovers on hotspot-image stops.
+Pins and popovers on image-hotspot stops.
 
 ```typescript
 hotspot: {

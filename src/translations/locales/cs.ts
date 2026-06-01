@@ -29,6 +29,7 @@ export const cs: Translations = {
     downloadForOffline: 'Stáhnout pro offline',
     availableOffline: 'Dostupné offline',
     downloading: 'Stahování...',
+    stops: 'zastávek',
   },
   rating: {
     title: 'Jak se vám prohlídka líbila?',
@@ -58,5 +59,8 @@ export const cs: Translations = {
   tourHeader: {
     minLeft: 'min zbývá',
     offline: 'Offline',
+  },
+  map: {
+    locationError: 'Poloha nedostupná',
   },
 } as const;

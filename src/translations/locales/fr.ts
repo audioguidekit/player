@@ -29,6 +29,7 @@ export const fr: Translations = {
     downloadForOffline: 'Télécharger hors ligne',
     availableOffline: 'Disponible hors ligne',
     downloading: 'Téléchargement...',
+    stops: 'arrêts',
   },
   rating: {
     title: 'Comment avez-vous aimé cette visite ?',
@@ -58,5 +59,8 @@ export const fr: Translations = {
   tourHeader: {
     minLeft: 'min restantes',
     offline: 'Hors ligne',
+  },
+  map: {
+    locationError: 'Localisation indisponible',
   },
 } as const;

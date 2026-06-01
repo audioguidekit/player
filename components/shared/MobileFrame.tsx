@@ -17,7 +17,7 @@ const OuterContainer = styled.div`
 `;
 
 const InnerFrame = styled.div`
-  ${tw`w-full max-w-[400px] h-full md:h-[844px] bg-white md:rounded-[2.5rem] relative overflow-hidden shadow-2xl flex flex-col`}
+  ${tw`w-full h-full md:h-[844px] md:max-w-[400px] bg-white md:rounded-[2.5rem] relative overflow-hidden shadow-2xl flex flex-col`}
   /* Safe area handled by child components (MiniPlayer, MainSheet) */
 `;
 
@@ -27,6 +27,13 @@ const InnerFrame = styled.div`
  * - Rounded corners with shadow on desktop
  * - Max width of 400px on desktop
  */
+const OverlayPortal = styled.div`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 69; /* just below MiniPlayer z-[70] */
+`;
+
 export const MobileFrame: React.FC<MobileFrameProps> = ({
     children,
     className = ''
@@ -35,6 +42,7 @@ export const MobileFrame: React.FC<MobileFrameProps> = ({
         <OuterContainer className={className}>
             <InnerFrame>
                 {children}
+                <OverlayPortal id="map-controls-portal" />
             </InnerFrame>
         </OuterContainer>
     );

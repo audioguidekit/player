@@ -9,7 +9,7 @@
  * Properties in language files override metadata properties.
  */
 
-import { TourData, TourMetadata, Language } from '../../types';
+import { TourData, TourMetadata, Language, RouteGeoJSON, MapRouteConfig } from '../../types';
 
 // Import all tour JSON files at build time (language-specific files)
 // Uses /src/data/tour/ path - files must be in src directory for Vite to import them
@@ -31,6 +31,15 @@ const metadataModules = import.meta.glob<TourMetadata>(
   }
 );
 
+// Import GeoJSON route files (resolved at build time, so no runtime fetch needed)
+const geojsonModules = import.meta.glob<RouteGeoJSON>(
+  '/src/data/tour/**/*.geojson',
+  {
+    eager: true,
+    import: 'default',
+  }
+);
+
 /**
  * Tour registry structure: { [tourId]: { [languageCode]: TourData } }
  */
@@ -44,6 +53,37 @@ type MetadataRegistry = Record<string, TourMetadata>;
 // Hardcoded fallback if no defaultLanguage is set in metadata
 const FALLBACK_DEFAULT_LANGUAGE = 'en';
 
+// Map API keys from environment variables — env takes priority over metadata.json
+const MAP_ENV_KEYS: Partial<Record<string, string>> = {
+  mapbox:    import.meta.env.VITE_MAPBOX_API_KEY,
+  jawg:      import.meta.env.VITE_JAWG_API_KEY,
+  maptiler:  import.meta.env.VITE_MAPTILER_API_KEY,
+};
+
+/**
+ * Resolve a mapRoute.geoJSON relative path string to the parsed GeoJSON object.
+ * Called during metadata registry build so the resolved object flows into TourData at runtime.
+ */
+function resolveMapRouteGeoJSON(metadata: TourMetadata, metadataPath: string): TourMetadata {
+  if (!metadata.mapRoute || typeof metadata.mapRoute === 'boolean') return metadata;
+  const config = metadata.mapRoute as MapRouteConfig;
+  if (typeof config.geoJSON !== 'string') return metadata; // already resolved or absent
+
+  // Resolve the relative path against the metadata file's directory
+  const dir = metadataPath.substring(0, metadataPath.lastIndexOf('/'));
+  const relativePath = config.geoJSON.replace(/^\.\//, '');
+  const resolvedPath = `${dir}/${relativePath}`;
+
+  const parsed = geojsonModules[resolvedPath];
+  if (!parsed) {
+    console.warn(`[TourDiscovery] mapRoute.geoJSON not found: ${resolvedPath} — falling back to straight lines`);
+    const { geoJSON: _, ...rest } = config;
+    return { ...metadata, mapRoute: rest };
+  }
+
+  return { ...metadata, mapRoute: { ...config, geoJSON: parsed } };
+}
+
 /**
  * Build metadata registry from discovered metadata files
  */
@@ -56,7 +96,7 @@ function buildMetadataRegistry(): MetadataRegistry {
       continue;
     }
 
-    registry[metadata.id] = metadata;
+    registry[metadata.id] = resolveMapRouteGeoJSON(metadata, path);
     console.log(`[TourDiscovery] Loaded metadata for tour: ${metadata.id}`);
   }
 
@@ -116,6 +156,12 @@ function buildTourRegistry(): TourRegistry {
     const mergedTourData: TourData = metadata
       ? { ...metadata, ...tourData }
       : tourData;
+
+    // Inject map API key from env var if available (env takes priority over metadata.json)
+    if (mergedTourData.mapProvider) {
+      const envKey = MAP_ENV_KEYS[mergedTourData.mapProvider];
+      if (envKey) mergedTourData.mapApiKey = envKey;
+    }
 
     // Store merged tour by language
     registry[id][language] = mergedTourData;

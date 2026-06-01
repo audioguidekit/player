@@ -5,6 +5,7 @@ import { PauseIcon } from '@phosphor-icons/react/dist/csr/Pause';
 import { CheckIcon } from '@phosphor-icons/react/dist/csr/Check';
 import tw from 'twin.macro';
 import styled from 'styled-components';
+import { useHaptics } from '../../src/hooks/useHaptics';
 
 interface PlayPauseButtonProps {
     isPlaying: boolean;
@@ -93,6 +94,7 @@ export const PlayPauseButton = React.memo<PlayPauseButtonProps>(({
     className = '',
     buttonVariants
 }) => {
+    const triggerHaptic = useHaptics();
     const { icon, checkSize } = sizeConfig[size];
     const showCheckmark = isCompleting || isTransitioning;
     const isMini = variant === 'mini';
@@ -109,6 +111,7 @@ export const PlayPauseButton = React.memo<PlayPauseButtonProps>(({
             transition={{ duration: 0.3 }}
             onClick={(e) => {
                 e.stopPropagation();
+                triggerHaptic();
                 onClick();
             }}
             className={className}

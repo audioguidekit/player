@@ -547,6 +547,12 @@ const App: React.FC = () => {
     setHasStarted(true);
     setAllowAutoPlay(true); // user initiated
 
+    // If already on a stop (returning from start screen), resume playback
+    if (currentStopId) {
+      setPendingAutoPlay(true);
+      return;
+    }
+
     // Only auto-select if no current stop
     if (!currentStopId) {
       // Use resume point if available, otherwise first audio stop
@@ -573,8 +579,12 @@ const App: React.FC = () => {
   }, [tour, currentStopId, setCurrentStopId, setIsMiniPlayerExpanded, setHasStarted, setAllowAutoPlay]);
 
   const handleBackToStart = useCallback(() => {
+    if (isPlaying) {
+      audioPlayer.pause();
+      setIsPlaying(false);
+    }
     setHasStarted(false);
-  }, [setHasStarted]);
+  }, [setHasStarted, isPlaying, audioPlayer, setIsPlaying]);
 
   const closeSheet = useCallback(() => {
     setActiveSheet('NONE');
@@ -748,7 +758,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider themeId={themeId}>
-      <StatusBarController backgroundColor={tour?.backgroundColor} hasStarted={hasStarted} />
+      <StatusBarController backgroundColor={tour?.imageColor} hasStarted={hasStarted} />
       <GlobalStyles />
       <TranslationProvider language={uiLanguage}>
         <MobileFrame>
@@ -813,6 +823,7 @@ const App: React.FC = () => {
                     scrollTrigger={scrollToStopId?.timestamp ?? null}
                     onScrollComplete={handleScrollComplete}
                     onOpenRatingSheet={() => setActiveSheet('RATING')}
+                    showMapLocateButton={hasStarted}
                   />
                 }
               />

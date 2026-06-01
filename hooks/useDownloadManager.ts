@@ -93,7 +93,7 @@ export const useDownloadManager = (
           if (stop.before) urls.add(stop.before);
           if (stop.after) urls.add(stop.after);
           break;
-        case 'hotspot-image':
+        case 'image-hotspot':
           if (stop.image) urls.add(stop.image);
           break;
       }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLineUpIcon } from '@phosphor-icons/react/dist/csr/ArrowLineUp';
 import { ClockIcon } from '@phosphor-icons/react/dist/csr/Clock';
+import { PathIcon } from '@phosphor-icons/react/dist/csr/Path';
 import { HeadphonesIcon } from '@phosphor-icons/react/dist/csr/Headphones';
 import { SparkleIcon } from '@phosphor-icons/react/dist/csr/Sparkle';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
@@ -12,6 +13,7 @@ import { TourData } from '../types';
 import { ThemeConfig } from '../src/theme/types';
 import { useTranslation } from '../src/translations';
 import { getOfflineMode } from '../src/utils/offlineMode';
+import { useHaptics } from '../src/hooks/useHaptics';
 
 interface StartCardProps {
   tour: TourData;
@@ -27,8 +29,7 @@ interface StartCardProps {
 }
 
 const Container = styled.div`
-  ${tw`px-8 pt-10 flex flex-col items-center text-center w-full`}
-  padding-bottom: 0.20rem;
+  ${tw`px-8 pt-10 pb-8 flex flex-col items-center text-center w-full`}
 `;
 
 const IconContainer = styled.div<{ $showBorder?: boolean }>`
@@ -54,6 +55,7 @@ const Title = styled.h1`
   font-weight: ${({ theme }) => theme.startCard.titleFontWeight};
   line-height: ${({ theme }) => theme.startCard.titleLineHeight};
   color: ${({ theme }) => theme.colors.text.primary};
+  text-wrap: balance;
 `;
 
 const MetaContainer = styled.div`
@@ -104,7 +106,7 @@ const ErrorTip = styled.p`
 `;
 
 const ActionButton = styled.button<{ $disabled: boolean }>(({ $disabled, theme }) => [
-  tw`w-full py-4 rounded-full flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden`,
+  tw`w-full py-4 rounded-full flex items-center justify-center gap-3 transition-all duration-300 relative overflow-hidden`,
   {
     backgroundColor: theme.buttons.primary.backgroundColor,
     color: theme.buttons.primary.textColor,
@@ -113,6 +115,9 @@ const ActionButton = styled.button<{ $disabled: boolean }>(({ $disabled, theme }
     fontWeight: theme.buttons.primary.fontWeight,
     '& svg': {
       color: theme.buttons.primary.iconColor || theme.buttons.primary.textColor,
+    },
+    '&:active': {
+      backgroundColor: theme.buttons.primary.hoverBackground || theme.buttons.primary.backgroundColor,
     },
   },
   $disabled && tw`opacity-50 cursor-not-allowed active:scale-100`,
@@ -142,7 +147,7 @@ const OfflineMessage = styled.p`
 `;
 
 const DownloadButton = styled.button<{ $disabled?: boolean }>(({ $disabled, theme }) => [
-  tw`w-full py-4 mt-4 rounded-full flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden`,
+  tw`w-full py-4 mt-4 rounded-full flex items-center justify-center gap-3 transition-all duration-300 relative overflow-hidden`,
   {
     backgroundColor: theme.buttons.download.backgroundColor,
     color: theme.buttons.download.textColor,
@@ -157,6 +162,9 @@ const DownloadButton = styled.button<{ $disabled?: boolean }>(({ $disabled, them
       '&:hover': {
         backgroundColor: theme.buttons.download.hoverBackground || theme.buttons.download.backgroundColor,
       },
+    },
+    '&:active': {
+      backgroundColor: theme.buttons.download.hoverBackground || theme.buttons.download.backgroundColor,
     },
   },
   $disabled && tw`opacity-50 cursor-not-allowed active:scale-100`,
@@ -187,6 +195,7 @@ export const StartCard = React.memo<StartCardProps>(({
   const showLogoBorder = theme.branding.showLogoBorder;
   const logoSize = theme.branding.logoSize;
   const [loadingDots, setLoadingDots] = React.useState('');
+  const triggerHaptic = useHaptics();
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -234,6 +243,10 @@ export const StartCard = React.memo<StartCardProps>(({
           <ClockIcon size={18} />
           <span>{tour.totalDuration}</span>
         </MetaItem>
+        <MetaItem>
+          <PathIcon size={18} />
+          <span>{tour.stops.length} {t.startCard.stops}</span>
+        </MetaItem>
       </MetaContainer>
       <Description>
         {tour.description}
@@ -253,6 +266,8 @@ export const StartCard = React.memo<StartCardProps>(({
       <ActionButton
         onClick={(e) => {
           e.stopPropagation();
+
+          if (!isDownloading) triggerHaptic();
 
           // If tour is completed, reset progress
           if (isTourCompleted && onResetProgress) {
@@ -331,7 +346,13 @@ export const StartCard = React.memo<StartCardProps>(({
               {t.startCard.availableOffline}
             </OfflineStatus>
           ) : onDownload && (
-            <DownloadButton onClick={(e) => { e.stopPropagation(); onDownload(); }}>
+            <DownloadButton
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic();
+                onDownload();
+              }}
+            >
               <CloudArrowDownIcon size={20} weight="bold" />
               {t.startCard.downloadForOffline}
             </DownloadButton>

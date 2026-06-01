@@ -71,6 +71,49 @@ export interface ThemeConfig {
     };
   };
 
+  // Map Markers — independent from list stepIndicators since map is a visually different context.
+  // If omitted, falls back to stepIndicators values.
+  mapMarkers?: {
+    active: {
+      outlineColor: string;
+      numberColor: string;
+      backgroundColor: string;
+      shadow?: string;
+    };
+    inactive: {
+      borderColor: string;
+      numberColor: string;
+      backgroundColor: string;
+      numberFontSize?: string;
+      numberFontWeight?: string;
+    };
+    completed: {
+      backgroundColor: string;
+      checkmarkColor: string;
+    };
+    cluster: {
+      backgroundColor: string;
+      numberColor: string;
+      borderColor?: string;
+      shadow?: string;
+      fontSize?: string;
+      fontWeight?: string;
+      size?: number;           // Visual diameter in px (default: 64)
+      maxClusterRadius?: number; // Pixel radius at which markers cluster (default: 48)
+    };
+    userLocation?: {
+      dotColor: string;
+      borderColor?: string;  // Inner dot border (default: '#FFFFFF')
+    };
+    route?: {
+      completedColor?: string;   // color for visited segments
+      upcomingColor?: string;    // color for unvisited segments
+      weight?: number;           // line width in px
+      opacity?: number;          // 0–1
+      dashArray?: string;        // SVG dash pattern for upcoming segments
+    };
+  };
+
   // Primary Buttons (main action buttons)
   buttons: {
     primary: {

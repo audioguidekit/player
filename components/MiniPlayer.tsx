@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { useHaptics } from '../src/hooks/useHaptics';
 import { SkipBackIcon } from '@phosphor-icons/react/dist/csr/SkipBack';
 import { SkipForwardIcon } from '@phosphor-icons/react/dist/csr/SkipForward';
 import { XIcon } from '@phosphor-icons/react/dist/csr/X';
 import { ClosedCaptioningIcon } from '@phosphor-icons/react/dist/csr/ClosedCaptioning';
-import { motion, AnimatePresence, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
+import { motion, AnimatePresence, animate, useAnimationControls, useMotionValue, useTransform, PanInfo, useMotionTemplate } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { AudioStop } from '../types';
@@ -313,6 +314,8 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   // Ref for transcription scroll container
   const transcriptionRef = useRef<HTMLDivElement>(null);
 
+  const triggerHaptic = useHaptics();
+
   // Scroll transcription to top when stop changes
   useEffect(() => {
     if (transcriptionRef.current) {
@@ -459,6 +462,69 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
   // Vertical Drag Logic (Container — minimized ↔ expanded, drag-up → fullscreen)
   const yDrag = useMotionValue(0);
 
+  // Locate button positioning — written to --btn-bottom on #map-controls-portal.
+  // Rules:
+  //   • During drag: button stays put (no yDrag tracking).
+  //   • On mount: ResizeObserver sets the correct initial position (handles reload
+  //     with expanded player — cardHeightRef would be wrong until first observation).
+  //   • On expand/collapse: spring-animate to new position.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const cardHeightRef = useRef(72);
+  const btnAnimRef = useRef<ReturnType<typeof animate> | null>(null);
+  const btnInitialized = useRef(false);
+  const isFirstRender = useRef(true);
+
+  // ResizeObserver: updates the height ref. On first observation, sets the
+  // initial --btn-bottom immediately (no animation) so reload shows correct position.
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const h = entry.contentRect.height;
+      if (h === 0) return;
+      cardHeightRef.current = h;
+      if (!btnInitialized.current) {
+        btnInitialized.current = true;
+        document.getElementById('map-controls-portal')?.style.setProperty('--btn-bottom', `${h + 12}px`);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // On expand/collapse (skipped on first render — ResizeObserver handles initial position).
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      const portal = document.getElementById('map-controls-portal');
+      if (!portal) return;
+      // Read actual rendered height after layout settles — avoids stale cardHeightRef
+      const h = cardRef.current?.getBoundingClientRect().height || cardHeightRef.current;
+      cardHeightRef.current = h;
+      const current = parseFloat(portal.style.getPropertyValue('--btn-bottom')) || (h + 12);
+      const target = h + 12;
+      btnAnimRef.current?.stop();
+      btnAnimRef.current = animate(current, target, {
+        type: 'spring',
+        stiffness: 500,
+        damping: 32,
+        onUpdate: v => portal.style.setProperty('--btn-bottom', `${v}px`),
+      });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isExpanded]);
+
+  // Reset on unmount.
+  useEffect(() => {
+    return () => {
+      btnAnimRef.current?.stop();
+      document.getElementById('map-controls-portal')?.style.setProperty('--btn-bottom', '12px');
+    };
+  }, []);
+
   const handleVerticalDragEnd = (_: any, info: PanInfo) => {
     if (isExpanded) {
       if (info.offset.y > 50 || info.velocity.y > 300) {
@@ -520,6 +586,7 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
 
           {/* Foreground Card */}
           <ForegroundCard
+            ref={cardRef}
             style={{ x: dragX, boxShadow }}
             drag="x"
             dragDirectionLock
@@ -581,6 +648,7 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
                         <TranscriptionButton
                           onClick={(e) => {
                             e.stopPropagation();
+                            triggerHaptic();
                             setIsTranscriptionExpanded(!isTranscriptionExpanded);
                           }}
                           onPointerDownCapture={(e) => e.stopPropagation()}

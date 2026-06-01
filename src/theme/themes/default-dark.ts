@@ -67,6 +67,48 @@ export const defaultDarkTheme: ThemeConfig = {
     },
   },
 
+  // Map markers use a solid-background style for legibility on the tile layer
+  mapMarkers: {
+    active: {
+      outlineColor: '#459825',
+      numberColor: '#FFFFFF',
+      backgroundColor: '#459825',
+      shadow: '0 2px 8px rgba(0,0,0,0.5)',
+    },
+    inactive: {
+      borderColor: 'transparent',
+      numberColor: '#FFFFFF',
+      backgroundColor: '#555555',
+      numberFontSize: '12px',
+      numberFontWeight: '700',
+    },
+    completed: {
+      backgroundColor: '#459825',
+      checkmarkColor: '#FFFFFF',
+    },
+    cluster: {
+      backgroundColor: '#E5E5E5',
+      numberColor: '#1A1A1A',
+      borderColor: 'rgba(0,0,0,0.15)',
+      shadow: '0 3px 10px rgba(0,0,0,0.5)',
+      fontSize: '18px',
+      fontWeight: '700',
+      size: 64,
+      maxClusterRadius: 48,
+    },
+    userLocation: {
+      dotColor: '#60A5FA', // Vibrant sky-blue — readable on dark tiles
+      borderColor: '#FFFFFF',
+    },
+    route: {
+      completedColor: '#459825', // green — matches completed marker color
+      upcomingColor: '#555555',  // muted grey on dark tiles
+      weight: 3,
+      opacity: 0.85,
+      dashArray: '8 6',
+    },
+  },
+
   buttons: {
     primary: {
       backgroundColor: '#FFFFFF', // High contrast white button
