@@ -1,4 +1,4 @@
-export type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email' | 'quote' | 'image-gallery' | 'image-comparison' | 'hotspot-image' | 'embed';
+export type StopType = 'audio' | 'text' | 'image-text' | '3d-object' | 'video' | 'headline' | 'rating' | 'email' | 'quote' | 'image-gallery' | 'image-comparison' | 'image-hotspot' | 'embed';
 
 /** GeoJSON FeatureCollection containing a single LineString (the walking route). */
 export interface RouteGeoJSON {
@@ -174,7 +174,7 @@ export interface Hotspot {
 }
 
 export interface HotspotImageStop extends BaseStop {
-  type: 'hotspot-image';
+  type: 'image-hotspot';
   image: string;
   imageAlt?: string;
   hotspots: Hotspot[];

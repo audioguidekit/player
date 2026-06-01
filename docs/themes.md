@@ -376,7 +376,7 @@ imageCaption: {
 
 ### `hotspot`
 
-Pins and popovers on hotspot-image stops.
+Pins and popovers on image-hotspot stops.
 
 ```typescript
 hotspot: {

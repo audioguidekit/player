@@ -230,7 +230,7 @@ A before/after drag slider comparing two images.
 
 ---
 
-## `hotspot-image`
+## `image-hotspot`
 
 An image with tappable annotation pins that reveal titles and descriptions.
 
@@ -253,7 +253,7 @@ An image with tappable annotation pins that reveal titles and descriptions.
 ```json
 {
   "id": "10",
-  "type": "hotspot-image",
+  "type": "image-hotspot",
   "image": "https://example.com/img/cathedral.jpg",
   "hotspots": [
     { "x": 42, "y": 18, "title": "Rose window", "description": "Installed in 1386." },
