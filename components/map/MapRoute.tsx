@@ -30,6 +30,7 @@ export const MapRoute: React.FC<MapRouteProps> = ({
   const map = useMap();
   const completedLine = useRef<L.Polyline | null>(null);
   const upcomingLine = useRef<L.Polyline | null>(null);
+  const progressDot = useRef<L.CircleMarker | null>(null);
 
   // All stops that have a GPS location — not restricted to audio type
   const stopsWithLocation = useMemo(
@@ -56,7 +57,7 @@ export const MapRoute: React.FC<MapRouteProps> = ({
 
   const syncVisibility = useCallback(() => {
     const visible = map.getZoom() >= minZoom;
-    [completedLine, upcomingLine].forEach(ref => {
+    [completedLine, upcomingLine, progressDot].forEach(ref => {
       if (!ref.current) return;
       if (visible) ref.current.addTo(map);
       else ref.current.remove();
@@ -67,8 +68,10 @@ export const MapRoute: React.FC<MapRouteProps> = ({
   useEffect(() => {
     completedLine.current?.remove();
     upcomingLine.current?.remove();
+    progressDot.current?.remove();
     completedLine.current = null;
     upcomingLine.current = null;
+    progressDot.current = null;
 
     if (lines.completed.length >= 2) {
       completedLine.current = L.polyline(lines.completed, {
@@ -77,6 +80,16 @@ export const MapRoute: React.FC<MapRouteProps> = ({
         opacity,
         lineCap: 'round',
         lineJoin: 'round',
+      });
+
+      const tip = lines.completed[lines.completed.length - 1];
+      progressDot.current = L.circleMarker(tip, {
+        radius: 7,
+        color: '#FFFFFF',
+        weight: 2.5,
+        fillColor: completedColor,
+        fillOpacity: 1,
+        opacity: 1,
       });
     }
 
@@ -96,8 +109,10 @@ export const MapRoute: React.FC<MapRouteProps> = ({
     return () => {
       completedLine.current?.remove();
       upcomingLine.current?.remove();
+      progressDot.current?.remove();
       completedLine.current = null;
       upcomingLine.current = null;
+      progressDot.current = null;
     };
   }, [lines, completedColor, upcomingColor, weight, opacity, dashArray, map, syncVisibility]);
 
