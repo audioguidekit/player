@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForAppLoad, discoverTourLanguages, hasMultipleLanguages, clearAppState, getStoredLanguage } from './helpers';
+import { waitForAppLoad, discoverTourLanguages, hasMultipleLanguages, clearAppState, getStoredLanguage, getTourId } from './helpers';
 
 test.describe('Language System', () => {
   test('should load app with tour content', async ({ page }) => {
@@ -121,7 +121,8 @@ test.describe('URL Language Parameter (?lang=)', () => {
     const expectedTitle = tourData.title;
 
     // Navigate with ?lang= parameter
-    await page.goto(`/tour/barcelona?lang=${targetLang}`);
+    const tourId = await getTourId(request);
+    await page.goto(`/tour/${tourId}?lang=${targetLang}`);
     await waitForAppLoad(page);
 
     // Verify the tour title matches the expected language
@@ -140,7 +141,8 @@ test.describe('URL Language Parameter (?lang=)', () => {
     const targetLang = languages.find(l => l !== 'en') || languages[1];
 
     // Navigate with ?lang= parameter
-    await page.goto(`/tour/barcelona?lang=${targetLang}`);
+    const tourId = await getTourId(request);
+    await page.goto(`/tour/${tourId}?lang=${targetLang}`);
     await waitForAppLoad(page);
 
     // Wait for language to be saved
@@ -151,9 +153,10 @@ test.describe('URL Language Parameter (?lang=)', () => {
     expect(storedLang).toBe(targetLang);
   });
 
-  test('should ignore invalid language codes and fall back gracefully', async ({ page }) => {
+  test('should ignore invalid language codes and fall back gracefully', async ({ page, request }) => {
     // Navigate with invalid language code
-    await page.goto('/tour/barcelona?lang=invalid_lang');
+    const tourId = await getTourId(request);
+    await page.goto(`/tour/${tourId}?lang=invalid_lang`);
     await waitForAppLoad(page);
 
     // App should still load without errors
@@ -176,7 +179,8 @@ test.describe('URL Language Parameter (?lang=)', () => {
     const targetLang = languages.find(l => l !== 'en') || languages[1];
 
     // Navigate to a stop with ?lang= parameter
-    await page.goto(`/tour/barcelona/1?lang=${targetLang}`);
+    const tourId = await getTourId(request);
+    await page.goto(`/tour/${tourId}/1?lang=${targetLang}`);
     await waitForAppLoad(page);
 
     // Verify language is saved
@@ -196,7 +200,8 @@ test.describe('URL Language Parameter (?lang=)', () => {
     const targetLang = languages.find(l => l !== 'en') || languages[1];
 
     // Navigate with uppercase language code
-    await page.goto(`/tour/barcelona?lang=${targetLang.toUpperCase()}`);
+    const tourId = await getTourId(request);
+    await page.goto(`/tour/${tourId}?lang=${targetLang.toUpperCase()}`);
     await waitForAppLoad(page);
 
     // Wait for language to be saved

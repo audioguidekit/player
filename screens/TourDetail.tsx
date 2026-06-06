@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback, useMemo, useState, lazy, Suspense } from 'react';
-import { motion, AnimatePresence, useSpring, useTransform, animate } from 'framer-motion';
+import React, { useEffect, useLayoutEffect, useCallback, useMemo, useState, lazy, Suspense } from 'react';
+import { useSpring, useTransform } from 'framer-motion';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { TourData } from '../types';
@@ -24,7 +24,25 @@ const Container = styled.div`
   background-color: ${({ theme }) => theme.mainContent.backgroundColor};
 `;
 
-const ScrollableList = styled(motion.div)<{ $compact?: boolean }>`
+const ViewArea = styled.div`
+  ${tw`flex-1 relative overflow-hidden`}
+  display: flex;
+  flex-direction: column;
+`;
+
+// The map stays mounted across view switches so Leaflet keeps its state
+// (center / zoom / markers); it's hidden — not unmounted — while the list shows.
+// visibility:hidden preserves the element's size, so no map.invalidateSize() is
+// needed and returning to the map shows it exactly as left, with no re-fit or fade.
+const MapLayer = styled.div<{ $active: boolean }>`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  visibility: ${({ $active }) => ($active ? 'visible' : 'hidden')};
+`;
+
+const ScrollableList = styled.div<{ $compact?: boolean }>`
   ${tw`flex-1 overflow-y-auto overflow-x-hidden px-4 pb-32`}
   padding-top: ${({ $compact }) => $compact ? '0px' : '1.5rem'};
 `;
@@ -52,18 +70,15 @@ const Signature = styled.a`
   }
 `;
 
-// Animation variants hoisted outside component to prevent recreation on each render
-const scrollableListAnimation = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: 20 }
-} as const;
-
-const scrollableListTransition = {
-  delay: 0.2,
-  duration: 0.25,
-  type: "spring"
-} as const;
+// Target scrollTop that centers a stop's card in the area above the mini-player.
+const computeStopScrollTop = (container: HTMLElement, element: HTMLElement, isFirstStop: boolean): number => {
+  if (isFirstStop) return 0;
+  const visibleHeight = container.clientHeight - 128; // 128 ≈ bottom padding behind the player
+  const elementRect = element.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const relativeTop = elementRect.top - containerRect.top + container.scrollTop;
+  return Math.max(0, relativeTop - visibleHeight / 2 + elementRect.height / 2);
+};
 
 interface TourDetailProps {
   tour: TourData;
@@ -104,14 +119,27 @@ export const TourDetail = React.memo<TourDetailProps>(({
   onOpenRatingSheet,
   showMapLocateButton = true,
 }) => {
+  // Which views are available. List is on unless explicitly disabled (backward-compatible);
+  // map is off unless explicitly enabled.
+  const mapEnabled = tour.mapView === true;
+  const listEnabled = tour.listView !== false;
+  // The toggle only makes sense when both views are available.
+  const showViewToggle = mapEnabled && listEnabled;
+
+  // Prefer map when it's enabled (preserves prior behavior); otherwise fall back to list.
   const [viewMode, setViewMode] = useState<'map' | 'list'>(
-    tour.mapView === true ? 'map' : 'list'
+    mapEnabled ? 'map' : 'list'
   );
 
   // Slower spring: reduced stiffness from 75 to 35 to match counter
   const progressSpring = useSpring(0, { mass: 0.8, stiffness: 35, damping: 15 });
   const containerRef = React.useRef<HTMLDivElement>(null);
   const rafIdRef = React.useRef<number | null>(null);
+  // Latest currentStopId, read inside the view-switch scroll effect without making it
+  // a dep — so that effect fires only on a tab switch, not on every track change
+  // (track changes while in the list are handled by the animated scrollTrigger effect).
+  const currentStopIdRef = React.useRef(currentStopId);
+  currentStopIdRef.current = currentStopId;
 
   useEffect(() => {
     // Animate to the passed progress value whenever it changes
@@ -139,23 +167,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
 
     const container = containerRef.current;
     const stopIndex = tour.stops.findIndex(s => s.id === scrollToStopId);
-    const isFirstStop = stopIndex === 0;
-
-    let targetScrollTop: number;
-
-    if (isFirstStop) {
-      targetScrollTop = 0;
-    } else {
-      const containerHeight = container.clientHeight;
-      const paddingBottom = 128;
-      const visibleHeight = containerHeight - paddingBottom;
-
-      const elementRect = element.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-      const relativeTop = elementRect.top - containerRect.top + container.scrollTop;
-
-      targetScrollTop = Math.max(0, relativeTop - (visibleHeight / 2) + (elementRect.height / 2));
-    }
+    const targetScrollTop = computeStopScrollTop(container, element, stopIndex === 0);
 
     const startScrollTop = container.scrollTop;
     const distance = targetScrollTop - startScrollTop;
@@ -194,6 +206,20 @@ export const TourDetail = React.memo<TourDetailProps>(({
     };
   }, [scrollTrigger]);
 
+  // When switching to the list, jump straight to the active stop so it's in view.
+  // The list re-mounts at scrollTop 0 on each switch, and the animated scroll above
+  // only fires on scrollTrigger changes — so position it here, without animation.
+  useLayoutEffect(() => {
+    if (viewMode !== 'list') return;
+    const stopId = currentStopIdRef.current;
+    if (!stopId) return;
+    const container = containerRef.current;
+    const element = document.getElementById(`stop-${stopId}`);
+    if (!container || !element) return;
+    const stopIndex = tour.stops.findIndex(s => s.id === stopId);
+    container.scrollTop = computeStopScrollTop(container, element, stopIndex === 0);
+  }, [viewMode, tour.stops]);
+
   const width = useTransform(progressSpring, (value) => `${value}%`);
 
   // Memoize stop click handler to prevent unnecessary re-renders
@@ -211,47 +237,40 @@ export const TourDetail = React.memo<TourDetailProps>(({
         consumedMinutes={consumedMinutes}
         totalMinutes={totalMinutes}
         showProgressBar={tour.showProgressBar}
-        showViewToggle={tour.mapView === true}
+        showViewToggle={showViewToggle}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
 
-      {viewMode === 'map' ? (
-        <motion.div
-          key="map"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-        >
-          <Suspense fallback={<MapLoadingState>Loading map…</MapLoadingState>}>
-            <TourMapView
-              stops={tour.stops}
-              currentStopId={currentStopId}
-              isPlaying={isPlaying}
-              isStopCompleted={isStopCompleted}
-              onStopClick={handleStopClick}
-              mapProvider={tour.mapProvider}
-              mapApiKey={tour.mapApiKey}
-              mapStyleId={tour.mapStyleId}
-              mapCenter={tour.mapCenter}
-              mapZoom={tour.mapZoom}
-              mapMarkerCustomIcon={tour.mapMarkerCustomIcon}
-              mapMarkerNumber={tour.mapMarkerNumber}
-              mapCluster={tour.mapCluster}
-              mapRoute={tour.mapRoute}
-              onRequestListView={() => setViewMode('list')}
-              showLocateButton={showMapLocateButton && tour.mapLocateButton !== false}
-            />
-          </Suspense>
-        </motion.div>
-      ) : (
+      <ViewArea>
+        {mapEnabled && (
+          <MapLayer $active={viewMode === 'map'}>
+            <Suspense fallback={<MapLoadingState>Loading map…</MapLoadingState>}>
+              <TourMapView
+                stops={tour.stops}
+                currentStopId={currentStopId}
+                isStopCompleted={isStopCompleted}
+                onStopClick={handleStopClick}
+                mapProvider={tour.mapProvider}
+                mapApiKey={tour.mapApiKey}
+                mapStyleId={tour.mapStyleId}
+                mapCenter={tour.mapCenter}
+                mapZoom={tour.mapZoom}
+                mapMarker={tour.mapMarker}
+                mapMarkerIcon={tour.mapMarkerIcon}
+                mapCluster={tour.mapCluster}
+                mapRoute={tour.mapRoute}
+                active={viewMode === 'map'}
+                onRequestListView={listEnabled ? () => setViewMode('list') : undefined}
+                showLocateButton={showMapLocateButton && tour.mapLocateButton !== false}
+              />
+            </Suspense>
+          </MapLayer>
+        )}
+        {viewMode === 'list' && (
         // Scrollable List (matches pre-map layout)
         <ScrollableList
           ref={containerRef}
-          {...scrollableListAnimation}
-          transition={scrollableListTransition}
           className="no-scrollbar"
           $compact={tour.showStopImage !== true}
         >
@@ -302,7 +321,8 @@ export const TourDetail = React.memo<TourDetailProps>(({
             AudioGuideKit · open-source audio player
           </Signature>
         </ScrollableList>
-      )}
+        )}
+      </ViewArea>
     </Container>
   );
   }, (prevProps, nextProps) => {

@@ -73,6 +73,9 @@
         "imageColor": {
           "type": "string"
         },
+        "listView": {
+          "type": "boolean"
+        },
         "mapView": {
           "type": "boolean"
         },
@@ -111,14 +114,16 @@
         "mapZoom": {
           "type": "number"
         },
-        "mapMarkerCustomIcon": {
-          "type": [
-            "boolean",
-            "string"
+        "mapMarker": {
+          "type": "string",
+          "enum": [
+            "number",
+            "image",
+            "empty"
           ]
         },
-        "mapMarkerNumber": {
-          "type": "boolean"
+        "mapMarkerIcon": {
+          "type": "string"
         },
         "mapCluster": {
           "type": "object",

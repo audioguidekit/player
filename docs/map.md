@@ -18,18 +18,43 @@ Without `mapView: true` the map tab is hidden and everything works as before.
 
 ---
 
+## View modes
+
+A tour detail screen has two views — **map** and **list** — controlled by two independent flags:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `mapView` | boolean | `false` | Enable the map view |
+| `listView` | boolean | `true` | Enable the list view |
+
+The header shows a segmented map/list toggle **only when both are enabled**. With a single view enabled, there is no toggle and the tour opens directly into that view.
+
+| `mapView` | `listView` | Result |
+|-----------|------------|--------|
+| `true` | `true` (or omitted) | **Both** — toggle shown, opens on the map |
+| `true` | `false` | **Map only** — no toggle |
+| `false` (or omitted) | `true` (or omitted) | **List only** — no toggle (the default) |
+| `false` | `false` | Falls back to the list |
+
+Because `listView` defaults to `true`, existing tours are unaffected: omit it to keep the list, set `mapView: true` to add the map alongside it, or set `listView: false` (with `mapView: true`) for a map-only tour.
+
+> When the map is offline, its "unavailable offline" placeholder offers a **View list** button — this is automatically hidden in map-only tours (`listView: false`), since there is no list to fall back to.
+
+---
+
 ## metadata.json fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `mapView` | boolean | `false` | Show map tab in tour detail |
+| `listView` | boolean | `true` | Show list tab in tour detail |
 | `mapProvider` | `"openstreetmap"` \| `"mapbox"` \| `"jawg"` \| `"maptiler"` \| `"carto"` | `"openstreetmap"` | Tile provider |
 | `mapApiKey` | string | — | API key for the chosen provider. Set via `.env.local` (recommended) or directly here as a fallback — env var takes priority |
 | `mapStyleId` | string | — | Provider-specific style/map ID (see per-provider defaults below) |
 | `mapCenter` | `{ lat, lng }` | — | Initial map center; if omitted, the map fits all stops in view |
 | `mapZoom` | number (0–23) | — | Initial zoom level; if `mapCenter` is omitted, fitBounds zoom is used |
-| `mapMarkerCustomIcon` | `false` \| string (URL) | `false` | Custom image URL for all markers; replaces numbered circle |
-| `mapMarkerNumber` | boolean | `true` | Show stop number on markers |
+| `mapMarker` | `"number"` \| `"image"` \| `"empty"` | `"number"` | Default marker style for the tour (see [Marker styles](#marker-styles)) |
+| `mapMarkerIcon` | string (URL) | — | Custom image URL for all markers; overrides `mapMarker`. A per-stop `mapMarkerIcon` overrides it (see [Custom marker icons](#custom-marker-icons)) |
 | `mapCluster` | object | — | Marker clustering behaviour (see below) |
 | `mapRoute` | `boolean` \| object | `false` | Route polyline with progress indicator (see below) |
 | `mapLocateButton` | boolean | `true` | Show the locate-me button on the map |
@@ -89,19 +114,64 @@ Stops without `location` are silently skipped — no marker is rendered.
 
 ---
 
-## Custom marker icons
+## Marker styles
 
-### Tour-level (all stops)
-
-Set `mapMarkerCustomIcon` in `metadata.json` to a URL. All stops use this image instead of the numbered circle. Set to `false` (default) to use the standard numbered circle markers.
+By default each audio stop is a small circle showing its **stop number**, or a **checkmark** once completed. The `mapMarker` field in `metadata.json` sets the default style for the whole tour:
 
 ```json
-"mapMarkerCustomIcon": "https://api.iconify.design/ph/map-pin-duotone.svg"
+"mapMarker": "image"
 ```
 
-### Stop-level (individual stop)
+| Mode | Marker | Notes |
+|------|--------|-------|
+| `"number"` (default) | Numbered circle; checkmark when completed | The original behaviour |
+| `"image"` | The stop's own photo, cropped into the circle | See [Image markers](#image-markers) |
+| `"empty"` | Empty circle; checkmark still shown when completed | Like `number` with the number hidden |
 
-Add `mapMarkerIcon` directly to a stop in a language file. Overrides the tour-level icon for that stop only. Useful for unique images per stop.
+> [Custom icons](#custom-marker-icons) (per-stop or tour-level) always take precedence over `mapMarker` — see [Precedence](#precedence).
+
+### Image markers
+
+With `mapMarker: "image"`, each marker shows that stop's `image` — the same photo used in the list view — cropped into a 32 × 32 px circle (`object-fit: cover`).
+
+```json
+// metadata.json
+"mapMarker": "image"
+```
+
+```json
+// en.json — each stop supplies its own photo
+{
+  "id": "1",
+  "type": "audio",
+  "title": "Harlem Meer",
+  "image": "https://.../harlem-meer.webp",
+  "location": { "lat": 40.8005, "lng": -73.9577 }
+}
+```
+
+State is conveyed with a colored ring instead of a number or checkmark:
+
+| State | Appearance |
+|-------|------------|
+| Active (current stop) | Photo with a ring in `mapMarkers.active.outlineColor` |
+| Completed | Photo with a ring in `mapMarkers.completed.backgroundColor` |
+| Neither | Photo, no ring |
+| **Stop has no `image`** | Empty circle (never a broken image) |
+
+> In the default themes the active and completed ring colors are both green (`#459825`), so they look identical until you give them distinct values. See [themes.md](./themes.md#mapmarkers-optional).
+
+### Custom marker icons
+
+Custom icons replace the circle entirely with your own image (rendered at 32 × 32 px, `object-fit: contain`, inside a 44 × 44 px tap target). Unlike image markers they have **no circle, ring, number, or checkmark**.
+
+**Tour-level (all stops)** — set `mapMarkerIcon` in `metadata.json` to a URL:
+
+```json
+"mapMarkerIcon": "https://api.iconify.design/ph/map-pin-duotone.svg"
+```
+
+**Stop-level (individual stop)** — add `mapMarkerIcon` to a stop in a language file; overrides the tour-level icon for that stop only:
 
 ```json
 {
@@ -111,19 +181,15 @@ Add `mapMarkerIcon` directly to a stop in a language file. Overrides the tour-le
 }
 ```
 
-**Priority:** stop-level > tour-level > default numbered circle. Clusters are always unaffected.
+### Precedence
 
-The image is rendered at 32 × 32 px (`object-fit: contain`) inside a 44 × 44 px tap target.
+For each stop the marker is chosen in this order — first match wins:
 
----
+1. **`mapMarkerIcon`** on a stop — stop-level custom icon
+2. **`mapMarkerIcon`** in `metadata.json` — tour-level custom icon
+3. **`mapMarker`** mode — `image` / `number` / `empty`
 
-## Hiding stop numbers
-
-Set `mapMarkerNumber: false` in `metadata.json` to render plain dots instead of numbered markers. Completed stops still show the checkmark.
-
-```json
-"mapMarkerNumber": false
-```
+Clusters are always unaffected by any of these.
 
 ---
 
@@ -314,3 +380,9 @@ Map tiles require an internet connection. When the device is offline the map is 
 | `getTileConfig` | `src/utils/mapTileProvider.ts` | Tile URL/attribution resolver |
 | `buildGeoJSONRouteLines` | `src/utils/routeGeometry.ts` | Snap stops to GeoJSON line, slice for progress |
 | `buildStraightRouteLines` | `src/utils/routeGeometry.ts` | Straight-line fallback route segments |
+
+### Marker rendering
+
+`MapMarkers` (inside `TourMapView`) builds the Leaflet cluster group **once** per set of stops, then repaints only the individual markers whose state changes (active / completed / mode) via `marker.setIcon()`. It never rebuilds the whole layer on a normal re-render.
+
+This matters specifically for image markers: during playback the app saves progress every few seconds, which recreates the `isStopCompleted` callback each time. Rebuilding the layer on every such render would recreate each `<img>` element and make image markers visibly **blink**. Reading the volatile callbacks via refs (so the icon builder stays referentially stable) and diffing per-marker state keeps the markers steady.

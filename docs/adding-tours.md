@@ -47,6 +47,8 @@ Shared properties across all language versions. Individual language files can ov
 | `showStopImage` | `boolean \| "thumbnail"` | `true` | Stop card layout (see below) |
 | `showStopDuration` | boolean | `true` | Show duration on stop cards |
 | `showStopNumber` | boolean | `true` | Show number indicator on stops |
+| `listView` | boolean | `true` | Enable the list view (see [map.md](./map.md#view-modes)) |
+| `mapView` | boolean | `false` | Enable the map view (see [map.md](./map.md)) |
 | `hapticsEnabled` | boolean | `true` | Enable haptic feedback on taps |
 | `image` | string | — | Default tour cover image URL. Can be overridden per language by adding `"image"` to the language file. |
 
@@ -63,7 +65,7 @@ Shared properties across all language versions. Individual language files can ov
 | `false` | `false` | `true` | List: `[1] Title` |
 | `false` | `false` | `false` | List: `Title` |
 
-> **Map view:** The map tab (`mapView`, `mapProvider`, `mapCenter`, etc.) is also configured in `metadata.json`. See [map.md](./map.md) for the full field reference.
+> **Map & list views:** A tour can show a map view, a list view, or both, toggled in the header. `listView` defaults to `true`; enable the map with `mapView: true`. Set `listView: false` (with `mapView: true`) for a map-only tour. See [View modes](./map.md#view-modes) for the full combination table, plus the map config fields (`mapProvider`, `mapCenter`, etc.) in [map.md](./map.md).
 
 ### Haptic feedback
 

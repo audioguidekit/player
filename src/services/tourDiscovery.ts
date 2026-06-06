@@ -182,6 +182,21 @@ export function getAvailableTourIds(): string[] {
   return Object.keys(tourRegistry);
 }
 
+// Hardcoded fallback if no tours are discovered (app is non-functional anyway)
+const FALLBACK_DEFAULT_TOUR_ID = 'tour';
+
+/**
+ * Get the default tour ID for the app.
+ *
+ * The app is a single-tour deployment, so this returns the first tour
+ * discovered in src/data/tour/ at build time. Used for the root redirect and
+ * progress-tracking key, so the URL slug always matches the bundled tour's
+ * actual `id` and can never drift from the data.
+ */
+export function getDefaultTourId(): string {
+  return getAvailableTourIds()[0] ?? FALLBACK_DEFAULT_TOUR_ID;
+}
+
 /**
  * Get available languages for a specific tour
  */

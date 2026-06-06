@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -15,7 +15,6 @@ import { MapRoute } from './map/MapRoute';
 interface TourMapViewProps {
   stops: Stop[];
   currentStopId: string | null;
-  isPlaying: boolean;
   isStopCompleted: (stopId: string) => boolean;
   onStopClick: (stopId: string) => void;
   mapProvider?: MapProvider;
@@ -23,8 +22,8 @@ interface TourMapViewProps {
   mapStyleId?: string;
   mapCenter?: { lat: number; lng: number };
   mapZoom?: number;
-  mapMarkerCustomIcon?: boolean | string;
-  mapMarkerNumber?: boolean;
+  mapMarker?: 'number' | 'image' | 'empty';
+  mapMarkerIcon?: string;
   mapCluster?: {
     disableClusteringAtZoom?: number;
     spiderfyOnMaxZoom?: boolean;
@@ -32,6 +31,7 @@ interface TourMapViewProps {
   mapRoute?: boolean | MapRouteConfig;
   onRequestListView?: () => void;
   showLocateButton?: boolean;
+  active?: boolean; // false when the map is mounted but hidden (list view) — suppresses portaled controls
 }
 
 // ─── Styled components ────────────────────────────────────────────────────────
@@ -119,35 +119,79 @@ const MapDoubleTapZoom: React.FC = () => {
   return null;
 };
 
-interface MapBoundsFitterProps {
+interface MapInitialCameraProps {
   locations: Array<{ lat: number; lng: number }>;
   center?: { lat: number; lng: number };
   zoom?: number;
+  activeLocation?: { lat: number; lng: number } | null;
 }
 
-const MapBoundsFitter: React.FC<MapBoundsFitterProps> = ({ locations, center, zoom }) => {
+// Owns the map's single initial camera placement, by precedence:
+//   explicit mapCenter  >  active stop (deep link / resume)  >  fit all stops.
+// currentStopId — and so activeLocation — is populated asynchronously (useDeepLink
+// / useAutoResume set it after mount). So when no target is known yet, the fit-all
+// fallback is deferred one frame; if an active stop lands first it claims the
+// camera, avoiding the old fit-bounds-then-fly-to double move. place() re-reads the
+// latest activeLocation via a ref, so the deferral is timing-safe. Fires once.
+const MapInitialCamera: React.FC<MapInitialCameraProps> = ({ locations, center, zoom, activeLocation }) => {
   const map = useMap();
-  const hasFitted = useRef(false);
+  const placedRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const activeLocationRef = useRef(activeLocation);
+  activeLocationRef.current = activeLocation;
 
   useEffect(() => {
-    if (hasFitted.current || locations.length === 0) return;
-    hasFitted.current = true;
+    if (placedRef.current || locations.length === 0) return;
 
-    if (center) {
-      // Explicit center provided — use it with the given zoom (or a sensible default)
-      map.setView([center.lat, center.lng], zoom ?? 13);
-    } else if (locations.length === 1) {
-      map.setView([locations[0].lat, locations[0].lng], zoom ?? 15);
-    } else {
-      const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
-      map.fitBounds(bounds, { padding: [48, 48] });
-      // Override the fitBounds-calculated zoom if the user specified one
-      if (zoom !== undefined) map.setZoom(zoom);
+    const place = () => {
+      if (placedRef.current) return;
+      placedRef.current = true;
+      const active = activeLocationRef.current;
+      if (center) {
+        map.setView([center.lat, center.lng], zoom ?? 13);
+      } else if (active) {
+        map.setView([active.lat, active.lng], zoom ?? 15);
+      } else if (locations.length === 1) {
+        map.setView([locations[0].lat, locations[0].lng], zoom ?? 15);
+      } else {
+        const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
+        map.fitBounds(bounds, { padding: [48, 48] });
+        // Honor an explicit zoom over the fitBounds-calculated one
+        if (zoom !== undefined) map.setZoom(zoom);
+      }
+    };
+
+    // A known target (explicit center or an already-resolved active stop) places
+    // immediately — one move, no animation race.
+    if (center || activeLocation) {
+      place();
+      return;
     }
-  }, [map, locations, center, zoom]);
+
+    // No target yet — defer the fit-all fallback one frame so a late active stop
+    // can win. If it arrives, this effect re-runs (cleanup cancels the pending
+    // frame) and the branch above places at the stop instead.
+    rafRef.current = requestAnimationFrame(place);
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [map, locations, center, zoom, activeLocation]);
 
   return null;
 };
+
+// Wraps marker inner HTML in the shared 44×44 tap target (keeps tap dimensions
+// consistent across all icon variants).
+const divIcon44 = (inner: string): L.DivIcon =>
+  L.divIcon({
+    html: `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer">${inner}</div>`,
+    className: '',
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+  });
 
 interface MapMarkersProps {
   stops: Stop[];
@@ -156,76 +200,107 @@ interface MapMarkersProps {
   onStopClick: (stopId: string) => void;
   theme: ThemeConfig;
   markerIcon?: string;
-  showNumber?: boolean;
+  markerMode?: 'number' | 'image' | 'empty';
   clusterConfig?: TourMapViewProps['mapCluster'];
 }
 
 const MapMarkers: React.FC<MapMarkersProps> = ({
-  stops, currentStopId, isStopCompleted, onStopClick, theme, markerIcon, showNumber = true, clusterConfig,
+  stops, currentStopId, isStopCompleted, onStopClick, theme, markerIcon, markerMode = 'number', clusterConfig,
 }) => {
   const map = useMap();
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
-  const hasFlownRef = useRef(false);
+  const markersRef = useRef<Map<string, { marker: L.Marker; index: number; visualKey: string }>>(new Map());
 
-  // On first active stop (covers deep links), fly the map to it
-  useEffect(() => {
-    if (hasFlownRef.current || !currentStopId) return;
-    const stop = stops.find(s => s.id === currentStopId);
-    if (!stop?.location) return;
-    hasFlownRef.current = true;
-    map.flyTo([stop.location.lat, stop.location.lng], Math.max(map.getZoom(), 15), { duration: 0.8 });
-  }, [currentStopId, stops, map]);
+  // Volatile inputs are read inside the stable icon builder via refs. Without this,
+  // frequent parent re-renders (audio position saves recreate isStopCompleted every
+  // few seconds) would change createStopIcon → tear down and rebuild the whole marker
+  // layer → image <img> markers re-fetch/decode → visible blink.
+  const onStopClickRef = useRef(onStopClick);
+  const isStopCompletedRef = useRef(isStopCompleted);
+  const currentStopIdRef = useRef(currentStopId);
+  const themeRef = useRef(theme);
+  const markerModeRef = useRef(markerMode);
+  const markerIconRef = useRef(markerIcon);
+  onStopClickRef.current = onStopClick;
+  isStopCompletedRef.current = isStopCompleted;
+  currentStopIdRef.current = currentStopId;
+  themeRef.current = theme;
+  markerModeRef.current = markerMode;
+  markerIconRef.current = markerIcon;
 
+  // Encodes everything that changes a stop's icon, so we only repaint when it changes.
+  const iconStateKey = (stop: Stop): string => {
+    if (stop.mapMarkerIcon || markerIcon) return `custom:${stop.mapMarkerIcon || markerIcon}`;
+    const a = stop.id === currentStopId ? 'a' : '';
+    const c = isStopCompleted(stop.id) ? 'c' : '';
+    return `${markerMode}:${a}${c}`;
+  };
+  const completedKey = stops.map(s => (s.type === 'audio' && isStopCompleted(s.id) ? '1' : '0')).join('');
+
+  // Stable across renders: all dynamic state is read from refs at call time.
   const createStopIcon = useCallback(
     (stop: Stop, index: number): L.DivIcon => {
+      const markerIcon = markerIconRef.current;
+      const currentStopId = currentStopIdRef.current;
+      const isStopCompleted = isStopCompletedRef.current;
+      const theme = themeRef.current;
+      const markerMode = markerModeRef.current;
+
       // Custom image marker: stop-level overrides tour-level; no number, no state variants
       const resolvedIcon = stop.mapMarkerIcon || markerIcon;
       if (resolvedIcon) {
-        return L.divIcon({
-          html: `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer"><img src="${resolvedIcon}" style="width:32px;height:32px;object-fit:contain" draggable="false" /></div>`,
-          className: '',
-          iconSize: [44, 44],
-          iconAnchor: [22, 22],
-        });
+        return divIcon44(`<img src="${resolvedIcon}" style="width:32px;height:32px;object-fit:contain" draggable="false" />`);
       }
 
       // Default: themed numbered / checkmark circle
       const isActive = stop.id === currentStopId;
       const isCompleted = isStopCompleted(stop.id);
       const m = theme.mapMarkers ?? theme.stepIndicators;
+      const defaultShadow = '0 2px 6px rgba(0,0,0,0.25)';
+      const activeShadow = theme.mapMarkers?.active.shadow ?? defaultShadow;
+
+      // Image mode: stop photo cropped into the circle, ring for active/completed.
+      // Falls back to an empty circle when the stop has no image.
+      if (markerMode === 'image') {
+        const stopImage = 'image' in stop ? (stop as { image?: string }).image : undefined;
+        const ringColor = isActive ? m.active.outlineColor : isCompleted ? m.completed.backgroundColor : null;
+        const border = ringColor ? `3px solid ${ringColor}` : 'none';
+        const inner = stopImage
+          ? `<img src="${stopImage}" style="width:100%;height:100%;object-fit:cover" draggable="false" />`
+          : '';
+        return divIcon44(`<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:${m.inactive.backgroundColor};border:${border};box-shadow:${activeShadow};box-sizing:border-box">${inner}</div>`);
+      }
+
+      // 'number' shows the index; 'empty' suppresses it (completed still shows the checkmark)
+      const showNumber = markerMode === 'number';
 
       let bg: string, border: string, shadow: string, content: string;
 
       if (isCompleted) {
         bg = m.completed.backgroundColor;
         border = 'none';
-        shadow = theme.mapMarkers?.active.shadow ?? '0 2px 6px rgba(0,0,0,0.25)';
+        shadow = activeShadow;
         const c = m.completed.checkmarkColor;
         content = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="11" viewBox="0 0 10 8"><path d="M1 4L3.5 6.5L9 1" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
       } else if (isActive) {
         bg = m.active.backgroundColor;
         border = `3px solid ${m.active.outlineColor}`;
-        shadow = theme.mapMarkers?.active.shadow ?? '0 2px 6px rgba(0,0,0,0.25)';
+        shadow = activeShadow;
         const fs = theme.mapMarkers?.inactive.numberFontSize ?? '12px';
         const fw = theme.mapMarkers?.inactive.numberFontWeight ?? '700';
         content = showNumber ? `<span style="font-size:${fs};font-weight:${fw};color:${m.active.numberColor}">${index + 1}</span>` : '';
       } else {
         bg = m.inactive.backgroundColor;
         border = m.inactive.borderColor !== 'transparent' ? `2px solid ${m.inactive.borderColor}` : 'none';
-        shadow = '0 2px 6px rgba(0,0,0,0.25)';
+        shadow = defaultShadow;
         const fs = theme.mapMarkers?.inactive.numberFontSize ?? '12px';
         const fw = theme.mapMarkers?.inactive.numberFontWeight ?? '600';
         content = showNumber ? `<span style="font-size:${fs};font-weight:${fw};color:${m.inactive.numberColor}">${index + 1}</span>` : '';
       }
 
-      return L.divIcon({
-        html: `<div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer"><div style="width:32px;height:32px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;box-shadow:${shadow};box-sizing:border-box">${content}</div></div>`,
-        className: '',
-        iconSize: [44, 44],
-        iconAnchor: [22, 22],
-      });
+      return divIcon44(`<div style="width:32px;height:32px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;box-shadow:${shadow};box-sizing:border-box">${content}</div>`);
     },
-    [markerIcon, currentStopId, isStopCompleted, theme, showNumber]
+    []
   );
 
   const createClusterIcon = useCallback(
@@ -251,12 +326,14 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     [theme]
   );
 
+  // Build the marker layer only when the set of stops (or clustering) changes —
+  // NOT on every active/completed change, so markers don't flicker.
   useEffect(() => {
-    // Remove previous cluster group
     if (clusterGroupRef.current) {
       clusterGroupRef.current.remove();
       clusterGroupRef.current = null;
     }
+    markersRef.current.clear();
 
     const group = L.markerClusterGroup({
       iconCreateFunction: createClusterIcon,
@@ -276,8 +353,9 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
         const marker = L.marker([stop.location.lat, stop.location.lng], {
           icon: createStopIcon(stop, idx),
         });
-        marker.on('click', () => onStopClick(stop.id));
+        marker.on('click', () => onStopClickRef.current(stop.id));
         group.addLayer(marker);
+        markersRef.current.set(stop.id, { marker, index: idx, visualKey: iconStateKey(stop) });
       }
     });
 
@@ -287,8 +365,24 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
     return () => {
       group.remove();
       clusterGroupRef.current = null;
+      markersRef.current.clear();
     };
-  }, [map, stops, createStopIcon, createClusterIcon, onStopClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, stops, clusterConfig, createStopIcon, createClusterIcon]);
+
+  // Repaint only the markers whose visual state actually changed (active / completed / mode).
+  useEffect(() => {
+    markersRef.current.forEach((entry, stopId) => {
+      const stop = stops.find(s => s.id === stopId);
+      if (!stop) return;
+      const key = iconStateKey(stop);
+      if (key !== entry.visualKey) {
+        entry.marker.setIcon(createStopIcon(stop, entry.index));
+        entry.visualKey = key;
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStopId, completedKey, markerMode, theme, stops, createStopIcon]);
 
   return null;
 };
@@ -298,7 +392,6 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 export const TourMapView: React.FC<TourMapViewProps> = ({
   stops,
   currentStopId,
-  isPlaying,
   isStopCompleted,
   onStopClick,
   mapProvider = 'openstreetmap',
@@ -306,17 +399,20 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
   mapStyleId,
   mapCenter,
   mapZoom,
-  mapMarkerCustomIcon,
-  mapMarkerNumber = true,
+  mapMarker,
+  mapMarkerIcon,
   mapCluster,
   mapRoute,
   onRequestListView,
   showLocateButton = true,
+  active = true,
 }) => {
   const theme = useTheme() as ThemeConfig;
 
+  const markerMode = mapMarker ?? 'number';
+
   // Resolve route config: merge metadata overrides onto theme defaults
-  const routeConfig = mapRoute && mapRoute !== false
+  const routeConfig = mapRoute
     ? (typeof mapRoute === 'boolean' ? {} : mapRoute) as MapRouteConfig
     : null;
   const themeRoute = theme.mapMarkers?.route ?? {};
@@ -340,9 +436,16 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
     handleUserMoved,
   } = useUserLocation();
 
-  const locations = stops
-    .filter(s => s.type === 'audio' && s.location != null)
-    .map(s => s.location!);
+  const locations = useMemo(
+    () => stops
+      .filter(s => s.type === 'audio' && s.location != null)
+      .map(s => s.location!),
+    [stops]
+  );
+
+  // The active stop (deep link / resume) the camera should focus on first.
+  // currentStopId resolves asynchronously, so this is null until it lands.
+  const activeLocation = (currentStopId ? stops.find(s => s.id === currentStopId) : undefined)?.location ?? null;
 
   if (!isOnline) {
     return (
@@ -380,7 +483,7 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           {...(tileConfig.subdomains ? { subdomains: tileConfig.subdomains } : {})}
         />
         <MapDoubleTapZoom />
-        <MapBoundsFitter locations={locations} center={mapCenter} zoom={mapZoom} />
+        <MapInitialCamera locations={locations} center={mapCenter} zoom={mapZoom} activeLocation={activeLocation} />
         {resolvedRoute && (
           <MapRoute
             stops={stops}
@@ -400,8 +503,8 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
           isStopCompleted={isStopCompleted}
           onStopClick={onStopClick}
           theme={theme}
-          markerIcon={typeof mapMarkerCustomIcon === 'string' ? mapMarkerCustomIcon : undefined}
-          showNumber={mapMarkerNumber}
+          markerIcon={mapMarkerIcon}
+          markerMode={markerMode}
           clusterConfig={mapCluster}
         />
         <UserLocationLayer
@@ -414,7 +517,7 @@ export const TourMapView: React.FC<TourMapViewProps> = ({
         />
       </MapContainer>
 
-      {showLocateButton && (() => {
+      {showLocateButton && active && (() => {
         const portal = document.getElementById('map-controls-portal');
         if (!portal) return null;
         return createPortal(

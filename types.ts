@@ -52,14 +52,15 @@ export interface TourMetadata {
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
   imageColor?: string;         // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
+  listView?: boolean;          // Enable list tab (default: true)
   mapView?: boolean;           // Enable map tab (default: false)
   mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // API key for the chosen provider
   mapStyleId?: string;         // Provider-specific style/map ID (uses provider's default outdoor style if omitted)
   mapCenter?: { lat: number; lng: number }; // Initial map center; defaults to fitting all stops in view
   mapZoom?: number;            // Initial zoom level 0–23; if mapCenter is omitted, fitBounds zoom is used instead
-  mapMarkerCustomIcon?: boolean | string; // Custom marker image URL for all stops; false = use default numbered circle (default: false)
-  mapMarkerNumber?: boolean;   // Show stop number on markers (default: true)
+  mapMarker?: 'number' | 'image' | 'empty'; // Marker style: 'number'=numbered circle (default), 'image'=stop photo in a circle, 'empty'=plain circle with no number/image. A custom mapMarkerIcon (tour- or stop-level) overrides this.
+  mapMarkerIcon?: string;      // Custom marker image URL applied to all stops; overrides mapMarker. A per-stop mapMarkerIcon overrides this for that stop.
   mapCluster?: {
     disableClusteringAtZoom?: number; // Zoom level at which clustering stops (e.g. 16)
     spiderfyOnMaxZoom?: boolean;     // Fan out overlapping markers at max zoom (default: true)
@@ -213,14 +214,15 @@ export interface TourData {
   fullscreenPlayer?: boolean;  // Show fullscreen player on stop click (default: false)
   showProgressBar?: boolean;   // Show progress bar in tour header (default: true)
   imageColor?: string;         // Solid color for the iOS status bar area and TourStart background when no image (e.g. '#1a2634')
+  listView?: boolean;          // Enable list tab (default: true)
   mapView?: boolean;           // Enable map tab (default: false)
   mapProvider?: 'openstreetmap' | 'mapbox' | 'jawg' | 'maptiler' | 'carto'; // Tile provider (default: 'openstreetmap')
   mapApiKey?: string;          // API key for the chosen provider
   mapStyleId?: string;         // Provider-specific style/map ID (uses provider's default outdoor style if omitted)
   mapCenter?: { lat: number; lng: number }; // Initial map center; defaults to fitting all stops in view
   mapZoom?: number;            // Initial zoom level 0–23; if mapCenter is omitted, fitBounds zoom is used instead
-  mapMarkerCustomIcon?: boolean | string; // Custom marker image URL for all stops; false = use default numbered circle (default: false)
-  mapMarkerNumber?: boolean;   // Show stop number on markers (default: true)
+  mapMarker?: 'number' | 'image' | 'empty'; // Marker style: 'number'=numbered circle (default), 'image'=stop photo in a circle, 'empty'=plain circle with no number/image. A custom mapMarkerIcon (tour- or stop-level) overrides this.
+  mapMarkerIcon?: string;      // Custom marker image URL applied to all stops; overrides mapMarker. A per-stop mapMarkerIcon overrides this for that stop.
   mapCluster?: {
     disableClusteringAtZoom?: number;
     spiderfyOnMaxZoom?: boolean;

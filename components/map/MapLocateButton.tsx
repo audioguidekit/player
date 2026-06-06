@@ -83,7 +83,6 @@ export const MapLocateButton: React.FC<MapLocateButtonProps> = ({ locateState, o
   const isError     = locateState === 'error';
   const handlePress = useMobilePress();
   const { t } = useTranslation();
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const [labelVisible, setLabelVisible] = useState(false);
   const [labelMounted, setLabelMounted] = useState(false);
 
@@ -100,11 +99,8 @@ export const MapLocateButton: React.FC<MapLocateButtonProps> = ({ locateState, o
     return () => { cancelAnimationFrame(show); clearTimeout(hide); };
   }, [isError]);
 
-  const handleWrapperPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-  }, []);
-
   return (
-    <Wrapper ref={wrapperRef} onPointerDown={handleWrapperPointerDown}>
+    <Wrapper>
       {labelMounted && (
         <ErrorLabel
           $visible={labelVisible}

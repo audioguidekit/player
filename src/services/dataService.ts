@@ -41,7 +41,7 @@ export async function loadTourByLanguage(languageCode: string): Promise<TourData
 
 /**
  * Loads a tour by its ID with language preference
- * @param tourId - Tour ID (e.g., 'barcelona')
+ * @param tourId - Tour ID (e.g., 'new-york')
  * @param languageCode - Preferred language code
  * @returns Promise resolving to tour data
  */
