@@ -18,7 +18,16 @@ function syncTourDataPlugin(): Plugin {
     }
     const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.json') || f.endsWith('.geojson'));
     for (const file of files) {
-      fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+      const src = path.join(srcDir, file);
+      const dest = path.join(destDir, file);
+      if (file.endsWith('.json')) {
+        // The public copy lives one directory deeper than src, so rewrite the
+        // editor-only `$schema` hint to keep it resolving to src/schema/*.
+        const content = fs.readFileSync(src, 'utf8').replace(/"\.\.\/\.\.\/schema\//g, '"../../../src/schema/');
+        fs.writeFileSync(dest, content);
+      } else {
+        fs.copyFileSync(src, dest);
+      }
     }
   }
 

@@ -1,0 +1,17 @@
+name: Validate tour data
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      # Regenerate schemas from types.ts and fail if the committed copies are stale.
+      - run: bun run schema
+      - run: git diff --exit-code -- src/schema || (echo "::error::Schemas are stale — run 'bun run schema' and commit src/schema/*.schema.json" && exit 1)
+      # Validate every tour data file against the schemas.
+      - run: bun run validate

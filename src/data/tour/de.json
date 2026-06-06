@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schema/tour-file.schema.json",
   "id": "barcelona",
   "language": "de",
   "title": "Unlimited Barcelona",
