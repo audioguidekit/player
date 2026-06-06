@@ -1,0 +1,854 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/TourFile",
+  "definitions": {
+    "TourFile": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "totalDuration": {
+          "type": "string"
+        },
+        "totalStops": {
+          "type": "number"
+        },
+        "image": {
+          "type": "string"
+        },
+        "offlineMode": {
+          "$ref": "#/definitions/OfflineMode"
+        },
+        "transitionAudio": {
+          "type": "string"
+        },
+        "themeId": {
+          "type": "string"
+        },
+        "transcriptAvailable": {
+          "type": "boolean"
+        },
+        "collectFeedback": {
+          "type": "boolean"
+        },
+        "hapticsEnabled": {
+          "type": "boolean"
+        },
+        "showLanguageLabel": {
+          "type": "boolean"
+        },
+        "showStopImage": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "const": "thumbnail"
+            }
+          ]
+        },
+        "showStopDuration": {
+          "type": "boolean"
+        },
+        "showStopNumber": {
+          "type": "boolean"
+        },
+        "fullscreenPlayer": {
+          "type": "boolean"
+        },
+        "showProgressBar": {
+          "type": "boolean"
+        },
+        "imageColor": {
+          "type": "string"
+        },
+        "mapView": {
+          "type": "boolean"
+        },
+        "mapProvider": {
+          "type": "string",
+          "enum": [
+            "openstreetmap",
+            "mapbox",
+            "jawg",
+            "maptiler",
+            "carto"
+          ]
+        },
+        "mapApiKey": {
+          "type": "string"
+        },
+        "mapStyleId": {
+          "type": "string"
+        },
+        "mapCenter": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number"
+            },
+            "lng": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "lat",
+            "lng"
+          ],
+          "additionalProperties": false
+        },
+        "mapZoom": {
+          "type": "number"
+        },
+        "mapMarkerCustomIcon": {
+          "type": [
+            "boolean",
+            "string"
+          ]
+        },
+        "mapMarkerNumber": {
+          "type": "boolean"
+        },
+        "mapCluster": {
+          "type": "object",
+          "properties": {
+            "disableClusteringAtZoom": {
+              "type": "number"
+            },
+            "spiderfyOnMaxZoom": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mapRoute": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/definitions/MapRouteConfig"
+            }
+          ]
+        },
+        "mapLocateButton": {
+          "type": "boolean"
+        },
+        "stops": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/TextStop"
+              },
+              {
+                "$ref": "#/definitions/ImageTextStop"
+              },
+              {
+                "$ref": "#/definitions/ThreeDObjectStop"
+              },
+              {
+                "$ref": "#/definitions/VideoStop"
+              },
+              {
+                "$ref": "#/definitions/HeadlineStop"
+              },
+              {
+                "$ref": "#/definitions/RatingStop"
+              },
+              {
+                "$ref": "#/definitions/EmailStop"
+              },
+              {
+                "$ref": "#/definitions/QuoteStop"
+              },
+              {
+                "$ref": "#/definitions/ImageGalleryStop"
+              },
+              {
+                "$ref": "#/definitions/ImageComparisonStop"
+              },
+              {
+                "$ref": "#/definitions/HotspotImageStop"
+              },
+              {
+                "$ref": "#/definitions/EmbedStop"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "audio"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "duration": {
+                    "type": "string"
+                  },
+                  "image": {
+                    "type": "string"
+                  },
+                  "imageAlt": {
+                    "type": "string"
+                  },
+                  "imageCaption": {
+                    "type": "string"
+                  },
+                  "imageCredit": {
+                    "type": "string"
+                  },
+                  "audioFile": {
+                    "type": "string"
+                  },
+                  "transcription": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "$ref": "#/definitions/StopLocation"
+                  },
+                  "mapMarkerIcon": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "title",
+                  "duration",
+                  "image",
+                  "id"
+                ],
+                "additionalProperties": false,
+                "description": "An audio stop as authored in JSON, with runtime playback state removed."
+              }
+            ],
+            "discriminator": {
+              "propertyName": "type"
+            }
+          }
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "description",
+        "id",
+        "language",
+        "stops",
+        "title",
+        "totalDuration",
+        "totalStops"
+      ],
+      "additionalProperties": false,
+      "description": "Shape of a language file, e.g. `src/data/tour/en.json`. Mirrors  {@link  TourData }  but with runtime-only stop state removed.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mapProvider": {
+                "const": "carto"
+              }
+            },
+            "required": [
+              "mapProvider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "mapStyleId": {
+                "enum": [
+                  "rastertiles/voyager",
+                  "light_all",
+                  "dark_all",
+                  "light_nolabels",
+                  "dark_nolabels"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OfflineMode": {
+      "type": "string",
+      "enum": [
+        "online-only",
+        "optional",
+        "offline-only"
+      ]
+    },
+    "MapRouteConfig": {
+      "type": "object",
+      "properties": {
+        "geoJSON": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/RouteGeoJSON"
+            }
+          ]
+        },
+        "minZoom": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Route polyline configuration. In metadata.json, `geoJSON` is a relative path string (\"./route.geojson\"). At runtime (after build-time resolution) it becomes a parsed RouteGeoJSON object."
+    },
+    "RouteGeoJSON": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "FeatureCollection"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "Feature"
+              },
+              "geometry": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "LineString"
+                  },
+                  "coordinates": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    "description": "Coordinates in [lng, lat] order — GeoJSON standard."
+                  }
+                },
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "additionalProperties": false
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "type",
+              "geometry",
+              "properties"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "type",
+        "features"
+      ],
+      "additionalProperties": false,
+      "description": "GeoJSON FeatureCollection containing a single LineString (the walking route)."
+    },
+    "TextStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "text"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "StopLocation": {
+      "type": "object",
+      "properties": {
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "lat",
+        "lng"
+      ],
+      "additionalProperties": false
+    },
+    "ImageTextStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "image-text"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "imageAlt": {
+          "type": "string"
+        },
+        "imageCaption": {
+          "type": "string"
+        },
+        "imageCredit": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "image",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ThreeDObjectStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "3d-object"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "modelUrl": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "modelUrl",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "VideoStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "video"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "videoUrl": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "videoUrl"
+      ],
+      "additionalProperties": false
+    },
+    "HeadlineStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "headline"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "RatingStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "rating"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "EmailStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "email"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "buttonText": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "QuoteStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "quote"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "year": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "author",
+        "id",
+        "quote",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ImageGalleryStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "image-gallery"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GalleryImage"
+          }
+        },
+        "caption": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "images",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GalleryImage": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "alt": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "credit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "ImageComparisonStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "image-comparison"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "beforeLabel": {
+          "type": "string"
+        },
+        "afterLabel": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "after",
+        "before",
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "HotspotImageStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "image-hotspot"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "imageAlt": {
+          "type": "string"
+        },
+        "hotspots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Hotspot"
+          }
+        },
+        "caption": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "hotspots",
+        "id",
+        "image",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "Hotspot": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "EmbedStop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "const": "embed"
+        },
+        "location": {
+          "$ref": "#/definitions/StopLocation"
+        },
+        "mapMarkerIcon": {
+          "type": "string"
+        },
+        "embedUrl": {
+          "type": "string"
+        },
+        "embedType": {
+          "type": "string",
+          "enum": [
+            "youtube",
+            "spotify",
+            "video",
+            "generic"
+          ]
+        },
+        "aspectRatio": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "embedUrl",
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

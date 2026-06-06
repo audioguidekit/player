@@ -56,8 +56,10 @@ dev-dist/
 create-audioguidekit-player/
 
 # Scripts directory (local tooling, not part of the repo)
-scripts/
-scripts/screenshot-studio/.last-config.json
+# ...except the tour-data schema tooling, which CI and the build depend on.
+scripts/*
+!scripts/generate-schema.ts
+!scripts/validate-tours.ts
 
 # Screenshots (local output, not part of the repo)
 screenshots/
