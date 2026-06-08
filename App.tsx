@@ -15,6 +15,7 @@ import { MiniPlayer } from './components/MiniPlayer';
 import { TourHeader } from './components/TourHeader';
 import { useTourData, useLanguages } from './hooks/useDataLoader';
 import { DEFAULT_TOUR_ID } from './src/config/tours';
+import { getAvailableTourIds } from './src/services/tourDiscovery';
 import { defaultLanguage } from './src/config/languages';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
@@ -57,7 +58,16 @@ const getArtworkType = (url: string | undefined): string | null => {
   }
 };
 
-const App: React.FC = () => {
+interface AppProps {
+  /**
+   * When true, App renders its content without its own MobileFrame so it can be
+   * placed inside a shared device frame (e.g. by RootNavigator's push/pop stack).
+   * The shared frame provides the #map-controls-portal that map controls use.
+   */
+  frameless?: boolean;
+}
+
+const App: React.FC<AppProps> = ({ frameless = false }) => {
   // Get route params
   const { tourId, stopId: urlStopId } = useParams<{ tourId: string; stopId?: string }>();
   const navigate = useNavigate();
@@ -69,8 +79,8 @@ const App: React.FC = () => {
   const [activeSheet, setActiveSheet] = useState<SheetType>('NONE');
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
 
-  // Load tour data based on selected language
-  const { data: tour, loading: tourLoading, error: tourError } = useTourData(selectedLanguage?.code);
+  // Load tour data for the routed tour in the selected language
+  const { data: tour, loading: tourLoading, error: tourError } = useTourData(tourId, selectedLanguage?.code);
 
   // Progress tracking (using tour ID from loaded tour data)
   const progressTracking = useProgressTracking(tour?.id || tourId || DEFAULT_TOUR_ID);
@@ -586,6 +596,17 @@ const App: React.FC = () => {
     setHasStarted(false);
   }, [setHasStarted, isPlaying, audioPlayer, setIsPlaying]);
 
+  // Whether to offer a "back to tours" affordance (only in multi-tour deployments)
+  const hasMultipleTours = useMemo(() => getAvailableTourIds().length > 1, []);
+
+  const handleBackToTours = useCallback(() => {
+    if (isPlaying) {
+      audioPlayer.pause();
+      setIsPlaying(false);
+    }
+    navigate('/');
+  }, [isPlaying, audioPlayer, setIsPlaying, navigate]);
+
   const closeSheet = useCallback(() => {
     setActiveSheet('NONE');
   }, [setActiveSheet]);
@@ -756,12 +777,16 @@ const App: React.FC = () => {
     );
   }
 
+  // Inside the push/pop stack the device frame is owned by RootNavigator, so we
+  // render frameless and let the shared MobileFrame provide the chrome + portal.
+  const Frame = frameless ? React.Fragment : MobileFrame;
+
   return (
     <ThemeProvider themeId={themeId}>
       <StatusBarController backgroundColor={tour?.imageColor} hasStarted={hasStarted} />
       <GlobalStyles />
       <TranslationProvider language={uiLanguage}>
-        <MobileFrame>
+        <Frame>
           {/* Tour Progress Tracker - monitors completion */}
           <TourProgressTracker
             tour={tour}
@@ -780,6 +805,7 @@ const App: React.FC = () => {
                 languages={languages}
                 onOpenRating={handleOpenRating}
                 onOpenLanguage={handleOpenLanguage}
+                onBack={hasMultipleTours ? handleBackToTours : undefined}
                 sheetY={sheetY}
                 collapsedY={collapsedY}
                 isVisible={true}
@@ -890,7 +916,7 @@ const App: React.FC = () => {
               />
             </Suspense>
           </div>
-        </MobileFrame>
+        </Frame>
       </TranslationProvider>
     </ThemeProvider>
   );

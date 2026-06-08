@@ -63,4 +63,9 @@ export const es: Translations = {
   map: {
     locationError: 'Ubicación no disponible',
   },
+  tourSelection: {
+    title: 'Elige un recorrido',
+    subtitle: 'Selecciona un recorrido para comenzar tu visita',
+    tours: 'recorridos',
+  },
 } as const;

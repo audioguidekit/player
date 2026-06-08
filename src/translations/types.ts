@@ -60,6 +60,11 @@ export interface Translations {
   map: {
     locationError: string;
   };
+  tourSelection: {
+    title: string;
+    subtitle: string;
+    tours: string;
+  };
 }
 
 export type LanguageCode = 'en' | 'cs' | 'de' | 'fr' | 'it' | 'es';

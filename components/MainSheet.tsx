@@ -126,15 +126,26 @@ export const MainSheet: React.FC<MainSheetProps> = ({
   }, [COLLAPSED_Y, onLayoutChange]);
 
   // Animate when state changes or dimensions change
+  const prevExpandedRef = useRef(isExpanded);
   useEffect(() => {
     // Ensure we have valid dimensions before animating
-    if (containerHeight > 0 && startContentHeight > 0) {
+    if (!(containerHeight > 0 && startContentHeight > 0)) return;
+
+    const target = isExpanded ? EXPANDED_Y : COLLAPSED_Y;
+    const expandedChanged = prevExpandedRef.current !== isExpanded;
+    prevExpandedRef.current = isExpanded;
+
+    if (expandedChanged) {
+      // User-driven expand/collapse: animate.
       // Faster spring: Increased stiffness from 120 to 280 for snappier expansion
-      if (isExpanded) {
-        controls.start({ y: EXPANDED_Y, transition: { type: 'spring', damping: 32, stiffness: 280 } });
-      } else {
-        controls.start({ y: COLLAPSED_Y, transition: { type: 'spring', damping: 32, stiffness: 280 } });
-      }
+      controls.start({ y: target, transition: { type: 'spring', damping: 32, stiffness: 280 } });
+    } else {
+      // Only the collapsed rest position changed (e.g. measured on mount, resize,
+      // or orientation change). Snap instantly instead of springing so sheetY
+      // always equals its rest position — otherwise sheetY lags the new value and
+      // the TourStart background parallax briefly offsets the image (visible flash
+      // on desktop, where the measured frame height differs from window height).
+      controls.set({ y: target });
     }
   }, [isExpanded, controls, COLLAPSED_Y, EXPANDED_Y, containerHeight, startContentHeight]);
 

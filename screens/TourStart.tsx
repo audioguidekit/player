@@ -1,7 +1,8 @@
 import React from 'react';
-import { motion, useTransform, MotionValue, useMotionTemplate } from 'framer-motion';
+import { motion, useTransform, useMotionValue, MotionValue, useMotionTemplate } from 'framer-motion';
 import { ChatCircleDotsIcon } from '@phosphor-icons/react/dist/csr/ChatCircleDots';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
+import { ArrowLeftIcon } from '@phosphor-icons/react/dist/csr/ArrowLeft';
 // Direct imports instead of wildcard to reduce bundle size (~80-120KB savings)
 import { GB, CZ, DE, FR, IT, ES } from 'country-flag-icons/react/3x2';
 import tw from 'twin.macro';
@@ -57,6 +58,10 @@ const TopButtonsContainer = styled.div`
   top: calc(env(safe-area-inset-top, 0px) + 1rem);
 `;
 
+const LeftButtons = styled.div`
+  ${tw`flex items-center gap-2`}
+`;
+
 const ActionButton = styled.button`
   ${tw`w-12 h-12 backdrop-blur-md rounded-full flex items-center justify-center transition-colors`}
   background-color: ${({ theme }) => theme.startCard.overlay?.buttonBackground || 'rgba(0, 0, 0, 0.4)'};
@@ -106,6 +111,7 @@ interface TourStartProps {
   languages: Language[];
   onOpenRating: () => void;
   onOpenLanguage: () => void;
+  onBack?: () => void;
   sheetY?: MotionValue<number>;
   collapsedY?: number;
   isVisible?: boolean;
@@ -117,6 +123,7 @@ export const TourStart: React.FC<TourStartProps> = ({
   languages,
   onOpenRating,
   onOpenLanguage,
+  onBack,
   sheetY,
   collapsedY = 0,
   isVisible = true
@@ -132,19 +139,33 @@ export const TourStart: React.FC<TourStartProps> = ({
 
   // Animation Transforms
 
+  // The drag parallax range is anchored to the sheet's collapsed rest position
+  // (collapsedY). On mount sheetY already sits at that rest position, but
+  // collapsedY is still 0 for the first frame (it arrives via MainSheet's
+  // onLayoutChange). Applying the transforms before it's measured would push the
+  // image down ~50px and then snap it up. Gate them until the layout is ready;
+  // once it is, sheetY === collapsedY so the parallax is 0 and the switch is
+  // seamless.
+  const isLayoutReady = collapsedY > 0;
+  const restScale = useMotionValue(1);
+  const restY = useMotionValue(0);
+
   // 1. Scale image up to 110% when dragging down
-  const scale = useTransform(
+  const scaleRaw = useTransform(
     sheetY || new MotionValue(0),
     [collapsedY, collapsedY + 200],
     [1, 1.1]
   );
 
   // 2. Parallax move (Image follows finger slightly when dragging down)
-  const y = useTransform(
+  const yRaw = useTransform(
     sheetY || new MotionValue(0),
     [collapsedY, collapsedY + 200],
     [0, 50]
   );
+
+  const scale = isLayoutReady ? scaleRaw : restScale;
+  const y = isLayoutReady ? yRaw : restY;
 
   // 3. Overlay Opacity
   // Dragging Up (0 to collapsedY): Darkens (0.8 -> 0.3)
@@ -196,16 +217,29 @@ export const TourStart: React.FC<TourStartProps> = ({
 
         {/* Top Buttons */}
         <TopButtonsContainer>
-          {tour.collectFeedback !== false && (
-            <ActionButton
-              onClick={() => {
-                triggerHaptic();
-                onOpenRating();
-              }}
-            >
-              <ChatCircleDotsIcon size={28} weight="regular" />
-            </ActionButton>
-          )}
+          <LeftButtons>
+            {onBack && (
+              <ActionButton
+                onClick={() => {
+                  triggerHaptic();
+                  onBack();
+                }}
+                aria-label="Back to tours"
+              >
+                <ArrowLeftIcon size={24} weight="bold" />
+              </ActionButton>
+            )}
+            {tour.collectFeedback !== false && (
+              <ActionButton
+                onClick={() => {
+                  triggerHaptic();
+                  onOpenRating();
+                }}
+              >
+                <ChatCircleDotsIcon size={28} weight="regular" />
+              </ActionButton>
+            )}
+          </LeftButtons>
           {languages.length > 1 && (
             <LanguageButton
               onClick={() => {

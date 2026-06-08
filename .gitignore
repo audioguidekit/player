@@ -63,3 +63,6 @@ scripts/*
 
 # Screenshots (local output, not part of the repo)
 screenshots/
+
+# Generated tour data (mirrored from src/data/tour by the vite sync plugin for test HTTP access)
+public/data/tour/

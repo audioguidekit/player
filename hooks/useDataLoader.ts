@@ -12,11 +12,17 @@ export interface LoadingState<T> {
 }
 
 /**
- * Hook to load tour data by language code
+ * Hook to load tour data by tour ID and language code.
+ *
+ * When `tourId` is provided the specific tour is loaded (with the standard
+ * language fallback). When it is omitted the first available tour is used,
+ * preserving the original single-tour behavior.
+ *
+ * @param tourId - Tour ID to load (e.g., 'new-york'); optional
  * @param languageCode - Language code to load (e.g., 'en', 'de')
  * @returns Loading state with tour data
  */
-export function useTourData(languageCode?: string): LoadingState<TourData> {
+export function useTourData(tourId?: string, languageCode?: string): LoadingState<TourData> {
   const [state, setState] = useState<LoadingState<TourData>>({
     data: null,
     loading: true,
@@ -34,7 +40,9 @@ export function useTourData(languageCode?: string): LoadingState<TourData> {
     const loadData = async () => {
       try {
         setState(prev => ({ ...prev, loading: true, error: null }));
-        const tour = await dataService.getTourByLanguage(languageCode);
+        const tour = tourId
+          ? await dataService.getTourById(tourId, languageCode)
+          : await dataService.getTourByLanguage(languageCode);
 
         if (!cancelled) {
           setState({ data: tour, loading: false, error: null });
@@ -55,7 +63,7 @@ export function useTourData(languageCode?: string): LoadingState<TourData> {
     return () => {
       cancelled = true;
     };
-  }, [languageCode]);
+  }, [tourId, languageCode]);
 
   return state;
 }
@@ -88,52 +96,6 @@ export function useLanguages(): LoadingState<Language[]> {
             data: null,
             loading: false,
             error: error instanceof Error ? error : new Error('Failed to load languages'),
-          });
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return state;
-}
-
-/**
- * Hook to load all available tours
- * @returns Loading state with array of tours
- */
-export function useAllTours(): LoadingState<TourData[]> {
-  const [state, setState] = useState<LoadingState<TourData[]>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadData = async () => {
-      try {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-        const manifest = await dataService.getManifest();
-        const tours = await Promise.all(
-          manifest.tours.map(entry => dataService.getTour(entry.filename))
-        );
-
-        if (!cancelled) {
-          setState({ data: tours, loading: false, error: null });
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setState({
-            data: null,
-            loading: false,
-            error: error instanceof Error ? error : new Error('Failed to load tours'),
           });
         }
       }

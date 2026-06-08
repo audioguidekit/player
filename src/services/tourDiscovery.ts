@@ -303,6 +303,21 @@ export function getAnyTourByLanguage(
 }
 
 /**
+ * Get one TourData per available tour, resolved in the preferred language
+ * (with the standard language fallback). Used to render the tour selection
+ * screen — each entry carries the localized title/description/image/meta.
+ * Tours with no resolvable language are skipped.
+ */
+export function getAllTours(
+  preferredLanguage: string,
+  fallbackLanguage: string = defaultLanguage
+): TourData[] {
+  return getAvailableTourIds()
+    .map(id => getTourWithFallback(id, preferredLanguage, fallbackLanguage))
+    .filter((tour): tour is TourData => tour !== null);
+}
+
+/**
  * Get the full tour registry (for debugging)
  */
 export function getTourRegistry(): TourRegistry {

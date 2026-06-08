@@ -11,23 +11,58 @@ function syncTourDataPlugin(): Plugin {
   const srcDir = 'src/data/tour';
   const destDir = 'public/data/tour';
 
+  // Recursively walk srcDir (tours now live in per-tour subfolders, e.g.
+  // src/data/tour/<tourId>/metadata.json) and mirror the structure into destDir.
+  function syncDir(srcRoot: string, destRoot: string) {
+    for (const entry of fs.readdirSync(srcRoot, { withFileTypes: true })) {
+      const src = path.join(srcRoot, entry.name);
+      const dest = path.join(destRoot, entry.name);
+      if (entry.isDirectory()) {
+        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+        syncDir(src, dest);
+      } else if (entry.name.endsWith('.json')) {
+        // The public copy lives deeper than src, so rewrite the editor-only
+        // `$schema` hint to keep it resolving to src/schema/*.
+        const content = fs.readFileSync(src, 'utf8').replace(/"(\.\.\/)+schema\//g, '"../../../src/schema/');
+        fs.writeFileSync(dest, content);
+      } else if (entry.name.endsWith('.geojson')) {
+        fs.copyFileSync(src, dest);
+      }
+    }
+  }
+
+  // Mirror a single tour folder's data files flat into destRoot (no subfolder).
+  function syncTourFlat(tourDir: string, destRoot: string) {
+    for (const file of fs.readdirSync(tourDir)) {
+      const src = path.join(tourDir, file);
+      const dest = path.join(destRoot, file);
+      if (file.endsWith('.json')) {
+        const content = fs.readFileSync(src, 'utf8').replace(/"(\.\.\/)+schema\//g, '"../../../src/schema/');
+        fs.writeFileSync(dest, content);
+      } else if (file.endsWith('.geojson')) {
+        fs.copyFileSync(src, dest);
+      }
+    }
+  }
+
   function syncFiles() {
     if (!fs.existsSync(srcDir)) return;
     if (!fs.existsSync(destDir)) {
       fs.mkdirSync(destDir, { recursive: true });
     }
-    const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.json') || f.endsWith('.geojson'));
-    for (const file of files) {
-      const src = path.join(srcDir, file);
-      const dest = path.join(destDir, file);
-      if (file.endsWith('.json')) {
-        // The public copy lives one directory deeper than src, so rewrite the
-        // editor-only `$schema` hint to keep it resolving to src/schema/*.
-        const content = fs.readFileSync(src, 'utf8').replace(/"\.\.\/\.\.\/schema\//g, '"../../../src/schema/');
-        fs.writeFileSync(dest, content);
-      } else {
-        fs.copyFileSync(src, dest);
-      }
+    // Mirror every per-tour subfolder into public/data/tour/<tourId>/.
+    syncDir(srcDir, destDir);
+
+    // Also emit a flat copy of the default (first, alphabetically — matching
+    // Vite's import.meta.glob ordering) tour at the public root, so the legacy
+    // /data/tour/metadata.json paths used by the Playwright HTTP tests keep
+    // resolving to the default tour.
+    const tourDirs = fs.readdirSync(srcDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name)
+      .sort();
+    if (tourDirs.length > 0) {
+      syncTourFlat(path.join(srcDir, tourDirs[0]), destDir);
     }
   }
 

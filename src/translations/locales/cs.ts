@@ -63,4 +63,9 @@ export const cs: Translations = {
   map: {
     locationError: 'Poloha nedostupná',
   },
+  tourSelection: {
+    title: 'Vyberte prohlídku',
+    subtitle: 'Vyberte prohlídku a začněte svou návštěvu',
+    tours: 'prohlídky',
+  },
 } as const;
