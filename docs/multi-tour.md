@@ -73,6 +73,7 @@ default behavior.
 | `logo` | string | — | Image URL shown above the title in the header (rendered ~32px tall). Tapping it re-opens the `splash` if one is set. |
 | `hero` | string | — | Image URL used as a **full-screen backdrop** behind all content (lowest layer). |
 | `splash` | string | — | Image **or video** URL for a full-screen branding intro shown over the picker — see below. |
+| `splashArrowColor` | string | `"#FFFFFF"` | Color (hex) of the splash's double-arrow hint button (its circle border and chevrons). Set it so the hint stays visible on your splash — white is invisible on a white background. |
 | `statusBarColor` | string | theme header color | Color (hex) for the iOS status bar / browser chrome (`theme-color`) **while the splash is shown**. Set it to match your splash. The picker itself uses the theme's header color. |
 | `tourOrder` | string[] | discovery order | Tour `id`s in display order. Listed ids come first; any remaining tours are appended. Unknown ids are ignored. |
 | `tourCard` | `TourCardConfig` | all shown | What every tour card displays — see below. |
@@ -104,7 +105,8 @@ canvas first.
   loop; anything else is treated as an image. Both fill the frame (`object-fit: cover`).
 - A **pulsing double-arrow button** hints that swiping continues to the picker.
   Swiping left or tapping anywhere slides the splash off to the left (with haptic
-  feedback) to reveal the list.
+  feedback) to reveal the list. Color it with `splashArrowColor` (defaults to
+  white) so it stays visible against your splash.
 - Shown **once per visit** — it does not reappear when returning to the picker
   from a tour. Omit or set `""` to disable.
 - **Re-open from the logo** — if both `logo` and `splash` are set, tapping the

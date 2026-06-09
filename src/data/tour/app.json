@@ -13,6 +13,7 @@
   "logo": "https://placehold.co/160x32/1A2634/FFFFFF/png?text=NYC+Tours",
   "hero": "",
   "splash": "https://placehold.co/800x1400/1A2634/FFFFFF/png?text=Museum+Branding",
+  "splashArrowColor": "#FFFFFF",
   "statusBarColor": "#1A2634",
   "tourOrder": ["new-york", "lower-manhattan"],
   "tourCard": {

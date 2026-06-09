@@ -91,6 +91,7 @@ export interface AppConfig {
   logo?: string;               // Optional logo image URL shown in the header
   hero?: string;               // Optional hero/cover image URL shown above the list
   splash?: string;             // Optional full-screen intro image/video URL; tap to continue to the picker (branding)
+  splashArrowColor?: string;   // Optional color for the splash's double-arrow hint button (border + chevrons); defaults to white
   statusBarColor?: string;     // Optional color for the iOS status bar / browser chrome on the landing screen (theme-color); defaults to the theme header color
   tourOrder?: string[];        // Tour ids in display order; unlisted tours are appended in discovery order
   tourCard?: TourCardConfig;   // What each tour card shows in the list; applies to ALL tours (no per-tour override)

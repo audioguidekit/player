@@ -30,7 +30,8 @@ const bounceAlpha = keyframes`
   100% { opacity: 1; transform: translateX(0)     scale(1);   }
 `;
 
-// Double-chevron (»), white fill — the inlined SVG from the pen's `.next` class.
+// Double-chevron (») shape — the inlined SVG from the pen's `.next` class. Used
+// as a CSS mask (only its alpha matters) so the fill can be any color.
 const ARROW_SVG =
   'data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiI+PHN0eWxlPi5zdDB7ZmlsbDojZmZmfTwvc3R5bGU+PHBhdGggY2xhc3M9InN0MCIgZD0iTTMxOS4xIDIxN2MyMC4yIDIwLjIgMTkuOSA1My4yLS42IDczLjdzLTUzLjUgMjAuOC03My43LjZsLTE5MC0xOTBjLTIwLjEtMjAuMi0xOS44LTUzLjIuNy03My43UzEwOSA2LjggMTI5LjEgMjdsMTkwIDE5MHoiLz48cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzE5LjEgMjkwLjVjMjAuMi0yMC4yIDE5LjktNTMuMi0uNi03My43cy01My41LTIwLjgtNzMuNy0uNmwtMTkwIDE5MGMtMjAuMiAyMC4yLTE5LjkgNTMuMi42IDczLjdzNTMuNSAyMC44IDczLjcuNmwxOTAtMTkweiIvPjwvc3ZnPg==';
 
@@ -42,7 +43,11 @@ const ARROW_SVG =
 // stays visible; the mask re-enables pointer events.
 const Backdrop = styled.div`
   ${tw`fixed inset-0 flex items-center justify-center`}
-  z-index: 50;
+  /* Above all in-app chrome: the map controls portal (z-69) and MiniPlayer
+     (z-70) live in the same (body-level) stacking context as this body portal,
+     since #root creates no stacking context — so a lower z-index would let the
+     locate button poke through the splash on reload while a tour is open. */
+  z-index: 100;
 
   @media (min-width: 768px) {
     padding: 2rem;
@@ -94,30 +99,44 @@ const Hint = styled.div`
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
 `;
 
-// The circular button outline; the two chevrons animate inside it.
-const Round = styled.div`
-  ${tw`relative`}
+// The circular button outline; the chevron group is flex-centered inside it.
+// Border + chevrons share one color (--arrow-color) so the hint stays visible
+// on any splash background.
+const Round = styled.div<{ $color: string }>`
+  ${tw`relative flex items-center justify-center`}
+  --arrow-color: ${({ $color }) => $color};
   width: 56px;
   height: 56px;
-  border: 2px solid #fff;
+  border: 2px solid var(--arrow-color);
   border-radius: 100%;
+`;
+
+// Wraps the two staggered chevrons. width 22 = arrow (14) + the second's 8px
+// offset. The chevron SVG has asymmetric right padding inside its 512 viewBox,
+// so `contain`-centering leaves the painted ink ~2px left of geometric centre —
+// nudge the whole group right to truly centre it in the circle.
+const ArrowGroup = styled.div`
+  ${tw`relative`}
+  width: 22px;
+  height: 14px;
+  transform: translateX(2px);
 `;
 
 const Arrow = styled.div`
   ${tw`absolute`}
-  top: 50%;
-  left: 50%;
+  top: 0;
   width: 14px;
   height: 14px;
-  margin-top: -7px;
-  background: url(${ARROW_SVG}) no-repeat center / contain;
+  background-color: var(--arrow-color);
+  -webkit-mask: url(${ARROW_SVG}) no-repeat center / contain;
+  mask: url(${ARROW_SVG}) no-repeat center / contain;
   animation: ${bounceAlpha} 1.4s linear infinite;
 
   &.first {
-    margin-left: -10px;
+    left: 0;
   }
   &.second {
-    margin-left: -2px;
+    left: 8px;
     animation-delay: 0.2s;
   }
 `;
@@ -131,6 +150,8 @@ interface SplashScreenProps {
   statusBarColor?: string;
   /** Slide in from the left (reverse of the dismiss) instead of appearing instantly. */
   slideIn?: boolean;
+  /** Color of the double-arrow hint button (border + chevrons). Defaults to white. */
+  arrowColor?: string;
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
@@ -138,6 +159,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   onDismiss,
   statusBarColor,
   slideIn = false,
+  arrowColor = '#fff',
 }) => {
   // Tint the status bar to match the splash only while it's shown; on dismiss
   // restore whatever the picker set (its theme header color via ThemeColorSync).
@@ -179,9 +201,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
             )}
           </Media>
           <Hint>
-            <Round>
-              <Arrow className="first" />
-              <Arrow className="second" />
+            <Round $color={arrowColor}>
+              <ArrowGroup>
+                <Arrow className="first" />
+                <Arrow className="second" />
+              </ArrowGroup>
             </Round>
           </Hint>
         </Card>

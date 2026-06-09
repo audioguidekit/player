@@ -234,6 +234,7 @@ const TourSelectionContent: React.FC<TourSelectionContentProps> = ({
               key="splash"
               media={appConfig.splash}
               statusBarColor={appConfig.statusBarColor}
+              arrowColor={appConfig.splashArrowColor}
               slideIn={splashReopenedRef.current}
               onDismiss={() => {
                 triggerHaptic();

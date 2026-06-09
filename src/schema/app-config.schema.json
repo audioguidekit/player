@@ -30,6 +30,9 @@
         "splash": {
           "type": "string"
         },
+        "splashArrowColor": {
+          "type": "string"
+        },
         "statusBarColor": {
           "type": "string"
         },
