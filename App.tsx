@@ -183,7 +183,7 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
     [tour]
   );
 
-  /* 
+  /*
   // Disable preloading to prevent iOS Media Session interference
   useAudioPreloader({
     audioPlaylist,
@@ -849,7 +849,7 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
                     scrollTrigger={scrollToStopId?.timestamp ?? null}
                     onScrollComplete={handleScrollComplete}
                     onOpenRatingSheet={() => setActiveSheet('RATING')}
-                    showMapLocateButton={hasStarted}
+                    showMapLocateButton={hasStarted && activeSheet === 'NONE'}
                   />
                 }
               />
