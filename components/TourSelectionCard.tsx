@@ -1,12 +1,12 @@
 import React from 'react';
 import { ClockIcon } from '@phosphor-icons/react/dist/csr/Clock';
 import { PathIcon } from '@phosphor-icons/react/dist/csr/Path';
-import { CaretRightIcon } from '@phosphor-icons/react/dist/csr/CaretRight';
 import tw from 'twin.macro';
 import styled from 'styled-components';
 import { TourData } from '../types';
 import { useTranslation } from '../src/translations';
 import { useHaptics } from '../src/hooks/useHaptics';
+import { getAppConfig } from '../src/services/tourDiscovery';
 
 interface TourSelectionCardProps {
   tour: TourData;
@@ -14,16 +14,25 @@ interface TourSelectionCardProps {
 }
 
 const Card = styled.button`
-  ${tw`w-full text-left flex flex-col overflow-hidden transition-all duration-200 active:scale-[0.98]`}
+  ${tw`w-full text-left flex flex-col overflow-hidden`}
   background-color: ${({ theme }) => theme.cards.backgroundColor};
   border: 1px solid ${({ theme }) => theme.cards.borderColor};
   border-radius: ${({ theme }) => theme.cards.borderRadius};
   box-shadow: ${({ theme }) => theme.cards.shadow};
+  /* Single press effect on the whole card: one transform, one GPU layer, scaled
+     from the center so the cover and body move together (matches AudioStopCard). */
+  transition: transform 0.15s ease-out;
+  transform-origin: center;
+  will-change: transform;
+
+  &:active {
+    transform: scale(0.98);
+  }
 `;
 
 const Cover = styled.div<{ $fallback?: string }>`
   ${tw`relative w-full`}
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   background-color: ${({ theme, $fallback }) => $fallback || theme.cards.image.placeholderColor};
 `;
 
@@ -73,16 +82,17 @@ const MetaItem = styled.div`
   ${tw`flex items-center gap-2`}
 `;
 
-const Chevron = styled.div`
-  ${tw`flex items-center justify-center shrink-0`}
-  color: ${({ theme }) => theme.startCard.metaColor};
-`;
-
 export const TourSelectionCard = React.memo<TourSelectionCardProps>(({ tour, onClick }) => {
   const { t } = useTranslation();
   const triggerHaptic = useHaptics();
 
   const isVideo = tour.image?.match(/\.(mp4|webm|ogg)$/i);
+
+  // App-level card display toggles (all tours, no per-tour override). Title is always shown.
+  const { tourCard } = getAppConfig();
+  const showImage = tourCard?.showImage !== false;
+  const showDescription = tourCard?.showDescription !== false;
+  const showMeta = tourCard?.showMeta !== false;
 
   return (
     <Card
@@ -91,27 +101,28 @@ export const TourSelectionCard = React.memo<TourSelectionCardProps>(({ tour, onC
         onClick();
       }}
     >
-      <Cover $fallback={tour.imageColor}>
-        {tour.image && !isVideo && <CoverImage src={tour.image} alt={tour.title} loading="lazy" />}
-      </Cover>
+      {showImage && (
+        <Cover $fallback={tour.imageColor}>
+          {tour.image && !isVideo && <CoverImage src={tour.image} alt={tour.title} loading="lazy" />}
+        </Cover>
+      )}
       <Body>
         <TextBlock>
           <Title>{tour.title}</Title>
-          <Description>{tour.description}</Description>
-          <MetaContainer>
-            <MetaItem>
-              <ClockIcon size={16} />
-              <span>{tour.totalDuration}</span>
-            </MetaItem>
-            <MetaItem>
-              <PathIcon size={16} />
-              <span>{tour.stops.length} {t.startCard.stops}</span>
-            </MetaItem>
-          </MetaContainer>
+          {showDescription && <Description>{tour.description}</Description>}
+          {showMeta && (
+            <MetaContainer>
+              <MetaItem>
+                <ClockIcon size={16} />
+                <span>{tour.totalDuration}</span>
+              </MetaItem>
+              <MetaItem>
+                <PathIcon size={16} />
+                <span>{tour.stops.length} {t.startCard.stops}</span>
+              </MetaItem>
+            </MetaContainer>
+          )}
         </TextBlock>
-        <Chevron>
-          <CaretRightIcon size={20} weight="bold" />
-        </Chevron>
       </Body>
     </Card>
   );

@@ -21,8 +21,10 @@ addFormats(ajv);
 
 const tourSchema = require(resolve(root, 'src/schema/tour-file.schema.json'));
 const metaSchema = require(resolve(root, 'src/schema/tour-metadata.schema.json'));
+const appSchema = require(resolve(root, 'src/schema/app-config.schema.json'));
 const validateTour = ajv.compile(tourSchema);
 const validateMeta = ajv.compile(metaSchema);
+const validateApp = ajv.compile(appSchema);
 
 /** Turn an Ajv error into a single human-readable line. */
 function formatError(e: ErrorObject): string {
@@ -50,8 +52,9 @@ let failed = 0;
 for (const file of tourFiles.sort()) {
   const rel = relative(root, file);
   const isMeta = file.endsWith('/metadata.json');
+  const isApp = file.endsWith('/app.json');
   const data = require(file);
-  const validate = isMeta ? validateMeta : validateTour;
+  const validate = isApp ? validateApp : isMeta ? validateMeta : validateTour;
 
   if (validate(data)) {
     console.log(`✓ ${rel}`);

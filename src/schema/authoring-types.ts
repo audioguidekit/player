@@ -11,7 +11,7 @@
  * The JSON Schemas used for editor validation and the build/CI gate are generated
  * from `TourFile` and `TourMetadataFile` below (see scripts/generate-schema.ts).
  */
-import type { TourData, TourMetadata, Stop, AudioStop } from '../../types';
+import type { TourData, TourMetadata, AppConfig, Stop, AudioStop } from '../../types';
 
 /** Playback state injected at runtime (see isStopCompleted) — never written in JSON. */
 type RuntimeStopState = 'isCompleted' | 'isPlaying';
@@ -34,3 +34,8 @@ export interface TourFile extends Omit<TourData, 'stops'> {
  * Shape of `src/data/tour/metadata.json` — properties shared across languages.
  */
 export type TourMetadataFile = TourMetadata;
+
+/**
+ * Shape of `src/data/tour/app.json` — app-level config for the landing screen.
+ */
+export type AppConfigFile = AppConfig;

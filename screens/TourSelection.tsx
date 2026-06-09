@@ -1,5 +1,6 @@
 import React, { useMemo, useState, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { GB, CZ, DE, FR, IT, ES } from 'country-flag-icons/react/3x2';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import tw from 'twin.macro';
@@ -7,13 +8,14 @@ import styled from 'styled-components';
 import { Language } from '../types';
 import { MobileFrame } from '../components/shared/MobileFrame';
 import { TourSelectionCard } from '../components/TourSelectionCard';
-import { ThemeProvider } from '../src/theme/ThemeProvider';
+import { SplashScreen } from '../components/SplashScreen';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 import { GlobalStyles } from '../src/theme/GlobalStyles';
 import { TranslationProvider, useTranslation } from '../src/translations';
 import { LoadingScreen } from '../src/components/screens/LoadingScreen';
 import { useLanguages } from '../hooks/useDataLoader';
 import { useLanguageSelection } from '../hooks/useLanguageSelection';
-import { getAllTours, getAvailableTourIds, getTourWithFallback } from '../src/services/tourDiscovery';
+import { getAllTours, getAppConfig, getAvailableTourIds, getTourWithFallback } from '../src/services/tourDiscovery';
 import { defaultLanguage } from '../src/config/languages';
 import { storageService } from '../src/services/storageService';
 import { useHaptics } from '../src/hooks/useHaptics';
@@ -32,8 +34,25 @@ const Screen = styled.div`
 `;
 
 const Header = styled.div`
-  ${tw`flex items-start justify-between gap-3 px-5 pb-4`}
+  ${tw`relative flex items-start justify-between gap-3 px-5 pb-4`}
+  z-index: 1;
   padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem);
+`;
+
+const Logo = styled.img<{ $clickable?: boolean }>`
+  ${tw`block mb-3`}
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
+`;
+
+// Full-screen backdrop behind all content (lowest layer). pointer-events:none
+// so it never intercepts taps meant for the cards above it.
+const Hero = styled.img`
+  ${tw`absolute inset-0 w-full h-full pointer-events-none`}
+  object-fit: cover;
+  z-index: 0;
 `;
 
 const TitleBlock = styled.div`
@@ -82,13 +101,36 @@ const LanguageFlag = styled.div`
 `;
 
 const ScrollArea = styled.div`
-  ${tw`flex-1 overflow-y-auto px-5 pt-1`}
+  ${tw`relative flex-1 overflow-y-auto px-5 pt-1`}
+  z-index: 1;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem);
 `;
 
 const List = styled.div`
   ${tw`flex flex-col gap-4`}
 `;
+
+/**
+ * Keeps the picker's status-bar color (the theme header color) re-asserted while
+ * the list is the active route. The picker stays mounted under the push/pop
+ * stack, so a tour overwrites `theme-color` and a plain mount-only sync would
+ * leave the tour's color on return. Gated on the route and placed before
+ * <Screen> so the splash's own override still wins while the splash is shown.
+ */
+const PickerStatusBar: React.FC = () => {
+  const location = useLocation();
+  const { currentTheme } = useTheme();
+  const isPickerActive = !location.pathname.startsWith('/tour/');
+
+  React.useEffect(() => {
+    if (!isPickerActive) return;
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', currentTheme.header.backgroundColor);
+  }, [isPickerActive, currentTheme.header.backgroundColor]);
+
+  return null;
+};
 
 interface TourSelectionContentProps {
   languages: Language[];
@@ -107,8 +149,19 @@ const TourSelectionContent: React.FC<TourSelectionContentProps> = ({
   const navigate = useNavigate();
   const triggerHaptic = useHaptics();
   const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
+  // Branding splash shown once over the picker (until tapped). Stays dismissed
+  // on push/pop back since this screen remains mounted.
+  const [splashDismissed, setSplashDismissed] = useState(false);
+  // First appearance is instant; re-opening via the logo slides in from the left
+  // (the reverse of the slide-left dismiss).
+  const splashReopenedRef = React.useRef(false);
 
   const tours = useMemo(() => getAllTours(selectedLanguage.code), [selectedLanguage.code]);
+
+  // App-level landing config; localized strings fall back to the built-in translations.
+  const appConfig = getAppConfig();
+  const title = appConfig.title?.[selectedLanguage.code] ?? t.tourSelection.title;
+  const subtitle = appConfig.subtitle?.[selectedLanguage.code] ?? t.tourSelection.subtitle;
 
   const FlagIcon = flagComponents[selectedLanguage.countryCode] || GB;
 
@@ -121,11 +174,32 @@ const TourSelectionContent: React.FC<TourSelectionContentProps> = ({
 
   return (
     <Frame>
+      {/* Picker uses the theme header color for the status bar (re-asserted on
+          return from a tour); the splash overrides it with app.json
+          statusBarColor while shown (see SplashScreen). */}
+      <PickerStatusBar />
       <Screen>
+        {appConfig.hero && <Hero src={appConfig.hero} alt="" />}
         <Header>
           <TitleBlock>
-            <Title>{t.tourSelection.title}</Title>
-            <Subtitle>{t.tourSelection.subtitle}</Subtitle>
+            {appConfig.logo && (
+              <Logo
+                src={appConfig.logo}
+                alt=""
+                $clickable={!!appConfig.splash}
+                onClick={
+                  appConfig.splash
+                    ? () => {
+                        triggerHaptic();
+                        splashReopenedRef.current = true;
+                        setSplashDismissed(false);
+                      }
+                    : undefined
+                }
+              />
+            )}
+            <Title>{title}</Title>
+            <Subtitle>{subtitle}</Subtitle>
           </TitleBlock>
           {languages.length > 1 && (
             <LanguageButton
@@ -153,6 +227,21 @@ const TourSelectionContent: React.FC<TourSelectionContentProps> = ({
             ))}
           </List>
         </ScrollArea>
+
+        <AnimatePresence>
+          {appConfig.splash && !splashDismissed && (
+            <SplashScreen
+              key="splash"
+              media={appConfig.splash}
+              statusBarColor={appConfig.statusBarColor}
+              slideIn={splashReopenedRef.current}
+              onDismiss={() => {
+                triggerHaptic();
+                setSplashDismissed(true);
+              }}
+            />
+          )}
+        </AnimatePresence>
       </Screen>
 
       <Suspense fallback={null}>
@@ -189,9 +278,13 @@ export const TourSelection: React.FC<{ frameless?: boolean }> = ({ frameless = f
   const tourIds = getAvailableTourIds();
   const lang = selectedLanguage?.code || defaultLanguage;
   const firstTourId = tourIds[0];
-  // Theme the picker after the first tour (only that tour is needed, not all of them).
+  // Prefer the app-level theme; otherwise borrow the first tour's (only that tour
+  // is needed, not all of them).
   const themeId = useMemo(
-    () => getTourWithFallback(firstTourId, lang)?.themeId || 'default-light',
+    () =>
+      getAppConfig().themeId ||
+      getTourWithFallback(firstTourId, lang)?.themeId ||
+      'default-light',
     [firstTourId, lang]
   );
 

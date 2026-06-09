@@ -9,7 +9,7 @@
  * Properties in language files override metadata properties.
  */
 
-import { TourData, TourMetadata, Language, RouteGeoJSON, MapRouteConfig } from '../../types';
+import { TourData, TourMetadata, AppConfig, Language, RouteGeoJSON, MapRouteConfig } from '../../types';
 
 // Import all tour JSON files at build time (language-specific files)
 // Uses /src/data/tour/ path - files must be in src directory for Vite to import them
@@ -25,6 +25,15 @@ const tourModules = import.meta.glob<TourData>(
 // Import metadata files separately
 const metadataModules = import.meta.glob<TourMetadata>(
   '/src/data/tour/**/metadata.json',
+  {
+    eager: true,
+    import: 'default',
+  }
+);
+
+// App-level config for the tour-selection landing screen (optional, single file)
+const appConfigModules = import.meta.glob<AppConfig>(
+  '/src/data/tour/app.json',
   {
     eager: true,
     import: 'default',
@@ -106,11 +115,27 @@ function buildMetadataRegistry(): MetadataRegistry {
 // Build metadata registry once at module load
 const metadataRegistry = buildMetadataRegistry();
 
+// The optional app.json (first match wins; there should only ever be one).
+const appConfig: AppConfig = Object.values(appConfigModules)[0] ?? {};
+
+/**
+ * Get the app-level config for the tour-selection landing screen.
+ * Returns an empty object when no src/data/tour/app.json is present, so callers
+ * can read fields with optional chaining and fall back to their own defaults.
+ */
+export function getAppConfig(): AppConfig {
+  return appConfig;
+}
+
 /**
  * Get the default language from tour metadata.
  * Returns the defaultLanguage from the first tour's metadata, or 'en' as ultimate fallback.
  */
 export function getDefaultLanguage(): string {
+  // App-level config wins when it sets a default language for the picker
+  if (appConfig.defaultLanguage) {
+    return appConfig.defaultLanguage;
+  }
   // Get the first tour's metadata that has a defaultLanguage set
   for (const metadata of Object.values(metadataRegistry)) {
     if (metadata.defaultLanguage) {
@@ -131,8 +156,13 @@ function buildTourRegistry(): TourRegistry {
   const registry: TourRegistry = {};
 
   for (const [path, tourData] of Object.entries(tourModules)) {
-    // Skip metadata, index files and backups
-    if (path.includes('metadata.json') || path.includes('index.json') || path.includes('-original')) {
+    // Skip metadata, app config, index files and backups
+    if (
+      path.includes('metadata.json') ||
+      path.includes('app.json') ||
+      path.includes('index.json') ||
+      path.includes('-original')
+    ) {
       continue;
     }
 
@@ -176,10 +206,21 @@ function buildTourRegistry(): TourRegistry {
 const tourRegistry = buildTourRegistry();
 
 /**
- * Get all available tour IDs
+ * Get all available tour IDs.
+ *
+ * Honors the optional app.json `tourOrder`: listed ids come first in the given
+ * order, then any remaining discovered tours in their natural order. Ids in
+ * `tourOrder` that don't match a discovered tour are ignored.
  */
 export function getAvailableTourIds(): string[] {
-  return Object.keys(tourRegistry);
+  const discovered = Object.keys(tourRegistry);
+  const order = appConfig.tourOrder;
+  if (!order?.length) return discovered;
+
+  const known = new Set(discovered);
+  const ordered = order.filter(id => known.has(id));
+  const rest = discovered.filter(id => !ordered.includes(id));
+  return [...ordered, ...rest];
 }
 
 // Hardcoded fallback if no tours are discovered (app is non-functional anyway)

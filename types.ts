@@ -69,6 +69,43 @@ export interface TourMetadata {
   mapLocateButton?: boolean;           // Show locate-me button on map (default: true)
 }
 
+/**
+ * A string localized per language code, e.g. { en: "Choose a tour", de: "Wähle eine Tour" }.
+ * The current language is looked up by code; missing codes fall back to defaults.
+ */
+export type LocalizedString = Record<string, string>;
+
+/**
+ * App-level configuration for multi-tour deployments (src/data/tour/app.json).
+ *
+ * Authors the tour-selection landing screen, which otherwise has no identity of
+ * its own. Every field is optional — with no app.json the picker falls back to
+ * the first tour's theme and the built-in translated title/subtitle, so single-
+ * tour deployments are unaffected.
+ */
+export interface AppConfig {
+  themeId?: string;            // Registered theme for the landing screen (default: first tour's theme)
+  defaultLanguage?: string;    // Preferred language for the picker before the user chooses
+  title?: LocalizedString;     // Landing heading; falls back to t.tourSelection.title when absent
+  subtitle?: LocalizedString;  // Landing subheading; falls back to t.tourSelection.subtitle when absent
+  logo?: string;               // Optional logo image URL shown in the header
+  hero?: string;               // Optional hero/cover image URL shown above the list
+  splash?: string;             // Optional full-screen intro image/video URL; tap to continue to the picker (branding)
+  statusBarColor?: string;     // Optional color for the iOS status bar / browser chrome on the landing screen (theme-color); defaults to the theme header color
+  tourOrder?: string[];        // Tour ids in display order; unlisted tours are appended in discovery order
+  tourCard?: TourCardConfig;   // What each tour card shows in the list; applies to ALL tours (no per-tour override)
+}
+
+/**
+ * Controls which elements render on every tour card in the selection list.
+ * The title is always shown. All flags default to true (omitted = shown).
+ */
+export interface TourCardConfig {
+  showImage?: boolean;        // Cover image/thumbnail (default: true)
+  showDescription?: boolean;  // Description text (default: true)
+  showMeta?: boolean;         // Meta row — duration (minutes) and stop count (default: true)
+}
+
 export interface BaseStop {
   id: string;
   type: StopType;

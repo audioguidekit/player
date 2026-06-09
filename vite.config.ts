@@ -127,7 +127,10 @@ export default defineConfig(({ mode }) => {
       logOverride: { 'this-is-undefined-in-esm': 'silent' }
     },
     plugins: [
-      basicSsl(),
+      // HTTPS by default (self-signed, for PWA/geolocation). Set HTTP=1 to serve
+      // plain HTTP — useful for previewing on mobile browsers that refuse the
+      // self-signed cert (e.g. Arc): `HTTP=1 bun run dev`.
+      ...(process.env.HTTP ? [] : [basicSsl()]),
       // Treat .geojson files as JSON modules (Vite only handles .json by default)
       {
         name: 'vite-plugin-geojson',

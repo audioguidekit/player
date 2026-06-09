@@ -2,6 +2,9 @@
 
 Tours are automatically discovered from `src/data/tour/` — no manifest needed.
 
+> Bundling **more than one tour**? Put each tour in its own subfolder and add an
+> app-level `app.json` to theme the selection screen. See [multi-tour.md](./multi-tour.md).
+
 ## File structure
 
 ```

@@ -100,3 +100,4 @@ function write(rootType: string, file: string): void {
 
 write('TourFile', 'tour-file.schema.json');
 write('TourMetadataFile', 'tour-metadata.schema.json');
+write('AppConfigFile', 'app-config.schema.json');

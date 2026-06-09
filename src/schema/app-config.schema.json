@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/AppConfigFile",
+  "definitions": {
+    "AppConfigFile": {
+      "$ref": "#/definitions/AppConfig",
+      "description": "Shape of `src/data/tour/app.json` — app-level config for the landing screen."
+    },
+    "AppConfig": {
+      "type": "object",
+      "properties": {
+        "themeId": {
+          "type": "string"
+        },
+        "defaultLanguage": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedString"
+        },
+        "subtitle": {
+          "$ref": "#/definitions/LocalizedString"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "hero": {
+          "type": "string"
+        },
+        "splash": {
+          "type": "string"
+        },
+        "statusBarColor": {
+          "type": "string"
+        },
+        "tourOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tourCard": {
+          "$ref": "#/definitions/TourCardConfig"
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "App-level configuration for multi-tour deployments (src/data/tour/app.json).\n\nAuthors the tour-selection landing screen, which otherwise has no identity of its own. Every field is optional — with no app.json the picker falls back to the first tour's theme and the built-in translated title/subtitle, so single- tour deployments are unaffected."
+    },
+    "LocalizedString": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "A string localized per language code, e.g. { en: \"Choose a tour\", de: \"Wähle eine Tour\" }. The current language is looked up by code; missing codes fall back to defaults."
+    },
+    "TourCardConfig": {
+      "type": "object",
+      "properties": {
+        "showImage": {
+          "type": "boolean"
+        },
+        "showDescription": {
+          "type": "boolean"
+        },
+        "showMeta": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Controls which elements render on every tour card in the selection list. The title is always shown. All flags default to true (omitted = shown)."
+    }
+  }
+}
