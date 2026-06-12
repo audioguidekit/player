@@ -69,6 +69,7 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
     <Container>
       {isSingle ? (
         <SingleImage
+          data-testid="lightbox-trigger"
           src={item.images[0].url}
           alt={item.images[0].alt || ''}
           onClick={(e) => openAt(0, e)}
@@ -78,6 +79,7 @@ export const ImageGalleryCard = memo<ImageGalleryCardProps>(({ item }) => {
           {item.images.map((img, i) => (
             <Thumbnail
               key={i}
+              data-testid="lightbox-trigger"
               src={img.url}
               alt={img.alt || ''}
               onClick={(e) => openAt(i, e)}

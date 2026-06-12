@@ -92,7 +92,7 @@ export const ImageTextCard = memo<ImageTextCardProps>(({ item, index = 0, showNu
 
   return (
     <Container>
-      <ImageContainer onClick={() => setLightboxOpen(true)}>
+      <ImageContainer data-testid="lightbox-trigger" onClick={() => setLightboxOpen(true)}>
         <Image src={item.image} alt={item.imageAlt || item.title || 'Content'} />
       </ImageContainer>
       {lightboxOpen && (

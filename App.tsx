@@ -24,6 +24,9 @@ import { useProgressTracking } from './hooks/useProgressTracking';
 import { useDownloadManager } from './hooks/useDownloadManager';
 import { useTourNavigation } from './hooks/useTourNavigation';
 import { useAudioPreloader } from './hooks/useAudioPreloader';
+import { useMediaSessionIntegration } from './hooks/useMediaSessionIntegration';
+import { useAudioPlaybackSync } from './hooks/useAudioPlaybackSync';
+import { useStopUrlSync } from './hooks/useStopUrlSync';
 import { RatingProvider, useRating } from './context/RatingContext';
 import { TranslationProvider } from './src/translations';
 import { ThemeProvider } from './src/theme/ThemeProvider';
@@ -39,24 +42,6 @@ import { useAutoResume } from './hooks/useAutoResume';
 import { TourProgressTracker } from './components/TourProgressTracker';
 import { ThemeColorSync } from './components/ThemeColorSync';
 import { StatusBarController } from './components/StatusBarController';
-import { useMediaSession, useMediaMeta } from 'use-media-session';
-
-// Helper to get artwork MIME type
-const getArtworkType = (url: string | undefined): string | null => {
-  if (!url) return null;
-  const ext = url.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'webp':
-      return 'image/webp';
-    default:
-      return 'image/jpeg';
-  }
-};
 
 interface AppProps {
   /**
@@ -141,7 +126,7 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
     isTransitioning,
     isSwitchingTracks,
     setCurrentStopId,
-    setIsPlaying: rawSetIsPlaying,
+    setIsPlaying,
     handlePlayPause,
     handleStopClick,
     handleStopPlayPause,
@@ -157,17 +142,6 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
     onTrackChange: handleTrackChange,
     isStopCompleted: progressTracking.isStopCompleted
   });
-
-  // DEBUG: Wrap setIsPlaying to log all calls with stack trace
-  const setIsPlaying = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
-    const stack = new Error().stack?.split('\n').slice(1, 4).join('\n');
-    if (typeof value === 'function') {
-      console.log('[DEBUG setIsPlaying] Called with function updater\n', stack);
-    } else {
-      console.log(`[DEBUG setIsPlaying] Setting to ${value}\n`, stack);
-    }
-    rawSetIsPlaying(value);
-  }, [rawSetIsPlaying]);
 
   // Keep ref in sync with state (avoids stale closure in handleAudioEnded)
   useEffect(() => {
@@ -223,21 +197,8 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
     resumePositionRef,
   });
 
-  // Sync URL with current stop - update URL when playing stop changes
-  useEffect(() => {
-    if (!tour) return;
-
-    const effectiveTourId = tourId || tour.id;
-
-    // When we have a current stop and it differs from URL, update URL
-    if (currentStopId && currentStopId !== urlStopId) {
-      navigate(`/tour/${effectiveTourId}/${currentStopId}`, { replace: true });
-    }
-    // When we don't have a current stop but URL has one, update URL (going back to tour view)
-    else if (!currentStopId && urlStopId && !hasStarted) {
-      navigate(`/tour/${effectiveTourId}`, { replace: true });
-    }
-  }, [currentStopId, urlStopId, tourId, tour, hasStarted, navigate]);
+  // Sync URL with the currently playing stop
+  useStopUrlSync({ tour, tourId, currentStopId, urlStopId, hasStarted, navigate });
 
   // Show mini player only in tour detail (not on start screen)
   const shouldShowMiniPlayer = !!currentAudioStop && hasStarted;
@@ -302,190 +263,27 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
     onPlayBlocked: handlePlayBlocked,
   });
 
-  // CRITICAL: Sync native audio events to React state
-  // This matches the working demo's JSX: <audio onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
-  // Track if audio was playing before pause to distinguish real pauses from load() pauses
-  const wasPlayingBeforePauseRef = useRef(false);
-
-  useEffect(() => {
-    const audio = audioPlayer.audioElement;
-    if (!audio) return;
-
-    const handleNativePlay = () => {
-      wasPlayingBeforePauseRef.current = true;
-      setIsPlaying(true);
-    };
-
-    const handleNativePause = () => {
-      const audio = audioPlayer.audioElement;
-      // Only sync pause if audio was actually playing before
-      // Don't set isPlaying(false) if audio ended - let the ended handler manage the transition
-      if (wasPlayingBeforePauseRef.current && !audio?.ended) {
-        setIsPlaying(false);
-      }
-      wasPlayingBeforePauseRef.current = false;
-    };
-
-    audio.addEventListener('play', handleNativePlay);
-    audio.addEventListener('pause', handleNativePause);
-
-    return () => {
-      audio.removeEventListener('play', handleNativePlay);
-      audio.removeEventListener('pause', handleNativePause);
-    };
-  }, [audioPlayer.audioElement, setIsPlaying]);
-
-  // ============================================================================
-
-  // Watchdog Removed as requested
-  // ============================================================================
-
-  // MEDIASESSION API - Critical for iOS Control Center integration
-  // ============================================================================
-
-  // Build artwork array for MediaSession metadata
-  const artworkType = getArtworkType(currentAudioStop?.image);
-  const mediaSessionArtwork = currentAudioStop?.image
-    ? [{ src: currentAudioStop.image, sizes: '512x512', type: artworkType || 'image/jpeg' }]
-    : [];
-
-  // MediaSession metadata - matching working demo EXACTLY
-  useMediaMeta({
-    title: currentAudioStop?.title || '',
-    artist: tour?.title || '',
-    album: 'AudioGuideKit',
-    artwork: mediaSessionArtwork,
+  // Low-level coordination between the singleton audio element and isPlaying:
+  // native play/pause sync, iOS preload, resume-seek, and deferred autoplay.
+  const { setPendingAutoPlay } = useAudioPlaybackSync({
+    audioPlayer,
+    tour,
+    assetsReady,
+    currentStopId,
+    setIsPlaying,
+    pendingSeekRef,
   });
 
-  // Play callback for MediaSession - MUST set state AFTER play succeeds
-  const mediaSessionPlayTrack = useCallback(() => {
-    console.log('[mediaSessionPlayTrack] Called - will call play()');
-    audioPlayer.play()
-      .then(() => {
-        console.log('[mediaSessionPlayTrack] play() succeeded - setting isPlaying=true');
-        setIsPlaying(true);
-        setIsPlaying(true);
-      })
-      .catch((e) => {
-        console.error('[mediaSessionPlayTrack] play() failed:', e);
-      });
-  }, [audioPlayer, setIsPlaying]);
-
-  // Pause callback for MediaSession
-  const mediaSessionPauseTrack = useCallback(() => {
-    const audio = audioPlayer.audioElement;
-    console.log('[mediaSessionPauseTrack] Called - audio.paused:', audio?.paused);
-    if (audio && !audio.paused) {
-      console.log('[mediaSessionPauseTrack] Pausing and setting isPlaying=false');
-      audioPlayer.pause();
-      setIsPlaying(false);
-      setIsPlaying(false);
-    }
-  }, [audioPlayer, setIsPlaying]);
-
-  // Seek callbacks for MediaSession
-  const mediaSessionSeekBackward = useCallback(() => {
-    audioPlayer.skipBackward(10);
-  }, [audioPlayer]);
-
-  const mediaSessionSeekForward = useCallback(() => {
-    audioPlayer.skipForward(10);
-  }, [audioPlayer]);
-
-  // MediaSession hook - provides Control Center integration
-  useMediaSession({
-    playbackState: isPlaying ? 'playing' : 'paused',
-    onPlay: mediaSessionPlayTrack,
-    onPause: mediaSessionPauseTrack,
-    onSeekBackward: mediaSessionSeekBackward,
-    onSeekForward: mediaSessionSeekForward,
+  // MediaSession API - iOS Control Center / lock-screen integration.
+  useMediaSessionIntegration({
+    audioPlayer,
+    currentAudioStop,
+    tourTitle: tour?.title,
+    isPlaying,
+    setIsPlaying,
     onPreviousTrack: handlePrevStop,
     onNextTrack: handleNextStop,
   });
-
-  // Log state changes for debugging
-  useEffect(() => {
-    console.log('[STATE CHANGE] isPlaying changed to:', isPlaying);
-    console.log('[MEDIASESSION] playbackState will be:', isPlaying ? 'playing' : 'paused');
-  }, [isPlaying]);
-
-  // Update MediaSession position state (throttled to once per second)
-  const lastPositionUpdateRef = useRef(0);
-  useEffect(() => {
-    if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-      const duration = audioPlayer.duration;
-      const currentTime = audioPlayer.currentTime;
-      const now = Date.now();
-
-      // Throttle to once per second
-      if (now - lastPositionUpdateRef.current < 1000) return;
-
-      if (duration > 0 && isFinite(duration) && isFinite(currentTime)) {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: duration,
-            playbackRate: 1,
-            position: currentTime,
-          });
-          lastPositionUpdateRef.current = now;
-        } catch {
-          // Ignore errors
-        }
-      }
-    }
-  }, [audioPlayer.currentTime, audioPlayer.duration]);
-
-  // ============================================================================
-
-  // CRITICAL FOR iOS: Pre-load first audio into the singleton element
-  // This ensures audio is ALREADY LOADED when user clicks "Start tour"
-  // iOS requires actual audio playback (not just buffering) for Media Session to activate
-  const hasPreloadedSingletonRef = useRef(false);
-  useEffect(() => {
-    if (!tour || !assetsReady || hasPreloadedSingletonRef.current) return;
-    if (!audioPlayer.audioElement) return;
-
-    const firstAudioStop = tour.stops.find(s => s.type === 'audio');
-    if (!firstAudioStop || firstAudioStop.type !== 'audio') return;
-
-    const audioUrl = firstAudioStop.audioFile;
-    const audio = audioPlayer.audioElement;
-
-    // Only preload if not already playing something
-    if (audio.src && !audio.paused) return;
-
-    console.log('[iOS PRELOAD] Pre-loading first audio into singleton:', audioUrl);
-    audio.src = audioUrl;
-    audio.load();
-
-    const handleCanPlay = () => {
-      console.log('[iOS PRELOAD] ✅ First audio ready in singleton (canplay)');
-      hasPreloadedSingletonRef.current = true;
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-
-    audio.addEventListener('canplay', handleCanPlay);
-
-    return () => {
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-  }, [tour, assetsReady, audioPlayer.audioElement]);
-
-  // AUTO-RESUME: Restore playback position when resuming
-  useEffect(() => {
-    if (!audioPlayer?.audioElement || !currentStopId) return;
-    if (pendingSeekRef.current === null) return;
-
-    const audio = audioPlayer.audioElement;
-
-    // Wait for audio metadata to load before seeking
-    if (audio.readyState >= 1 && audio.duration > 0) {
-      const seekPosition = pendingSeekRef.current;
-      console.log(`[RESUME] Seeking to ${seekPosition}s`);
-      audioPlayer.seek(seekPosition);
-      pendingSeekRef.current = null;
-    }
-  }, [audioPlayer, currentStopId, audioPlayer?.audioElement?.readyState, audioPlayer?.duration]);
 
   // Background audio keep-alive for iOS
   useBackgroundAudio({ enabled: isPlaying });
@@ -505,51 +303,6 @@ const App: React.FC<AppProps> = ({ frameless = false }) => {
       window.removeEventListener('unhandledrejection', onRejection);
     };
   }, []);
-
-  // Flag to indicate we want to start playing when audio is ready
-  const [pendingAutoPlay, setPendingAutoPlay] = useState(false);
-
-  // Effect to handle autoplay when audio becomes available
-  // MATCHING WORKING DEMO: Set isPlaying(true) SYNCHRONOUSLY when calling play()
-  useEffect(() => {
-    if (!pendingAutoPlay || !audioPlayer.audioElement) return;
-
-    const audio = audioPlayer.audioElement;
-    console.log('[AUTOPLAY] pendingAutoPlay effect triggered, readyState:', audio.readyState);
-
-    // Wait for audio to be ready
-    const attemptPlay = () => {
-      console.log('[AUTOPLAY] Attempting play() - will set isPlaying=true AFTER promise resolves');
-      // CRITICAL FIX: Do NOT set state before play()!
-      // iOS sees playbackState='playing' but audio.paused=true → shows play button
-      // Must wait for play() to succeed, THEN set state (like working demo autoplay pattern)
-      setPendingAutoPlay(false);
-
-      audio.play()
-        .then(() => {
-          console.log('[AUTOPLAY] play() succeeded - NOW setting isPlaying=true');
-          // CRITICAL: Set state AFTER play succeeds (matching working demo pattern)
-          setIsPlaying(true);
-          setIsPlaying(true);
-        })
-        .catch((error) => {
-          console.error('[AUTOPLAY] play() promise rejected:', error);
-          // No need to revert - we never set isPlaying=true
-        });
-    };
-
-    if (audio.readyState >= 2) {
-      attemptPlay();
-    } else {
-      console.log('[AUTOPLAY] Waiting for canplay event...');
-      const handleCanPlay = () => {
-        console.log('[AUTOPLAY] canplay event fired');
-        attemptPlay();
-        audio.removeEventListener('canplay', handleCanPlay);
-      };
-      audio.addEventListener('canplay', handleCanPlay, { once: true });
-    }
-  }, [pendingAutoPlay, audioPlayer.audioElement, setIsPlaying]);
 
   // Handlers - wrapped with useCallback for referential stability
   const handleStartTour = useCallback(() => {

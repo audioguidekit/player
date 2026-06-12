@@ -272,6 +272,7 @@ export const TourDetail = React.memo<TourDetailProps>(({
         <ScrollableList
           ref={containerRef}
           className="no-scrollbar"
+          data-testid="stop-feed"
           $compact={tour.showStopImage !== true}
         >
           {tour.stops
