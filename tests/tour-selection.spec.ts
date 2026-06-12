@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissSplashIfPresent } from './helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -39,14 +40,15 @@ const TOUR_CARD = 'button:has(h2)';
 
 test.describe('Tour selection screen', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await dismissSplashIfPresent(page);
     await page.locator(TOUR_CARD).first().waitFor({ timeout: 15000 });
   });
 
   test('lists every discovered tour as a card', async ({ page }) => {
     const discovered = fs
       .readdirSync(TOUR_DIR, { withFileTypes: true })
-      .filter(d => d.isDirectory())
+      .filter(d => d.isDirectory() && !d.name.startsWith('_')) // hidden fixture tours aren't listed
       .map(d => d.name);
 
     await expect(page.locator(TOUR_CARD)).toHaveCount(discovered.length);

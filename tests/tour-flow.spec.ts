@@ -1,79 +1,46 @@
 import { test, expect } from '@playwright/test';
-import { getTourId } from './helpers';
+import { getTourId, getFirstTourData, openTour, startTour, startButton } from './helpers';
 
-test.describe('Tour Start Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-  });
+/**
+ * The core happy path: open a tour, start it, and confirm the feed lists the
+ * tour's stops. Complements playback-flow.spec (player behavior) and
+ * navigation.spec (routing) by covering the feed content itself.
+ */
 
-  test('should display tour information', async ({ page }) => {
-    // Wait for content to load
-    await page.waitForTimeout(2000);
-
-    // Check that the page has loaded some content
-    const pageContent = await page.content();
-    expect(pageContent.length).toBeGreaterThan(100);
-  });
-
-  test('should have clickable elements for starting tour', async ({ page }) => {
-    // Wait for app to fully load
-    await page.waitForTimeout(3000);
-
-    // Look for any buttons or interactive elements
-    const buttons = page.locator('button');
-    const count = await buttons.count();
-
-    // App should have at least some interactive elements
-    expect(count).toBeGreaterThanOrEqual(0);
-  });
-});
-
-test.describe('Tour Navigation', () => {
-  test('should load tour data', async ({ page, request }) => {
+test.describe('Tour start flow', () => {
+  test('the start screen shows the tour title and a primary CTA', async ({ page, request }) => {
     const tourId = await getTourId(request);
+    const data = (await getFirstTourData(request)) as { title?: string } | null;
+    await openTour(page, tourId);
 
-    // Navigate directly to a tour
-    await page.goto(`/tour/${tourId}`);
-
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Page should have content
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
+    if (data?.title) {
+      await expect(page.getByRole('heading', { level: 1, name: data.title })).toBeVisible();
+    }
+    await expect(startButton(page)).toBeVisible();
   });
 
-  test('should maintain state during navigation', async ({ page, request }) => {
+  test('starting the tour renders the stop feed with every stop', async ({ page, request }) => {
     const tourId = await getTourId(request);
+    const data = (await getFirstTourData(request)) as { stops?: { id: string; type: string }[] } | null;
+    const stops = data?.stops ?? [];
 
-    await page.goto('/');
+    await startTour(page, tourId);
 
-    // Navigate to tour
-    await page.goto(`/tour/${tourId}`);
-    await page.waitForLoadState('networkidle');
+    // Move to the list if the tour opened on the map.
+    const listToggle = page.getByRole('button', { name: 'List view' });
+    if (await listToggle.isVisible().catch(() => false)) {
+      await listToggle.click();
+    }
 
-    // Go back
-    await page.goBack();
-    await page.waitForLoadState('networkidle');
+    const feed = page.getByTestId('stop-feed');
+    await expect(feed).toBeVisible({ timeout: 10000 });
 
-    // Should still be functional
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
-  });
-});
-
-test.describe('Stop Feed', () => {
-  test('should display stops when tour is loaded', async ({ page, request }) => {
-    const tourId = await getTourId(request);
-
-    await page.goto(`/tour/${tourId}`);
-
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
-
-    // Check page has rendered content
-    const pageContent = await page.content();
-    expect(pageContent).toBeTruthy();
+    // Each rendered stop carries id="stop-<id>"; the feed virtualises with
+    // content-visibility but the elements are still in the DOM.
+    const renderedStops = page.locator('[id^="stop-"]');
+    await expect(renderedStops.first()).toBeVisible();
+    if (stops.length > 0) {
+      expect(await renderedStops.count()).toBe(stops.length);
+    }
   });
 });

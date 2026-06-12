@@ -552,6 +552,7 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
     <PlayerRoot>
       {/* ── Mini/Expanded Player (bottom bar) ── */}
       <Container
+        data-testid="mini-player"
         drag="y"
         dragDirectionLock
         dragConstraints={{ top: 0, bottom: 0 }}
@@ -752,6 +753,7 @@ export const MiniPlayer = React.memo<MiniPlayerProps>(({
         {isFullscreen && (
           <FullscreenOverlay
             key="fullscreen-overlay"
+            data-testid="fullscreen-player"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

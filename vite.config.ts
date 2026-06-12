@@ -15,6 +15,10 @@ function syncTourDataPlugin(): Plugin {
   // src/data/tour/<tourId>/metadata.json) and mirror the structure into destDir.
   function syncDir(srcRoot: string, destRoot: string) {
     for (const entry of fs.readdirSync(srcRoot, { withFileTypes: true })) {
+      // Hidden fixture tours (id/dir prefixed "_") are loaded by the app from the
+      // build-time glob in dev/test only; they never need static HTTP copies, so
+      // keep them out of public/ and dist/ entirely.
+      if (entry.isDirectory() && entry.name.startsWith('_')) continue;
       const src = path.join(srcRoot, entry.name);
       const dest = path.join(destRoot, entry.name);
       if (entry.isDirectory()) {
@@ -58,7 +62,7 @@ function syncTourDataPlugin(): Plugin {
     // /data/tour/metadata.json paths used by the Playwright HTTP tests keep
     // resolving to the default tour.
     const tourDirs = fs.readdirSync(srcDir, { withFileTypes: true })
-      .filter(e => e.isDirectory())
+      .filter(e => e.isDirectory() && !e.name.startsWith('_')) // skip hidden fixture tours
       .map(e => e.name)
       .sort();
     if (tourDirs.length > 0) {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getTourId } from './helpers';
+import { getTourId, dismissSplashIfPresent } from './helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -15,52 +15,62 @@ const combinations = [
   { showStopImage: false, showStopDuration: false, showStopNumber: false, name: '8-list-minimal' },
 ];
 
-const METADATA_PATH = path.join(process.cwd(), 'src/data/tour/metadata.json');
-
-// Store original metadata to restore after tests
-let originalMetadata: string;
+// Per-tour metadata lives at src/data/tour/<tourId>/metadata.json since the
+// multi-tour restructure. The path depends on the active tour id, so it is
+// resolved (and the original captured) on the first test run.
+const TOUR_DIR = path.join(process.cwd(), 'src/data/tour');
+let metadataPath: string | undefined;
+let originalMetadata: string | undefined;
 
 // Run tests serially since we're modifying the same file
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Stop Card Display Options', () => {
-  test.beforeAll(async () => {
-    // Save original metadata
-    originalMetadata = fs.readFileSync(METADATA_PATH, 'utf-8');
-  });
-
   test.afterAll(async () => {
     // Restore original metadata
-    fs.writeFileSync(METADATA_PATH, originalMetadata);
+    if (metadataPath && originalMetadata !== undefined) {
+      fs.writeFileSync(metadataPath, originalMetadata);
+    }
   });
 
   for (const combo of combinations) {
     test(`${combo.name}: image=${combo.showStopImage}, duration=${combo.showStopDuration}, number=${combo.showStopNumber}`, async ({ page, request }) => {
       const tourId = await getTourId(request);
 
+      // Resolve the per-tour metadata path and capture the original once.
+      if (!metadataPath) {
+        metadataPath = path.join(TOUR_DIR, tourId, 'metadata.json');
+        originalMetadata = fs.readFileSync(metadataPath, 'utf-8');
+      }
+
       // Read current metadata and update settings
-      const metadata = JSON.parse(fs.readFileSync(METADATA_PATH, 'utf-8'));
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
       metadata.showStopImage = combo.showStopImage;
       metadata.showStopDuration = combo.showStopDuration;
       metadata.showStopNumber = combo.showStopNumber;
 
       // Write updated metadata (triggers Vite HMR)
-      fs.writeFileSync(METADATA_PATH, JSON.stringify(metadata, null, 2) + '\n');
+      fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2) + '\n');
 
       // Wait for Vite to pick up the change and rebuild
       await page.waitForTimeout(2000);
 
       // Navigate to tour start page (fresh load to get new bundle)
-      await page.goto(`/tour/${tourId}`, { waitUntil: 'networkidle' });
+      await page.goto(`/tour/${tourId}`, { waitUntil: 'domcontentloaded' });
+      await dismissSplashIfPresent(page);
 
-      // Click "Start tour" button to enter tour detail view
+      // Click "Start tour" to enter the feed. A JSON write can trigger a Vite
+      // full-reload that bounces back to the start screen, so re-click if the
+      // feed list hasn't appeared.
       const startButton = page.locator('button:has-text("Start tour")');
+      const feed = page.locator('[data-testid="stop-feed"]');
       await startButton.waitFor({ timeout: 10000 });
       await startButton.click();
-
-      // Wait for the tour detail view to load
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(2000);
+      await feed.waitFor({ state: 'visible', timeout: 8000 }).catch(async () => {
+        await dismissSplashIfPresent(page);
+        await startButton.click();
+        await feed.waitFor({ state: 'visible', timeout: 10000 });
+      });
 
       // Take a screenshot of the stop cards
       await page.screenshot({
@@ -70,8 +80,8 @@ test.describe('Stop Card Display Options', () => {
 
       // Verify the page rendered correctly - look for h3 elements (stop titles)
       const titles = page.locator('h3');
-      const titleCount = await titles.count();
-      expect(titleCount).toBeGreaterThan(0);
+      await expect(titles.first()).toBeVisible({ timeout: 10000 });
+      expect(await titles.count()).toBeGreaterThan(0);
     });
   }
 });

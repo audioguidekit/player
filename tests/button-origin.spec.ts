@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { getTourId, dismissSplashIfPresent } from './helpers';
 
-test('button transform-origin is always center on click', async ({ page }) => {
-  await page.goto('/');
-  await page.waitForTimeout(2000);
+test('button transform-origin is always center on click', async ({ page, request }) => {
+  // Go straight to a tour's start screen — `/` is the multi-tour picker.
+  const tourId = await getTourId(request);
+  await page.goto(`/tour/${tourId}`, { waitUntil: 'domcontentloaded' });
+  await dismissSplashIfPresent(page);
 
   // Navigate past start screen
   await page.locator('text=Start tour').click();

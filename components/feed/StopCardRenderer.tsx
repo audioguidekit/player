@@ -29,32 +29,44 @@ export const StopCardRenderer: React.FC<StopCardRendererProps> = ({
   compactLayout = false,
   showNumber
 }) => {
-  switch (item.type) {
-    case 'text':
-      return <TextCard item={item} index={index} showNumber={showNumber} />;
-    case 'image-text':
-      return <ImageTextCard item={item} index={index} showNumber={showNumber} />;
-    case '3d-object':
-      return <Suspense fallback={null}><ThreeDObjectCard item={item} /></Suspense>;
-    case 'video':
-      return <Suspense fallback={null}><VideoCard item={item} /></Suspense>;
-    case 'headline':
-      return <Suspense fallback={null}><HeadlineCard item={item} /></Suspense>;
-    case 'rating':
-      return <Suspense fallback={null}><RatingCard item={item} onOpenRatingSheet={onOpenRatingSheet} compactLayout={compactLayout} /></Suspense>;
-    case 'email':
-      return <Suspense fallback={null}><EmailCard item={item} /></Suspense>;
-    case 'quote':
-      return <Suspense fallback={null}><QuoteCard item={item} /></Suspense>;
-    case 'image-gallery':
-      return <Suspense fallback={null}><ImageGalleryCard item={item} /></Suspense>;
-    case 'image-comparison':
-      return <Suspense fallback={null}><ImageComparisonCard item={item} /></Suspense>;
-    case 'image-hotspot':
-      return <Suspense fallback={null}><HotspotImageCard item={item} /></Suspense>;
-    case 'embed':
-      return <Suspense fallback={null}><EmbedCard item={item} /></Suspense>;
-    default:
-      return null;
-  }
+  const card = (() => {
+    switch (item.type) {
+      case 'text':
+        return <TextCard item={item} index={index} showNumber={showNumber} />;
+      case 'image-text':
+        return <ImageTextCard item={item} index={index} showNumber={showNumber} />;
+      case '3d-object':
+        return <Suspense fallback={null}><ThreeDObjectCard item={item} /></Suspense>;
+      case 'video':
+        return <Suspense fallback={null}><VideoCard item={item} /></Suspense>;
+      case 'headline':
+        return <Suspense fallback={null}><HeadlineCard item={item} /></Suspense>;
+      case 'rating':
+        return <Suspense fallback={null}><RatingCard item={item} onOpenRatingSheet={onOpenRatingSheet} compactLayout={compactLayout} /></Suspense>;
+      case 'email':
+        return <Suspense fallback={null}><EmailCard item={item} /></Suspense>;
+      case 'quote':
+        return <Suspense fallback={null}><QuoteCard item={item} /></Suspense>;
+      case 'image-gallery':
+        return <Suspense fallback={null}><ImageGalleryCard item={item} /></Suspense>;
+      case 'image-comparison':
+        return <Suspense fallback={null}><ImageComparisonCard item={item} /></Suspense>;
+      case 'image-hotspot':
+        return <Suspense fallback={null}><HotspotImageCard item={item} /></Suspense>;
+      case 'embed':
+        return <Suspense fallback={null}><EmbedCard item={item} /></Suspense>;
+      default:
+        return null;
+    }
+  })();
+
+  if (!card) return null;
+
+  // Wrap with the same id convention as audio cards (`stop-<id>`) plus a
+  // type tag, so the stop is addressable for scroll/deep-link and tests.
+  return (
+    <div id={`stop-${item.id}`} data-stop-type={item.type} style={{ display: 'contents' }}>
+      {card}
+    </div>
+  );
 };

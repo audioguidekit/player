@@ -1,53 +1,44 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('PWA Features', () => {
-  test('should have a valid manifest', async ({ page }) => {
-    await page.goto('/');
+/**
+ * PWA wiring. These assert the app actually ships a usable manifest and that the
+ * service worker registers — not merely that the browser exposes the APIs.
+ */
 
-    // Check for manifest link in head
-    const manifestLink = page.locator('link[rel="manifest"]');
-    const exists = await manifestLink.count() > 0;
+test.describe('PWA', () => {
+  test('serves a manifest that parses and declares an installable app', async ({ page, request }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    if (exists) {
-      const href = await manifestLink.getAttribute('href');
-      expect(href).toBeTruthy();
-    }
+    const link = page.locator('link[rel="manifest"]');
+    await expect(link).toHaveCount(1);
+    const href = await link.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    const res = await request.get(new URL(href!, page.url()).toString());
+    expect(res.ok()).toBe(true);
+    const manifest = await res.json();
+    // A minimally installable manifest needs a name, a start_url and icons.
+    expect(manifest.name || manifest.short_name).toBeTruthy();
+    expect(manifest.start_url).toBeTruthy();
+    expect(Array.isArray(manifest.icons) && manifest.icons.length).toBeTruthy();
   });
 
-  test('should register service worker', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+  test('registers a service worker', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    // Check if service worker API is available
-    const swAvailable = await page.evaluate(() => {
-      return 'serviceWorker' in navigator;
-    });
+    // Wait for the registration rather than just checking the API exists.
+    const registered = await page
+      .waitForFunction(
+        async () => {
+          if (!('serviceWorker' in navigator)) return false;
+          const reg = await navigator.serviceWorker.getRegistration();
+          return !!reg;
+        },
+        { timeout: 15000 },
+      )
+      .then(() => true)
+      .catch(() => false);
 
-    expect(swAvailable).toBe(true);
-  });
-
-  test('should have IndexedDB available for offline storage', async ({ page }) => {
-    await page.goto('/');
-
-    const idbAvailable = await page.evaluate(() => {
-      return 'indexedDB' in window;
-    });
-
-    expect(idbAvailable).toBe(true);
-  });
-});
-
-test.describe('Offline Capabilities', () => {
-  test('should cache tour data for offline use', async ({ page, context }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
-
-    // Check cache storage availability
-    const cacheAvailable = await page.evaluate(() => {
-      return 'caches' in window;
-    });
-
-    expect(cacheAvailable).toBe(true);
+    expect(registered).toBe(true);
   });
 });

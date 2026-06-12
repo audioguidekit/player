@@ -104,6 +104,7 @@ export const PlayPauseButton = React.memo<PlayPauseButtonProps>(({
             $size={size}
             $variant={variant}
             $showCheckmark={showCheckmark}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
             variants={buttonVariants}
             initial={buttonVariants ? 'initial' : undefined}
             animate={buttonVariants ? 'animate' : undefined}

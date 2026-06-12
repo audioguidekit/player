@@ -124,6 +124,7 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
             <FlexContainer>
                 {/* Home Button - Ghost Style */}
                 <HomeButton
+                    aria-label="Home"
                     onClick={() => {
                         triggerHaptic();
                         onBack();
@@ -133,7 +134,7 @@ export const TourHeader: React.FC<TourHeaderProps> = ({
                 </HomeButton>
 
                 {showProgressBar && (
-                    <ProgressSection>
+                    <ProgressSection data-testid="tour-progress">
                         <ProgressBarContainer>
                             <ProgressBar style={{ width: progressWidth }} />
                         </ProgressBarContainer>

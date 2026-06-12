@@ -1,0 +1,115 @@
+{
+  "id": "_fixture",
+  "language": "en",
+  "title": "Fixture Tour (every stop type)",
+  "description": "A hidden test-only tour exercising every content stop type. Not shown in the picker and excluded from production builds; loaded directly at /tour/_fixture by the E2E suite.",
+  "totalDuration": "5 minutes",
+  "totalStops": 13,
+  "transcriptAvailable": true,
+  "fullscreenPlayer": true,
+  "collectFeedback": true,
+  "stops": [
+    {
+      "id": "audio-1",
+      "type": "audio",
+      "title": "Audio stop",
+      "duration": "0:30 mins",
+      "image": "https://placehold.co/600x600/1A2634/FFFFFF/png?text=Audio",
+      "audioFile": "https://pub-f2d1a02a5dea4125b3453ea5789cc9b1.r2.dev/audio/silence.mp3",
+      "transcription": "This is the transcription for the audio stop, used to exercise the transcription panel.",
+      "location": { "lat": 40.7825, "lng": -73.9635 }
+    },
+    {
+      "id": "text-2",
+      "type": "text",
+      "title": "Text stop",
+      "content": "<strong>SAFE-STRONG</strong> plain text with a <a href=\"https://example.com/safe\">SAFE-LINK</a> and a <tooltip title=\"a hint\">term</tooltip>.<script>window.__xssFired = true;</script><img src=x onerror=\"window.__xssFired = true\">"
+    },
+    {
+      "id": "image-text-3",
+      "type": "image-text",
+      "title": "Image + text stop",
+      "image": "https://placehold.co/800x500/2D4356/FFFFFF/png?text=Image+Text",
+      "imageAlt": "Placeholder image for the image-text stop",
+      "imageCaption": "A caption for the image-text stop",
+      "imageCredit": "Fixture",
+      "content": "Body copy rendered beside or below the image."
+    },
+    {
+      "id": "headline-4",
+      "type": "headline",
+      "text": "A Section Headline"
+    },
+    {
+      "id": "quote-5",
+      "type": "quote",
+      "quote": "The fixture quote that should render verbatim.",
+      "author": "Test Author",
+      "year": "2026"
+    },
+    {
+      "id": "gallery-6",
+      "type": "image-gallery",
+      "caption": "A small gallery",
+      "images": [
+        { "url": "https://placehold.co/400x400/1A2634/FFFFFF/png?text=G1", "alt": "Gallery image one" },
+        { "url": "https://placehold.co/400x400/2D4356/FFFFFF/png?text=G2", "alt": "Gallery image two" },
+        { "url": "https://placehold.co/400x400/435B66/FFFFFF/png?text=G3", "alt": "Gallery image three" }
+      ]
+    },
+    {
+      "id": "comparison-7",
+      "type": "image-comparison",
+      "before": "https://placehold.co/600x400/1A2634/FFFFFF/png?text=Before",
+      "after": "https://placehold.co/600x400/435B66/FFFFFF/png?text=After",
+      "beforeLabel": "Before",
+      "afterLabel": "After",
+      "caption": "Drag the handle to compare"
+    },
+    {
+      "id": "hotspot-8",
+      "type": "image-hotspot",
+      "image": "https://placehold.co/800x500/2D4356/FFFFFF/png?text=Hotspots",
+      "imageAlt": "Image with interactive hotspots",
+      "caption": "Tap a pin for detail",
+      "hotspots": [
+        { "x": 25, "y": 40, "title": "Hotspot A", "description": "First point of interest." },
+        { "x": 70, "y": 60, "title": "Hotspot B", "description": "Second point of interest." }
+      ]
+    },
+    {
+      "id": "video-9",
+      "type": "video",
+      "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+      "caption": "A short sample video"
+    },
+    {
+      "id": "embed-10",
+      "type": "embed",
+      "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      "embedType": "youtube",
+      "aspectRatio": "16/9",
+      "caption": "An embedded player"
+    },
+    {
+      "id": "model-11",
+      "type": "3d-object",
+      "modelUrl": "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
+      "caption": "An interactive 3D model"
+    },
+    {
+      "id": "email-12",
+      "type": "email",
+      "title": "Stay in touch",
+      "description": "Leave your email to hear about new tours.",
+      "placeholder": "you@example.com",
+      "buttonText": "Subscribe"
+    },
+    {
+      "id": "rating-13",
+      "type": "rating",
+      "question": "How was this tour?",
+      "description": "Your feedback helps us improve."
+    }
+  ]
+}

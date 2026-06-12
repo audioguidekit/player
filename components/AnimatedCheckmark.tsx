@@ -45,6 +45,8 @@ export const AnimatedCheckmark: React.FC<AnimatedCheckmarkProps> = ({
       $isVisible={isVisible}
       $circleSize={circleSize}
       className={className}
+      data-testid={isVisible ? 'stop-completed' : undefined}
+      aria-label={isVisible ? 'Completed' : undefined}
     >
       <AnimatePresence mode="wait">
         {isVisible && (

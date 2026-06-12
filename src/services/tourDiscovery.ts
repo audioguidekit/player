@@ -174,6 +174,13 @@ function buildTourRegistry(): TourRegistry {
 
     const { id, language } = tourData;
 
+    // Hidden fixture/test tours (id prefixed with "_") are kept in dev and test
+    // builds — routable by URL via getTour() — but excluded from production so
+    // they never ship in a customer app.
+    if (import.meta.env.PROD && id.startsWith('_')) {
+      continue;
+    }
+
     // Initialize tour entry if needed
     if (!registry[id]) {
       registry[id] = {};
@@ -213,7 +220,9 @@ const tourRegistry = buildTourRegistry();
  * `tourOrder` that don't match a discovered tour are ignored.
  */
 export function getAvailableTourIds(): string[] {
-  const discovered = Object.keys(tourRegistry);
+  // Hidden tours (id prefixed with "_") are routable by URL but never listed in
+  // the picker, default-tour selection, or language aggregation.
+  const discovered = Object.keys(tourRegistry).filter(id => !id.startsWith('_'));
   const order = appConfig.tourOrder;
   if (!order?.length) return discovered;
 

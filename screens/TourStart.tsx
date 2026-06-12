@@ -242,6 +242,7 @@ export const TourStart: React.FC<TourStartProps> = ({
           </LeftButtons>
           {languages.length > 1 && (
             <LanguageButton
+              aria-label="Change language"
               onClick={() => {
                 triggerHaptic();
                 onOpenLanguage();

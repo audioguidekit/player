@@ -97,6 +97,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 
           {/* Sheet */}
           <SheetContainer
+            role="dialog"
+            aria-modal="true"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}

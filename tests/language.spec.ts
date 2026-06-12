@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForAppLoad, discoverTourLanguages, hasMultipleLanguages, clearAppState, getStoredLanguage, getTourId } from './helpers';
+import { waitForAppLoad, discoverTourLanguages, hasMultipleLanguages, clearAppState, getStoredLanguage, getTourId, openTour } from './helpers';
 
 test.describe('Language System', () => {
   test('should load app with tour content', async ({ page }) => {
@@ -13,24 +13,22 @@ test.describe('Language System', () => {
     await expect(title).toBeVisible({ timeout: 10000 });
   });
 
-  test('should show language selector when multiple languages exist', async ({ page, request }) => {
+  test('shows a language selector on the start screen when multiple languages exist', async ({ page, request }) => {
     const multipleLanguages = await hasMultipleLanguages(request);
+    const tourId = await getTourId(request);
 
-    await page.goto('/');
-    await waitForAppLoad(page);
+    await openTour(page, tourId);
 
-    // Language selector visibility depends on whether multiple languages exist
-    const languageButton = page.getByRole('button').filter({ hasText: /language|globe|🌐/i });
-
+    const languageButton = page.getByRole('button', { name: 'Change language' });
     if (multipleLanguages) {
-      // If multiple languages, a language button should be visible
-      // But it might use different labels, so we check for any button in header area
-      const headerButtons = page.locator('header button, [data-testid="language-button"]');
-      const buttonCount = await headerButtons.count();
-      // Just verify the app loaded successfully - language button styling varies
-      expect(buttonCount).toBeGreaterThanOrEqual(0);
+      await expect(languageButton).toBeVisible({ timeout: 10000 });
+      // Activating it opens the language chooser sheet (a modal dialog).
+      await languageButton.click();
+      await expect(page.getByRole('dialog')).toBeVisible({ timeout: 10000 });
+    } else {
+      // Single-language tours correctly hide the selector.
+      await expect(languageButton).toHaveCount(0);
     }
-    // Single language tours correctly hide the language selector
   });
 
   test('should have localStorage available for language preference', async ({ page }) => {
@@ -125,9 +123,11 @@ test.describe('URL Language Parameter (?lang=)', () => {
     await page.goto(`/tour/${tourId}?lang=${targetLang}`);
     await waitForAppLoad(page);
 
-    // Verify the tour title matches the expected language
-    const title = page.locator('h1').first();
-    await expect(title).toContainText(expectedTitle, { timeout: 10000 });
+    // The tour pushes in over the multi-tour picker, so `h1.first()` is the
+    // picker's landing title. Assert the tour-start heading (level 1) renders
+    // in the requested language instead.
+    const title = page.getByRole('heading', { level: 1, name: expectedTitle });
+    await expect(title).toBeVisible({ timeout: 10000 });
   });
 
   test('should save URL language parameter to localStorage', async ({ page, request }) => {
